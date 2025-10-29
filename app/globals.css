@@ -16,12 +16,12 @@
 @theme inline {
   --font-montserrat: var(--font-montserrat);
   --blackish-green: var(--foreground);
-  --mint-green-100: var(--mint-green-100);
-  --mint-green-70: var(--mint-green-70);
-  --mint-green-50: var(--mint-green-50);
-  --salmon-100: var(--salmon-100);
-  --neutrals-100: var(--neutrals-100);
-  --neutrals-70: var(--neutrals-70);
+  --color-mint-green-100: var(--mint-green-100);
+  --color-mint-green-70: var(--mint-green-70);
+  --color-mint-green-50: var(--mint-green-50);
+  --color-salmon-100: var(--salmon-100);
+  --color-neutrals-100: var(--neutrals-100);
+  --color-neutrals-70: var(--neutrals-70);
   --box-shadow-light: var(--box-shadow-light);
 }
 
