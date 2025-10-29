@@ -2,19 +2,32 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #112211;
+  --mint-green-100: #8DD3BB;
+  --mint-green-70: #d7e2ee;
+  --mint-green-50: #cdeae1;
+  --salmon-100: #FF8682;
+  --neutrals-100: #FFFFFF;
+  --neutrals-70: #fafbfc;
+  --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05)
 }
 
+/* referencing other colors using the inline keyword */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-montserrat: var(--font-montserrat);
+  --blackish-green: var(--foreground);
+  --mint-green-100: var(--mint-green-100);
+  --mint-green-70: var(--mint-green-70);
+  --mint-green-50: var(--mint-green-50);
+  --salmon-100: var(--salmon-100);
+  --neutrals-100: var(--neutrals-100);
+  --neutrals-70: var(--neutrals-70);
+  --box-shadow-light: var(--box-shadow-light);
 }
 
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: Arial, Helvetica, sans-serif; */
 }
