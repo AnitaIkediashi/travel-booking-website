@@ -7,20 +7,20 @@
   --mint-green-70: #d7e2ee;
   --mint-green-50: #cdeae1;
   --salmon-100: #FF8682;
-  --neutrals-100: #FFFFFF;
   --neutrals-70: #fafbfc;
-  --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05)
+  --blackish-green-10: #1C1B1F;
+  --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05);
 }
 
 /* referencing other colors using the inline keyword */
 @theme inline {
   --font-montserrat: var(--font-montserrat);
-  --blackish-green: var(--foreground);
+  --color-blackish-green: var(--foreground);
+  --color-blackish-green-10: var(--blackish-green-10);
   --color-mint-green-100: var(--mint-green-100);
   --color-mint-green-70: var(--mint-green-70);
   --color-mint-green-50: var(--mint-green-50);
   --color-salmon-100: var(--salmon-100);
-  --color-neutrals-100: var(--neutrals-100);
   --color-neutrals-70: var(--neutrals-70);
   --box-shadow-light: var(--box-shadow-light);
 }
