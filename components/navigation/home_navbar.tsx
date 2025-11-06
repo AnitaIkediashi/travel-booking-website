@@ -3,6 +3,7 @@ import { BedIcon } from "../icons/bed";
 import { FlightIcon } from "../icons/flight";
 import logo from '@/public/logos/light/Logo_light.svg'
 import { Button } from "../reusable/button";
+import { MobileMenu } from "./mobile_menu";
 
 
 export const HomeNavbar = () => {
@@ -26,13 +27,14 @@ export const HomeNavbar = () => {
               </div>
             </div>
             <Image src={logo} alt="company logo" />
-            <div className="flex items-center gap-8">
+            <div className="lg:flex items-center gap-8 hidden">
               <Button
                 label="login"
                 className="capitalize text-white text-sm font-semibold"
               />
               <Button label="Sign up" className="text-sm font-semibold px-6 py-[15.5px] rounded-lg bg-white text-blackish-green" />
             </div>
+            <MobileMenu />
           </nav>
         </header>
       </div>
