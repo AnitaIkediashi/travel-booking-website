@@ -1,9 +1,10 @@
+import { HomeNavbar } from "@/components/navigation/home_navbar";
 
 
 export default function Home() {
   return (
-    <div className="">
-      hello world
-    </div>
+    <section className="w-full">
+      <HomeNavbar />
+    </section>
   );
 }

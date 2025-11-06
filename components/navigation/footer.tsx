@@ -40,7 +40,7 @@ export const Footer = () => {
   return (
     <footer className="w-full relative font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] w-[95%] h-auto mx-auto lg:px-6 px-4 rounded-[20px] bg-mint-green-50 flex lg:items-center lg:justify-between gap-3">
-        <div className="flex flex-col my-6 gap-6 lg:max-w-[593px]">
+        <div className="flex flex-col my-6 gap-6 lg:max-w-[400px] xl:max-w-[593px]">
           <h3 className="font-bold lg:text-[44px]/[54px] md:text-4xl text-2xl lg:max-w-[364px] lg:h-[108px]">
             Subscribe Newsletter
           </h3>
@@ -53,7 +53,7 @@ export const Footer = () => {
               stories.
             </p>
             <div className="flex md:flex-row flex-col gap-4 lg:justify-between w-full md:h-14">
-              <div className="md:w-[473px] w-full bg-white md:h-full h-14 rounded-sm md:pl-4 pl-2 py-2">
+              <div className="lg:w-[300px] md:w-[473px] xl:w-[400px] w-full bg-white md:h-full h-14 rounded-sm md:pl-4 pl-2 py-2">
                 <input
                   type="email"
                   placeholder="Your email address"
@@ -63,7 +63,7 @@ export const Footer = () => {
               <Button
                 type="button"
                 label="subscribe"
-                className="md:h-full h-14 md:w-[calc(100%-473px)] w-full flex items-center justify-center bg-blackish-green rounded-sm hover:bg-[rgba(28,27,31,0.8)]"
+                className="md:h-full h-14 lg:w-[calc(100%-300px)] md:w-[calc(100%-473px)] xl:w-[calc(100%-400px)] w-full flex items-center justify-center bg-blackish-green rounded-sm hover:bg-[rgba(28,27,31,0.8)]"
                 labelClassName="text-white text-sm font-semibold capitalize"
               />
             </div>
