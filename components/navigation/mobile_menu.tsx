@@ -9,7 +9,7 @@ export const MobileMenu = () => {
       <div className="cursor-pointer">
         <MenuIcon fillColor="#fff" />
       </div>
-      <div className="absolute bg-white "></div>
+      <div className="absolute bg-white h-[400px] w-[332px] rounded-lg right-0"></div>
     </div>
   );
 }
