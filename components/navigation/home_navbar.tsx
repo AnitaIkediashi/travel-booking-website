@@ -8,11 +8,11 @@ import { MobileMenu } from "./mobile_menu";
 
 export const HomeNavbar = () => {
   return (
-    <section className="mx-[30px] mt-[30px] font-montserrat">
+    <section className="md:mx-[30px] md:mt-[30px] mx-3 mt-4 font-montserrat">
       <div className="bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.7)),url(/landing_page/home_bg.png)] bg-no-repeat bg-center bg-cover h-[581px] rounded-3xl relative">
         <header className="px-8 py-[30px]">
           <nav className="flex items-center justify-between text-white">
-            <div className="flex items-center gap-8">
+            <div className="lg:flex items-center gap-8 hidden">
               <div className="flex items-center gap-[3.5px]">
                 <FlightIcon fillColor="white" />
                 <span className="capitalize text-sm font-semibold">
