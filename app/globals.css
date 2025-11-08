@@ -9,6 +9,7 @@
   --salmon-100: #FF8682;
   --neutrals-70: #fafbfc;
   --blackish-green-10: #1C1B1F;
+  --blackish-green-20: #79747E;
   --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05);
 }
 
@@ -17,6 +18,7 @@
   --font-montserrat: var(--font-montserrat);
   --color-blackish-green: var(--foreground);
   --color-blackish-green-10: var(--blackish-green-10);
+  --color-blackish-green-20: var(--blackish-green-20);
   --color-mint-green-100: var(--mint-green-100);
   --color-mint-green-70: var(--mint-green-70);
   --color-mint-green-50: var(--mint-green-50);

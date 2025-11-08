@@ -7,6 +7,8 @@ import { Button } from "./button";
 import { FlightIcon } from "../icons/flight";
 import { BedIcon } from "../icons/bed";
 import { BuildingIcon } from "../icons/building";
+import { SearchFlights } from "./search_flights";
+import { SearchStays } from "./search_stays";
 
 export const SearchPlaces = () => {
   const [activeTab, setActiveTab] = useState("flights");
@@ -41,7 +43,15 @@ export const SearchPlaces = () => {
             <span className="capitalize text-sm font-semibold">stays</span>
           </div>
         </div>
-        <div></div>
+        <div className="w-full mt-12">
+            {
+                activeTab === "flights" ? (
+                    <SearchFlights />
+                ) : (
+                    <SearchStays />
+                )
+            }
+        </div>
       </div>
       <div className="md:self-end flex md:flex-row flex-col md:items-center gap-6">
         <Button
