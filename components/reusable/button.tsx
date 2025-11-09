@@ -2,8 +2,8 @@ import { Url } from "next/dist/shared/lib/router/router";
 import Link from "next/link";
 
 type ButtonProps = {
-  label: string;
   className: string;
+  label?: string;
   labelClassName?: string;
   iconClassName?: string;
   type?: "button" | "submit";

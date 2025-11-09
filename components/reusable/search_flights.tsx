@@ -1,6 +1,10 @@
 'use client'
 import { useState } from "react";
 import { SwapIcon } from "../icons/swap";
+import { DatePicker, Select } from "antd";
+import { FlightDropdown } from "./flight_dropdown";
+
+const { RangePicker } = DatePicker;
 
 export const SearchFlights = () => {
     const [swapInput, setSwapInput] = useState(false);
@@ -8,6 +12,11 @@ export const SearchFlights = () => {
         fromValue: '',
         toValue: ''
     });
+    const [showDropDown, setShowDropDown] = useState(false);
+
+    const handleClick = () => {
+        setShowDropDown(prev => !prev);
+    }
 
     const handleSwap = () => {
         setSwapInput(prev => !prev)
@@ -24,7 +33,7 @@ export const SearchFlights = () => {
     };
 
     const inputClassName =
-      "outline-none text-black-20 text-base w-full caret-black-20 focus:border-b-2 border-b-blue-500 transition-all duration-100 ease-in-out";
+      "outline-none text-black-20 text-base w-full caret-black-20 focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
     const inputA = (
       <input
@@ -48,6 +57,11 @@ export const SearchFlights = () => {
         onChange={handleLocationChange}
       />
     );
+
+    const tripOptions = [
+      { value: "one-way", label: "One way" },
+      { value: "round-trip", label: "Round trip" },
+    ];
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6 font-montserrat">
       <div>
@@ -57,32 +71,36 @@ export const SearchFlights = () => {
           </legend>
           <div className="w-full flex items-center space-between relative h-full">
             <div className="w-[calc(100%-48px)] flex items-center">
-              <div className="w-1/2 mr-1">
-                {inputA}
-              </div>
-              -
-              <div className="w-1/2 ml-1">
-                {inputB}
-              </div>
+              <div className="w-1/2 mr-1">{inputA}</div>-
+              <div className="w-1/2 ml-1">{inputB}</div>
             </div>
-            <div className="w-12 h-12 grid place-items-center cursor-pointer" onClick={handleSwap}>
+            <div
+              className="w-12 h-12 grid place-items-center cursor-pointer"
+              onClick={handleSwap}
+            >
               <SwapIcon />
             </div>
           </div>
         </fieldset>
       </div>
-      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
         <legend className="text-blackish-green text-sm capitalize">trip</legend>
+        <Select options={tripOptions} allowClear className="w-full" />
       </fieldset>
-      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
         <legend className="text-blackish-green text-sm capitalize">
           depart - return
         </legend>
+        <RangePicker />
       </fieldset>
-      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+      <fieldset
+        className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative cursor-pointer"
+        onClick={handleClick}
+      >
         <legend className="text-blackish-green text-sm capitalize">
           passenger - class
         </legend>
+        {showDropDown && <FlightDropdown />}
       </fieldset>
     </div>
   );
