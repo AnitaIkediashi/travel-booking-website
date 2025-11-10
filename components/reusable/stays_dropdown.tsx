@@ -114,4 +114,3 @@ export const StaysDropdown = ({
     </div>
   );
 };
-[]
