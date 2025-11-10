@@ -121,7 +121,7 @@ export const FlightDropdown = ({
       <Button
         type="button"
         label="confirm"
-        className="w-full h-12 flex items-center justify-center capitalize text-blackish-green bg-mint-green-100 hover:bg-blackish-green-10 hover:text-white transition ease-in-out duration-300 font-medium text-sm rounded-sm mt-3"
+        className="w-full h-12 flex items-center justify-center capitalize text-blackish-green bg-mint-green-100 hover:bg-blackish-green-10/30 transition ease-in-out duration-300 font-medium text-sm rounded-sm mt-3"
         onClick={onClose}
       />
     </div>

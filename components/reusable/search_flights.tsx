@@ -8,9 +8,15 @@ import { AddIcon } from "../icons/add";
 import { Button } from "./button";
 import { PaperPlaneIcon } from "../icons/paperPlane";
 
+/**
+ * NOTES: 1. Day.js is a minimalist JavaScript library designed to make parsing, validating, manipulating, and displaying dates and times in web applications much easier and more efficient than using the built-in JavaScript Date object
+ *  2. React reconciliation is the process by which React efficiently updates the user interface (UI) in response to changes in a component's state or props. It is the core mechanism that allows React to provide a declarative programming model while maintaining high performance.
+ * 3. In React, when the state or props of a component change, React needs to determine how to update the actual DOM to reflect these changes. Instead of directly manipulating the DOM, React uses a virtual representation of the DOM called the Virtual DOM. The reconciliation process involves comparing the new Virtual DOM with the previous version to identify what has changed. This comparison is done using a diffing algorithm that efficiently determines the minimal set of changes needed to update the real DOM.
+ */
+
 const { RangePicker } = DatePicker;
 
-const dateFormat = "DD MMM YY ";
+const dateFormat = "DD MMM YY "; // From antd documentation
 
 type InitialState = {
   fromValue: string;
@@ -33,9 +39,9 @@ export const SearchFlights = () => {
     entryDate: null,
     startDate: null,
     endDate: null,
-    adultCount: 0,
+    adultCount: 1,
     childrenCount: 0,
-    cabinClass: "",
+    cabinClass: "Economy",
   });
   const [showDropDown, setShowDropDown] = useState(false);
 
@@ -132,7 +138,6 @@ export const SearchFlights = () => {
   };
 
   const handleCabinClassChange = (value: string) => {
-    console.log("cabin type selected:", value);
     setInitialValues((prevValues) => {
       return {
         ...prevValues,
@@ -146,7 +151,7 @@ export const SearchFlights = () => {
 
   const inputA = (
     <input
-      key={swapInput ? "to" : "from"}
+      key={swapInput ? "to" : "from"} // A unique key to force re-render when swapped because of react's reconciliation
       name={swapInput ? "toValue" : "fromValue"}
       type="text"
       size={12}
@@ -157,7 +162,7 @@ export const SearchFlights = () => {
   );
   const inputB = (
     <input
-      key={swapInput ? "from" : "to"}
+      key={swapInput ? "from" : "to"} // A unique key to force re-render when swapped because of react's reconciliation
       name={swapInput ? "fromValue" : "toValue"}
       type="text"
       size={12}
@@ -268,7 +273,7 @@ export const SearchFlights = () => {
         />
         <Button
           label="show flights"
-          className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center"
+          className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center hover:bg-blackish-green/30 transition ease-in-out duration-300"
           icon={<PaperPlaneIcon />}
         />
       </div>
