@@ -1,11 +1,39 @@
+'use client'
+
 import { DatePicker } from "antd";
 import { AddIcon } from "../icons/add";
 import { BedIcon } from "../icons/bed";
 import { BuildingIcon } from "../icons/building";
 import { Button } from "./button";
 import { dateFormat } from "./search_flights";
+import { ArrowDownIcon } from "../icons/arrow_down";
+import dayjs from "dayjs";
+import { useState } from "react";
+
+type InitialState = {
+  destination: string;
+  checkInDate: dayjs.Dayjs | null;
+  checkOutDate: dayjs.Dayjs | null;
+  roomCount: number;
+  adultCount: number;
+  childrenCount: number;
+}
 
 export const SearchStays = () => {
+  const [initialValues, setInitialValues] = useState<InitialState>({
+    destination: "",
+    checkInDate: null,
+    checkOutDate: null,
+    roomCount: 1,
+    adultCount: 1,
+    childrenCount: 0,
+  })
+
+  const [showDropDown, setShowDropDown] = useState(false);
+
+  const handleDropDownClick = () => {
+    setShowDropDown(!showDropDown);
+  };
   return (
     <div className="flex flex-col gap-8 font-montserrat">
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[258px_minmax(0,240px)_minmax(0,240px)_minmax(0,255px)] xl:grid-cols-[350px_minmax(0,240px)_minmax(0,240px)_minmax(0,255px)] gap-6">
@@ -50,10 +78,15 @@ export const SearchStays = () => {
           </fieldset>
         </div>
         <div className="relative">
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer">
+          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer" onClick={handleDropDownClick}>
             <legend className="text-blackish-green text-sm capitalize">
               rooms & guests
             </legend>
+            <p className="w-full h-full capitalize text-blackish-green-10 flex items-center justify-between">
+              <span className="mr-2">
+                <ArrowDownIcon />
+              </span>
+            </p>
           </fieldset>
         </div>
       </div>

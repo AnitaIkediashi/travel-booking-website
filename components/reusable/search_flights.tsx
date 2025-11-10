@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { AddIcon } from "../icons/add";
 import { Button } from "./button";
 import { PaperPlaneIcon } from "../icons/paperPlane";
+import { ArrowDownIcon } from "../icons/arrow_down";
 
 /**
  * NOTES: 1. Day.js is a minimalist JavaScript library designed to make parsing, validating, manipulating, and displaying dates and times in web applications much easier and more efficient than using the built-in JavaScript Date object
@@ -245,13 +246,16 @@ export const SearchFlights = () => {
             <legend className="text-blackish-green text-sm capitalize">
               passenger - class
             </legend>
-            <p className="w-full h-full capitalize text-blackish-green-10">
+            <p className="w-full h-full capitalize text-blackish-green-10 flex items-center justify-between">
               {totalPassengers > 0
                 ? `${totalPassengers} passenger${
                     totalPassengers > 1 ? "s, " : ", "
                   }`
                 : ""}
               {initialValues.cabinClass}
+              <span className="mr-2">
+                <ArrowDownIcon />
+              </span>
             </p>
           </fieldset>
           <FlightDropdown
