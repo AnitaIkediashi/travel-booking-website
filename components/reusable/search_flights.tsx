@@ -4,6 +4,9 @@ import { SwapIcon } from "../icons/swap";
 import { DatePicker, Select } from "antd";
 import { FlightDropdown } from "./flight_dropdown";
 import dayjs from "dayjs";
+import { AddIcon } from "../icons/add";
+import { Button } from "./button";
+import { PaperPlaneIcon } from "../icons/paperPlane";
 
 const { RangePicker } = DatePicker;
 
@@ -173,83 +176,100 @@ export const SearchFlights = () => {
     initialValues.adultCount + initialValues.childrenCount;
 
   return (
-    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6 font-montserrat">
-      <div>
-        <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+    <div className="flex flex-col gap-8">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6 font-montserrat">
+        <div>
+          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+            <legend className="text-blackish-green text-sm capitalize">
+              from - to
+            </legend>
+            <div className="w-full flex items-center space-between relative h-full">
+              <div className="w-[calc(100%-48px)] flex items-center">
+                <div className="w-1/2 mr-1">{inputA}</div>-
+                <div className="w-1/2 ml-1">{inputB}</div>
+              </div>
+              <div
+                className="w-12 h-12 grid place-items-center cursor-pointer"
+                onClick={handleSwap}
+              >
+                <SwapIcon />
+              </div>
+            </div>
+          </fieldset>
+        </div>
+        <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
           <legend className="text-blackish-green text-sm capitalize">
-            from - to
+            trip
           </legend>
-          <div className="w-full flex items-center space-between relative h-full">
-            <div className="w-[calc(100%-48px)] flex items-center">
-              <div className="w-1/2 mr-1">{inputA}</div>-
-              <div className="w-1/2 ml-1">{inputB}</div>
-            </div>
-            <div
-              className="w-12 h-12 grid place-items-center cursor-pointer"
-              onClick={handleSwap}
-            >
-              <SwapIcon />
-            </div>
-          </div>
-        </fieldset>
-      </div>
-      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
-        <legend className="text-blackish-green text-sm capitalize">trip</legend>
-        <Select
-          options={tripOptions}
-          allowClear
-          className="w-full text-blackish-green-10"
-          onChange={handleTripChange}
-        />
-      </fieldset>
-      <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
-        <legend className="text-blackish-green text-sm capitalize">
-          {initialValues.trip === "one-way"
-            ? "departure"
-            : "departure - return"}
-        </legend>
-        {initialValues.trip === "one-way" ? (
-          <DatePicker
-            format={dateFormat}
+          <Select
+            options={tripOptions}
+            allowClear
             className="w-full text-blackish-green-10"
-            onChange={handleSingleDateChange}
+            onChange={handleTripChange}
           />
-        ) : (
-          <RangePicker
-            format={dateFormat}
-            onChange={handleDateRangeChange}
-            className="text-blackish-green-10"
-          />
-        )}
-      </fieldset>
-      <div className="relative">
-        <fieldset
-          className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer"
-          onClick={handleDropDownClick}
-        >
-          <legend className="text-blackish-green text-sm capitalize">
-            passenger - class
-          </legend>
-          <p className="w-full h-full capitalize text-blackish-green-10">
-            {totalPassengers > 0
-              ? `${totalPassengers} passenger${
-                  totalPassengers > 1 ? "s, " : ", "
-                }`
-              : ""}
-            {initialValues.cabinClass}
-          </p>
         </fieldset>
-        <FlightDropdown
-          adultCount={initialValues.adultCount}
-          childrenCount={initialValues.childrenCount}
-          onAdultIncrement={handleAdultIncrement}
-          onAdultDecrement={handleAdultDecrement}
-          onChildrenIncrement={handleChildrenIncrement}
-          onChildrenDecrement={handleChildrenDecrement}
-          cabinType={initialValues.cabinClass}
-          onCabinClassChange={handleCabinClassChange}
-          showDropDown={showDropDown}
-          onClose={handleDropDownClick}
+        <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
+          <legend className="text-blackish-green text-sm capitalize">
+            {initialValues.trip === "one-way"
+              ? "departure"
+              : "departure - return"}
+          </legend>
+          {initialValues.trip === "one-way" ? (
+            <DatePicker
+              format={dateFormat}
+              className="w-full text-blackish-green-10"
+              onChange={handleSingleDateChange}
+            />
+          ) : (
+            <RangePicker
+              format={dateFormat}
+              onChange={handleDateRangeChange}
+              className="text-blackish-green-10"
+            />
+          )}
+        </fieldset>
+        <div className="relative">
+          <fieldset
+            className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer"
+            onClick={handleDropDownClick}
+          >
+            <legend className="text-blackish-green text-sm capitalize">
+              passenger - class
+            </legend>
+            <p className="w-full h-full capitalize text-blackish-green-10">
+              {totalPassengers > 0
+                ? `${totalPassengers} passenger${
+                    totalPassengers > 1 ? "s, " : ", "
+                  }`
+                : ""}
+              {initialValues.cabinClass}
+            </p>
+          </fieldset>
+          <FlightDropdown
+            adultCount={initialValues.adultCount}
+            childrenCount={initialValues.childrenCount}
+            onAdultIncrement={handleAdultIncrement}
+            onAdultDecrement={handleAdultDecrement}
+            onChildrenIncrement={handleChildrenIncrement}
+            onChildrenDecrement={handleChildrenDecrement}
+            cabinType={initialValues.cabinClass}
+            onCabinClassChange={handleCabinClassChange}
+            showDropDown={showDropDown}
+            onClose={handleDropDownClick}
+          />
+        </div>
+      </div>
+      <div className="md:self-end flex md:flex-row flex-col md:items-center gap-6">
+        <Button
+          label="add promo code"
+          className="uppercase text-blackish-green font-medium text-sm flex items-center gap-1 md:w-[161px] w-full h-12 justify-center"
+          icon={<AddIcon />}
+          type="button"
+        />
+        <Button
+          label="show flights"
+          className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center"
+          icon={<PaperPlaneIcon />}
         />
       </div>
     </div>

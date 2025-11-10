@@ -1,12 +1,8 @@
 "use client"; //for readability although there is no need writing it here since its parent is already a client component
 
 import { useState } from "react";
-import { AddIcon } from "../icons/add";
-import { PaperPlaneIcon } from "../icons/paperPlane";
-import { Button } from "./button";
 import { FlightIcon } from "../icons/flight";
 import { BedIcon } from "../icons/bed";
-import { BuildingIcon } from "../icons/building";
 import { SearchFlights } from "./search_flights";
 import { SearchStays } from "./search_stays";
 
@@ -16,7 +12,7 @@ export const SearchPlaces = () => {
     setActiveTab(tab);
   };
   return (
-    <div className="lg:w-[80%] md:w-[86%] w-[96%] mx-auto rounded-2xl bg-white shadow-light relative -top-[105px] pl-8 pr-4 pt-4 pb-8 flex flex-col gap-8 font-montserrat">
+    <div className="lg:w-[80%] md:w-[86%] w-[96%] mx-auto rounded-2xl bg-white shadow-light relative -top-[105px] pl-8 pr-4 pt-4 pb-8 font-montserrat">
       <div className="w-full">
         <div className="flex items-center h-12">
           <div
@@ -52,19 +48,6 @@ export const SearchPlaces = () => {
                 )
             }
         </div>
-      </div>
-      <div className="md:self-end flex md:flex-row flex-col md:items-center gap-6">
-        <Button
-          label="add promo code"
-          className="uppercase text-blackish-green font-medium text-sm flex items-center gap-1 md:w-[161px] w-full h-12 justify-center"
-          icon={<AddIcon />}
-          type="button"
-        />
-        <Button
-          label={activeTab === "flights" ? "show flights" : "show places"}
-          className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center"
-          icon={activeTab === "flights" ? <PaperPlaneIcon /> : <BuildingIcon />}
-        />
       </div>
     </div>
   );
