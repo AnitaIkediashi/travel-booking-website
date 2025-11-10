@@ -16,7 +16,7 @@ import { PaperPlaneIcon } from "../icons/paperPlane";
 
 const { RangePicker } = DatePicker;
 
-const dateFormat = "DD MMM YY "; // From antd documentation
+export const dateFormat = "DD MMM YY "; // From antd documentation
 
 type InitialState = {
   fromValue: string;
@@ -181,8 +181,8 @@ export const SearchFlights = () => {
     initialValues.adultCount + initialValues.childrenCount;
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6 font-montserrat">
+    <div className="flex flex-col gap-8 font-montserrat">
+      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6">
         <div>
           <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
             <legend className="text-blackish-green text-sm capitalize">
@@ -194,7 +194,7 @@ export const SearchFlights = () => {
                 <div className="w-1/2 ml-1">{inputB}</div>
               </div>
               <div
-                className="w-12 h-12 grid place-items-center cursor-pointer"
+                className="w-12 h-full grid place-items-center cursor-pointer"
                 onClick={handleSwap}
               >
                 <SwapIcon />
@@ -202,37 +202,41 @@ export const SearchFlights = () => {
             </div>
           </fieldset>
         </div>
-        <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
-          <legend className="text-blackish-green text-sm capitalize">
-            trip
-          </legend>
-          <Select
-            options={tripOptions}
-            allowClear
-            className="w-full text-blackish-green-10"
-            onChange={handleTripChange}
-          />
-        </fieldset>
-        <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
-          <legend className="text-blackish-green text-sm capitalize">
-            {initialValues.trip === "one-way"
-              ? "departure"
-              : "departure - return"}
-          </legend>
-          {initialValues.trip === "one-way" ? (
-            <DatePicker
-              format={dateFormat}
+        <div>
+          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
+            <legend className="text-blackish-green text-sm capitalize">
+              trip
+            </legend>
+            <Select
+              options={tripOptions}
+              allowClear
               className="w-full text-blackish-green-10"
-              onChange={handleSingleDateChange}
+              onChange={handleTripChange}
             />
-          ) : (
-            <RangePicker
-              format={dateFormat}
-              onChange={handleDateRangeChange}
-              className="text-blackish-green-10"
-            />
-          )}
-        </fieldset>
+          </fieldset>
+        </div>
+        <div>
+          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
+            <legend className="text-blackish-green text-sm capitalize">
+              {initialValues.trip === "one-way"
+                ? "departure"
+                : "departure - return"}
+            </legend>
+            {initialValues.trip === "one-way" ? (
+              <DatePicker
+                format={dateFormat}
+                className="w-full text-blackish-green-10"
+                onChange={handleSingleDateChange}
+              />
+            ) : (
+              <RangePicker
+                format={dateFormat}
+                onChange={handleDateRangeChange}
+                className="text-blackish-green-10"
+              />
+            )}
+          </fieldset>
+        </div>
         <div className="relative">
           <fieldset
             className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer"
