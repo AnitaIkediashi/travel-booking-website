@@ -29,7 +29,7 @@ export const StaysDropdown = ({
 }: HotelDropdownProps) => {
   return (
     <div
-      className={`absolute top-[59px] left-0 right-0 z-20 p-4 min-h-[200px] bg-white shadow-light rounded-sm font-montserrat text-blackish-green ${
+      className={`absolute top-[59px] -left-3 right-0 z-20 p-4 min-h-[200px] bg-white shadow-light rounded-sm font-montserrat text-blackish-green min-w-[200px] ${
         showDropDown ? "block" : "hidden"
       }`}
     >
