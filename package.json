@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.0",
     "antd": "^5.27.6",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "gsap": "^3.13.0",
     "next": "16.0.0",
@@ -17,12 +19,14 @@
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
+    "prisma": "^6.19.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
