@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//creating the tables/models i need for my app
+/*
+* City - Airport 1:M :- meaning A city can have multiple airports but an airport can have only one City
+* This applies to the user experience as well, as a user will search for a city and get multiple airports to choose from
+*/
+
+model City {
+  city_id String @id @default(uuid())
+  city_name String 
+  country_name String
+  airports Airport[]
+}
+
+model Airport {
+  airport_code String @id
+  airport_name String
+  country_name String
+  image_url    String
+  cityId     String 
+  city City @relation(fields: [cityId], references: [city_id])
+}
