@@ -14,23 +14,32 @@ datasource db {
 }
 
 //creating the tables/models i need for my app
-/*
-* City - Airport 1:M :- meaning A city can have multiple airports but an airport can have only one City
-* This applies to the user experience as well, as a user will search for a city and get multiple airports to choose from
-*/
+/**
+ * City - Airport 1:M :- meaning A city can have multiple airports but an airport can have only one City
+ * This applies to the user experience as well, as a user will search for a city and get multiple airports to choose from
+ */
 
 model City {
-  city_id String @id @default(uuid())
-  city_name String 
+  city_id      String    @id @default(uuid())
+  city_name    String
   country_name String
-  airports Airport[]
+  airports     Airport[]
 }
 
 model Airport {
   airport_code String @id
   airport_name String
-  country_name String
-  image_url    String
-  cityId     String 
-  city City @relation(fields: [cityId], references: [city_id])
+  image_url    String? // optional field
+  cityId       String // foreign key -FK
+  city         City   @relation(fields: [cityId], references: [city_id])
+  departure_flights Flight[] @relation("DepartureAirport")
+  arrival_flights   Flight[] @relation("ArrivalAirport")
+}
+
+model Flight {
+  flight_number  String   @id
+  departure_airport_code String
+  arrival_airport_code   String
+  departure_airport Airport @relation("DepartureAirport", fields: [departure_airport_code], references: [airport_code])
+  arrival_airport Airport @relation("ArrivalAirport", fields: [arrival_airport_code], references: [airport_code])
 }
