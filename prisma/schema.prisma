@@ -32,12 +32,12 @@ model Airport {
   image_url         String? // optional field
   cityId            String // foreign key -FK
   city              City     @relation(fields: [cityId], references: [city_id])
-  departure_flights Flight[] @relation("DepartureAirport")
-  arrival_flights   Flight[] @relation("ArrivalAirport")
+  // departure_flights Flight[] @relation("DepartureAirport")
+  // arrival_flights   Flight[] @relation("ArrivalAirport")
 }
 
-model Flight {
-  flight_number          String     @id
+model Data {
+  id          String     @id
   departure_airport_code String
   arrival_airport_code   String
   departure_start        Int
@@ -48,11 +48,10 @@ model Flight {
   amount                 Float
   baggages                Baggage[]
   cabin_class            String
-  departure_airport      Airport    @relation("DepartureAirport", fields: [departure_airport_code], references: [airport_code])
-  arrival_airport        Airport    @relation("ArrivalAirport", fields: [arrival_airport_code], references: [airport_code])
   stops                  Stop[]
   airlines               Airline[]
   duration               Duration[]
+
 }
 
 model Stop {
@@ -64,7 +63,7 @@ model Stop {
   cheapest_airline_name String?
   cheapest_airline_logo String?
   cheapest_airline_code String?
-  stopCount             Flight  @relation(fields: [stop_id], references: [flight_number])
+  stopCount             Data  @relation(fields: [stop_id], references: [id])
 }
 
 model Airline {
@@ -73,7 +72,7 @@ model Airline {
   logo          String
   currency_code String?
   amount        Float
-  airlineFlight Flight  @relation(fields: [airline_id], references: [flight_number])
+  airlineFlight Data  @relation(fields: [airline_id], references: [id])
 }
 
 model Duration {
@@ -81,7 +80,7 @@ model Duration {
   min            Int
   max            Int
   duration_type  String
-  durationFlight Flight @relation(fields: [duration_id], references: [flight_number])
+  durationFlight Data @relation(fields: [duration_id], references: [id])
 }
 
 model Baggage {
@@ -90,5 +89,5 @@ model Baggage {
   included    Boolean
   weight       Int?
   paramName  String?
-  baggageFlight Flight @relation(fields: [baggage_id], references: [flight_number])
+  baggageFlight Data @relation(fields: [baggage_id], references: [id])
 }
