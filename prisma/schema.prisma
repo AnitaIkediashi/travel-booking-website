@@ -27,19 +27,68 @@ model City {
 }
 
 model Airport {
-  airport_code String @id
-  airport_name String
-  image_url    String? // optional field
-  cityId       String // foreign key -FK
-  city         City   @relation(fields: [cityId], references: [city_id])
+  airport_code      String   @id
+  airport_name      String
+  image_url         String? // optional field
+  cityId            String // foreign key -FK
+  city              City     @relation(fields: [cityId], references: [city_id])
   departure_flights Flight[] @relation("DepartureAirport")
   arrival_flights   Flight[] @relation("ArrivalAirport")
 }
 
 model Flight {
-  flight_number  String   @id
+  flight_number          String     @id
   departure_airport_code String
   arrival_airport_code   String
-  departure_airport Airport @relation("DepartureAirport", fields: [departure_airport_code], references: [airport_code])
-  arrival_airport Airport @relation("ArrivalAirport", fields: [arrival_airport_code], references: [airport_code])
+  departure_start        Int
+  departure_end          Int
+  duration_min           Int
+  duration_max           Int
+  currency_code          String?
+  amount                 Float
+  baggages                Baggage[]
+  cabin_class            String
+  departure_airport      Airport    @relation("DepartureAirport", fields: [departure_airport_code], references: [airport_code])
+  arrival_airport        Airport    @relation("ArrivalAirport", fields: [arrival_airport_code], references: [airport_code])
+  stops                  Stop[]
+  airlines               Airline[]
+  duration               Duration[]
+}
+
+model Stop {
+  stop_id               String  @id
+  no_of_stops           Int
+  count                 Int?
+  min_price_amount      Float?
+  min_price_currency    String?
+  cheapest_airline_name String?
+  cheapest_airline_logo String?
+  cheapest_airline_code String?
+  stopCount             Flight  @relation(fields: [stop_id], references: [flight_number])
+}
+
+model Airline {
+  airline_id    String  @id
+  name          String
+  logo          String
+  currency_code String?
+  amount        Float
+  airlineFlight Flight  @relation(fields: [airline_id], references: [flight_number])
+}
+
+model Duration {
+  duration_id    String @id
+  min            Int
+  max            Int
+  duration_type  String
+  durationFlight Flight @relation(fields: [duration_id], references: [flight_number])
+}
+
+model Baggage {
+  baggage_id   String  @id
+  type         String
+  included    Boolean
+  weight       Int?
+  paramName  String?
+  baggageFlight Flight @relation(fields: [baggage_id], references: [flight_number])
 }
