@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL") // --- only needed when i want to do migrations and generate that's why the error ---
 }
 
 //creating the tables/models i need for my app
