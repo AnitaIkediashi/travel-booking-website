@@ -130,13 +130,17 @@ model Depart {
 }
 
 model FlightOffers {
-  id              String     @id @default(uuid())
-  flight_offer_id String // FK
-  token           String
-  trip_type       String
-  flight_key      String
-  segments        Segments[]
-  FlightData      Data       @relation(fields: [flight_offer_id], references: [id])
+  id                String            @id @default(uuid())
+  flight_offer_id   String // FK
+  token             String
+  trip_type         String
+  flight_key        String
+  segments          Segments[]
+  price_breakdown   PriceBreakdown?
+  traveler_price    TravelerPrice?
+  seat_availability SeatAvailability?
+  branded_fareinfo  BrandedFareInfo?
+  FlightData        Data              @relation(fields: [flight_offer_id], references: [id])
 }
 
 model Segments {
@@ -154,21 +158,134 @@ model Segments {
 model DepartureAirport {
   id            Int      @id @default(autoincrement())
   depart_id     Int      @unique
+  depart_leg_id Int      @unique
   airport_code  String
   airport       Airport  @relation(fields: [airport_code], references: [airport_code])
   departSegment Segments @relation(fields: [depart_id], references: [id])
+  departLeg     Legs     @relation(fields: [depart_leg_id], references: [id])
 }
 
 model ArrivalAirport {
   id             Int      @id @default(autoincrement())
   arrival_id     Int      @unique
+  arrival_leg_id Int      @unique
   airport_code   String
   airport        Airport  @relation(fields: [airport_code], references: [airport_code])
   arrivalSegment Segments @relation(fields: [arrival_id], references: [id])
+  arrivalLeg     Legs     @relation(fields: [arrival_leg_id], references: [id])
 }
 
 model Legs {
-  id         Int      @id @default(autoincrement())
-  leg_id     Int      @unique
-  legSegment Segments @relation(fields: [leg_id], references: [id])
+  id                Int               @id @default(autoincrement())
+  leg_id            Int               @unique
+  departure_time    String
+  arrival_time      String
+  cabin_class       String
+  total_time        Int
+  departure_airport DepartureAirport?
+  arrival_airport   ArrivalAirport?
+  carriers          Carriers[]
+  flight_info       FlightInfo?
+  legSegment        Segments          @relation(fields: [leg_id], references: [id])
+}
+
+model Carriers {
+  id         Int    @id @default(autoincrement())
+  carrier_id Int    @unique
+  name       String
+  logo       String
+  code       String
+  legCarrier Legs   @relation(fields: [carrier_id], references: [id])
+}
+
+model FlightInfo {
+  id             Int          @id @default(autoincrement())
+  flight_info_id Int          @unique
+  flight_number  Int
+  carrier_info   CarrierInfo?
+  flightLeg      Legs         @relation(fields: [flight_info_id], references: [id])
+}
+
+model CarrierInfo {
+  id                Int        @id @default(autoincrement())
+  carrier_info_id   Int        @unique
+  operating_carrier String
+  carrierFlight     FlightInfo @relation(fields: [carrier_info_id], references: [id])
+}
+
+model PriceBreakdown {
+  id                 Int           @id @default(autoincrement())
+  price_breakdown_id String        @unique
+  traveler_price_id  Int           @unique
+  total              TotalPrice?
+  base_fare          BaseFare?
+  tax                Tax?
+  discount           Discount?
+  priceFlight        FlightOffers  @relation(fields: [price_breakdown_id], references: [id])
+  travelerPrice      TravelerPrice @relation(fields: [traveler_price_id], references: [id])
+}
+
+model TotalPrice {
+  id                  Int            @id @default(autoincrement())
+  total_price_id      Int            @unique
+  currency_code       String
+  amount              Int
+  totalPricePerFlight PriceBreakdown @relation(fields: [total_price_id], references: [id])
+}
+
+model BaseFare {
+  id                 Int            @id @default(autoincrement())
+  base_price_id      Int            @unique
+  currency_code      String
+  amount             Int
+  basePricePerFlight PriceBreakdown @relation(fields: [base_price_id], references: [id])
+}
+
+model Tax {
+  id            Int            @id @default(autoincrement())
+  tax_id        Int            @unique
+  currency_code String
+  amount        Int
+  taxPerFlight  PriceBreakdown @relation(fields: [tax_id], references: [id])
+}
+
+model Discount {
+  id                Int            @id @default(autoincrement())
+  discount_id       Int            @unique
+  currency_code     String
+  amount            Int
+  discountPerFlight PriceBreakdown @relation(fields: [discount_id], references: [id])
+}
+
+model TravelerPrice {
+  id                     Int             @id @default(autoincrement())
+  traveler_price_id      String          @unique
+  traveler_reference     String
+  traveler_type          String
+  price_breakdown        PriceBreakdown?
+  travelerPricePerFlight FlightOffers    @relation(fields: [traveler_price_id], references: [id])
+}
+
+model SeatAvailability {
+  id                        Int          @id @default(autoincrement())
+  seat_availability_id      String       @unique
+  seats_left                Int
+  seatAvailabilityPerFlight FlightOffers @relation(fields: [seat_availability_id], references: [id])
+}
+
+model BrandedFareInfo {
+  id                       Int          @id @default(autoincrement())
+  branded_fareinfo_id      String       @unique
+  cabin_class              String
+  features                 Features[]
+  brandedFareInfoPerFlight FlightOffers @relation(fields: [branded_fareinfo_id], references: [id])
+}
+
+model Features {
+  id                     Int             @id @default(autoincrement())
+  feature_id             Int             @unique
+  feature_name           String
+  category               String
+  availability           Boolean
+  featureBrandedFareInfo BrandedFareInfo @relation(fields: [feature_id], references: [id])
 }
