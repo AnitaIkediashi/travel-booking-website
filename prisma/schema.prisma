@@ -27,7 +27,7 @@ model Airport {
 }
 
 model Data {
-  id                       String                  @id
+  id                       String                  @id @default(uuid())
   departure_intervals      DepartureInterval[]
   duration_min             Int
   duration_max             Int
