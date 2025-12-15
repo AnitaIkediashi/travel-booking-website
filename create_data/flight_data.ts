@@ -1,6 +1,5 @@
 import { AirportProps } from "@/types/flight_type";
-import { fa, faker } from "@faker-js/faker";
-import { ca } from "date-fns/locale";
+import { faker } from "@faker-js/faker";
 
 function populateFakeAirports(): AirportProps[] {
   return Array.from({ length: faker.number.int({ min: 3, max: 5 }) }, () => {
