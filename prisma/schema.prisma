@@ -138,7 +138,7 @@ model FlightOffers {
   flight_key        String
   segments          Segments[]
   price_breakdown   PriceBreakdown?
-  traveler_price    TravelerPrice?
+  traveler_price    TravelerPrice[]
   seat_availability SeatAvailability?
   branded_fareinfo  BrandedFareInfo?
   FlightData        Data              @relation(fields: [flight_offer_id], references: [id])
@@ -260,7 +260,7 @@ model Discount {
 
 model TravelerPrice {
   id                     Int             @id @default(autoincrement())
-  traveler_price_id      String          @unique
+  traveler_price_id      String          
   traveler_reference     String
   traveler_type          String
   price_breakdown        PriceBreakdown?
