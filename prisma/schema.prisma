@@ -287,6 +287,6 @@ model Features {
   feature_id             Int             @unique
   feature_name           String
   category               String
-  availability           Boolean
+  availability           String
   featureBrandedFareInfo BrandedFareInfo @relation(fields: [feature_id], references: [id])
 }

@@ -339,7 +339,7 @@ function populateTravelerPrice() {
 function populateSeatAvailability() {
   return {
     seats_left: faker.number.int({ min: 1, max: 10 }),
-  }
+  };
 }
 
 function populateBrandedFareInfo() {
@@ -351,9 +351,29 @@ function populateBrandedFareInfo() {
   ];
   return {
     cabin_class: faker.helpers.arrayElement(cabinClassArray),
-  }
+  };
 }
 
 function populateFeatures() {
-  
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
+    const featureNames = faker.helpers.arrayElement([
+      "CABIN_BAGGAGE",
+      "PERSONAL_ITEM",
+    ]);
+    const categoryNames = faker.helpers.arrayElement([
+      "BAGGAGE",
+      "TICKET_TERMS",
+      "AIRPORT_SERVICES",
+    ]);
+    const availability = faker.helpers.arrayElement([
+      "INCLUDED",
+      "NOT_INCLUDED",
+      "OPTIONAL",
+    ]);
+    return {
+      availability: availability,
+      category: categoryNames,
+      feature_name: featureNames,
+    };
+  });
 }
