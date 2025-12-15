@@ -71,7 +71,7 @@ model MinPrice {
 
 model Stop {
   id          Int       @id @default(autoincrement())
-  stop_id     String
+  stop_id     String // FK
   no_of_stops Int
   count       Int?
   stopCount   Data      @relation(fields: [stop_id], references: [id])

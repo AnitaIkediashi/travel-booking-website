@@ -1,5 +1,5 @@
 import { AirportProps } from "@/types/flight_type";
-import { faker } from "@faker-js/faker";
+import { fa, faker } from "@faker-js/faker";
 
 function populateFakeAirports(): AirportProps[] {
   return Array.from({ length: faker.number.int({ min: 3, max: 5 }) }, () => {
@@ -105,3 +105,103 @@ function populateBaggage() {
   });
 }
 
+function populateStops() {
+    Array.from({ length: faker.number.int({ min: 0, max: 2 }) }, () => {
+      const stopNo = faker.number.int({ min: 0, max: 4 });
+      const count = faker.number.int({min: 5, max: 20})
+
+      return {
+        no_of_stops: stopNo,
+        count: count,
+      }
+    });
+}
+
+function populateAirlines() {
+    Array.from({ length: faker.number.int({ min: 5, max: 10 }) }, () => {
+      const airlineName = faker.airline.airline().name;
+      const airlineCode = faker.airline.airline().iataCode;
+      const airlineImageUrl = faker.image.url({ width: 100, height: 100 });
+
+      return {
+        name: airlineName,
+        iata_code: airlineCode,
+        logo: airlineImageUrl,
+      };
+    });
+}
+
+function populateDuration() {
+    Array.from({ length: faker.number.int({ min: 2, max: 4 }) }, () => {
+      const min = faker.number.int({ min: 60, max: 300 });
+      const max = min + faker.number.int({ min: 30, max: 180 });
+
+      return {
+        min: min,
+        max: max,
+      };
+    });
+}
+
+function populateArrivalData() {
+    return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      };
+      const currentTime = new Date();
+      const startTime = new Date(currentTime);
+      startTime.setHours(0, 0, 0, 0); 
+      const endTime = new Date(currentTime);
+      endTime.setHours(23, 59, 59, 999); 
+      const temp_start = faker.date.between({ from: startTime, to: endTime });
+
+      const start = temp_start.toLocaleTimeString("en-US", options);
+      const temp_end = faker.date.between({ from: temp_start, to: endTime });
+      const end = temp_end.toLocaleTimeString("en-US", options);
+
+      return {
+        start: start,
+        end: end,
+      };
+    });
+}
+
+function populateDepartData() {
+    return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      };
+      const currentTime = new Date();
+      const startTime = new Date(currentTime);
+      startTime.setHours(0, 0, 0, 0); 
+      const endTime = new Date(currentTime);
+      endTime.setHours(23, 59, 59, 999); 
+      const temp_start = faker.date.between({ from: startTime, to: endTime });
+
+      const start = temp_start.toLocaleTimeString("en-US", options);
+      const temp_end = faker.date.between({ from: temp_start, to: endTime });
+      const end = temp_end.toLocaleTimeString("en-US", options);
+
+      return {
+        start: start,
+        end: end,
+      };
+    });
+}
+
+function populateFlightOffers() {
+    return Array.from({length: faker.number.int({min:5, max: 10})}, () => {
+        const token = faker.string.nanoid({min: 40, max: 80})
+        const tripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
+        const flightKey = faker.string.uuid();
+        return {
+            token: token,
+            trip_type: tripType,
+            flight_key: flightKey,
+        }
+    })
+}
