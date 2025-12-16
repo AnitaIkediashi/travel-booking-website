@@ -1,5 +1,5 @@
+import { CarrierDataProps } from "@/types/flight_type";
 import { prisma } from "../lib/prisma";
-import { AirportProps } from "@/types/flight_type";
 import { faker } from "@faker-js/faker";
 
 function populateFakeAirports() {
@@ -85,7 +85,7 @@ function populateFakeBaggage() {
   ];
   const includedBaggage = [true, false];
 
-  return Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const count = faker.number.int({ min: 5, max: 30 });
     const baggageType =
       count <= 10
@@ -105,8 +105,8 @@ function populateFakeBaggage() {
 }
 
 function populateFakeStops() {
-  Array.from({ length: faker.number.int({ min: 0, max: 2 }) }, () => {
-    const stopNo = faker.number.int({ min: 0, max: 4 });
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
+    const stopNo = faker.number.int({ min: 1, max: 4 });
     const count = faker.number.int({ min: 5, max: 20 });
 
     return {
@@ -117,7 +117,7 @@ function populateFakeStops() {
 }
 
 function populateFakeAirlines() {
-  Array.from({ length: faker.number.int({ min: 5, max: 10 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => {
     const airlineName = faker.airline.airline().name;
     const airlineCode = faker.airline.airline().iataCode;
     const airlineImageUrl = faker.image.url({ width: 100, height: 100 });
@@ -131,7 +131,7 @@ function populateFakeAirlines() {
 }
 
 function populateFakeDuration() {
-  Array.from({ length: faker.number.int({ min: 2, max: 4 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const min = faker.number.int({ min: 60, max: 300 });
     const max = min + faker.number.int({ min: 30, max: 180 });
 
@@ -143,7 +143,7 @@ function populateFakeDuration() {
 }
 
 function populateFakeArrivalData() {
-  return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
@@ -168,7 +168,7 @@ function populateFakeArrivalData() {
 }
 
 function populateFakeDepartData() {
-  return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
@@ -193,7 +193,7 @@ function populateFakeDepartData() {
 }
 
 function populateFakeFlightOffers() {
-  return Array.from({ length: faker.number.int({ min: 5, max: 10 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 3, max: 6 }) }, () => {
     const token = faker.string.nanoid({ min: 40, max: 80 });
     const tripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
     const flightKey = faker.string.uuid();
@@ -209,7 +209,7 @@ function populateFakeSegments() {
   const today = new Date();
   const twoMonthsLater = new Date(today);
   twoMonthsLater.setMonth(today.getMonth() + 2);
-  return Array.from({ length: faker.number.int({ min: 2, max: 4 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const totalDuration = faker.number.int({ min: 60, max: 600 });
     const departureTime = faker.date.between({
       from: today,
@@ -233,7 +233,7 @@ function populateFakeLegsData() {
   const twoMonthsLater = new Date(today);
   twoMonthsLater.setMonth(today.getMonth() + 2);
   const data = populateFakeFlightData();
-  return Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const totalDuration = faker.number.int({ min: 60, max: 600 });
     const departureTime = faker.date.between({
       from: today,
@@ -244,7 +244,7 @@ function populateFakeLegsData() {
     );
     const departureTimeIso = departureTime.toISOString();
     const arrivalTimeIso = arrivalTime.toISOString();
-  
+
     return {
       total_time: totalDuration,
       departure_time: departureTimeIso,
@@ -255,7 +255,7 @@ function populateFakeLegsData() {
 }
 
 function populateFakeCarriersData() {
-  return Array.from({ length: faker.number.int({ min: 3, max: 6 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
     const carrierName = faker.airline.airline().name;
     const carrierCode = faker.airline.airline().iataCode;
     const carrierLogo = faker.image.url({ width: 100, height: 100 });
@@ -267,7 +267,7 @@ function populateFakeCarriersData() {
   });
 }
 
-function populateFakeFlightInfo() {
+function populateFakeFlightNumber() {
   return {
     flight_number: faker.airline.flightNumber({
       addLeadingZeros: true,
@@ -323,7 +323,7 @@ function populateFakeTravelerPrice() {
       "infant",
     ]);
     return {
-      traveler_reference: travelerReference,
+      traveler_reference: travelerReference.toString(),
       traveler_type: travelerType.toUpperCase(),
     };
   });
@@ -332,13 +332,6 @@ function populateFakeTravelerPrice() {
 function populateFakeSeatAvailability() {
   return {
     seats_left: faker.number.int({ min: 1, max: 10 }),
-  };
-}
-
-function populateFakeBrandedFareInfo() {
-  const data = populateFakeFlightData();
-  return {
-    cabin_class: data.cabin_class
   };
 }
 
@@ -365,3 +358,340 @@ function populateFakeFeatures() {
     };
   });
 }
+
+async function clearDatabase() {
+  console.info("🗑️ Clearing existing database data...");
+  //note: delete from child first to parent last
+
+  // Use a transaction to ensure all deletes happen quickly and atomically
+  await prisma.$transaction([
+    // 1. Delete deeply nested models first (Keep the other fixes from prior answers here!)
+    prisma.carrierInfo.deleteMany(),
+    prisma.flightInfo.deleteMany(),
+    prisma.features.deleteMany(), // Ensure this is before BrandedFareInfo
+    prisma.brandedFareInfo.deleteMany(),
+    prisma.carriers.deleteMany(),
+    prisma.arrival.deleteMany(),
+    prisma.depart.deleteMany(),
+    prisma.flightTimes.deleteMany(), // 2. Delete the price breakdown component models
+
+    prisma.totalPrice.deleteMany(),
+    prisma.baseFare.deleteMany(),
+    prisma.tax.deleteMany(),
+    prisma.discount.deleteMany(), // 3. Delete intermediate models
+
+    prisma.priceBreakdown.deleteMany(),
+    prisma.travelerPrice.deleteMany(),
+    prisma.legs.deleteMany(),
+    prisma.segment.deleteMany(),
+    prisma.seatAvailability.deleteMany(), // <-- Moved up here (Child before parent FlightOffers)
+    prisma.flightOffers.deleteMany(), // <-- Parent // 4. Delete top-level helper models
+
+    prisma.departureInterval.deleteMany(),
+    prisma.shortLayoverConnection.deleteMany(),
+    prisma.minPrice.deleteMany(),
+    prisma.stop.deleteMany(),
+    prisma.airlines.deleteMany(),
+    prisma.duration.deleteMany(),
+    prisma.baggage.deleteMany(), // 5. Delete the main parent model
+
+    prisma.data.deleteMany(), // 6. Delete static look-up data (Airports)
+
+    prisma.airport.deleteMany(),
+  ]);
+
+  console.info("✅ Database data cleared successfully.");
+}
+
+async function main() {
+  // 💡 NEW STEP: Clear the database before creating new data
+  await clearDatabase();
+  console.info("starting...");
+
+  // 1. create Airports
+  const createdAirports = [];
+  for (const airport of fakeAirports) {
+    const created = await prisma.airport.create({
+      data: {
+        airport_code: airport.code,
+        airport_name: airport.name,
+        image_url: airport.imageUrl,
+        city: airport.city,
+        country: airport.country,
+      },
+    });
+    createdAirports.push(created);
+  }
+  if (createdAirports.length < 2) {
+    throw new Error("Not enough airports created for a valid flight path.");
+  }
+
+  // 2. create the flight data and all its nested relations
+  const flightInputData = populateFakeFlightData();
+
+  // using destructuring method the unpack and assign to the corresponding values - depAirport and arrAirport
+
+  const [depAirport, arrAirport] = faker.helpers.arrayElements(
+    createdAirports,
+    2
+  );
+
+  const fakeFlightNumber = populateFakeFlightNumber();
+
+  //using create method cos it works on relational fields
+  const createdData = await prisma.data.create({
+    data: {
+      duration_min: flightInputData.duration_min,
+      duration_max: flightInputData.duration_max,
+      cabin_class: flightInputData.cabin_class,
+
+      //nested relations
+      flight_offers: {
+        create: populateFakeFlightOffers().map((offer) => ({
+          token: offer.token,
+          trip_type: offer.trip_type,
+          flight_key: offer.flight_key,
+          price_breakdown: {
+            create: {
+              total: {
+                create: populateFakeTotalPrice(),
+              },
+              base_fare: {
+                create: populateFakeBaseFarePrice(),
+              },
+              tax: {
+                create: populateFakeTaxPriceBreakdown(),
+              },
+              discount: {
+                create: populateFakeDiscountPrice(),
+              },
+            },
+          },
+          seat_availability: {
+            create: populateFakeSeatAvailability(),
+          },
+          branded_fareinfo: {
+            create: {
+              cabin_class: flightInputData.cabin_class,
+              features: {
+                create: populateFakeFeatures().map((feature) => ({
+                  feature_name: feature.feature_name,
+                  category: feature.category,
+                  availability: feature.availability,
+                })),
+              },
+            },
+          },
+          segments: {
+            create: populateFakeSegments().map((segment) => ({
+              departure_airports: {
+                connect: {
+                  airport_code: depAirport.airport_code,
+                },
+              },
+              arrival_airports: {
+                connect: {
+                  airport_code: arrAirport.airport_code,
+                },
+              },
+              departure_time: segment.departure_time,
+              arrival_time: segment.arrival_time,
+              total_time: segment.total_time,
+              legs: {
+                create: populateFakeLegsData().map((leg) => ({
+                  departure_airport: {
+                    connect: {
+                      airport_code: depAirport.airport_code,
+                    },
+                  },
+                  arrival_airport: {
+                    connect: {
+                      airport_code: arrAirport.airport_code,
+                    },
+                  },
+                  departure_time: leg.departure_time,
+                  arrival_time: leg.arrival_time,
+                  cabin_class: leg.cabin_class,
+                  total_time: leg.total_time,
+                  flight_info: {
+                    create: {
+                      flight_number: fakeFlightNumber.flight_number,
+                      carrier_info: {
+                        create: populateFakeCarrierInfoData(),
+                      },
+                    },
+                  },
+                })),
+              },
+            })),
+          },
+          traveler_price: {
+            create: populateFakeTravelerPrice().map((traveler) => ({
+              traveler_reference: traveler.traveler_reference,
+              traveler_type: traveler.traveler_type,
+              price_breakdown: {
+                create: {
+                  total: {
+                    create: populateFakeTotalPrice(),
+                  },
+                  base_fare: {
+                    create: populateFakeBaseFarePrice(),
+                  },
+                  tax: {
+                    create: populateFakeTaxPriceBreakdown(),
+                  },
+                  discount: {
+                    create: populateFakeDiscountPrice(),
+                  },
+                },
+              },
+            })),
+          },
+        })),
+      },
+    },
+  });
+
+  // loop other one to many models
+  const flightOffers = await prisma.flightOffers.findMany({
+    where: {
+      flight_offer_id: createdData.id,
+    },
+    include: { segments: { include: { legs: true } } },
+  });
+
+  const allLegs = flightOffers.flatMap((offer) =>
+    offer.segments.flatMap((segment) => segment.legs)
+  );
+
+  const allLegsIds = allLegs.map((leg) => leg.id);
+
+  if (allLegsIds.length === 0) {
+    throw new Error("No legs were created for linking carriers.");
+  }
+  const carriersToCreate: CarrierDataProps[] = [];
+  for (const legId of allLegsIds) {
+    // 1. Determine the dynamic number and data for carriers for *this specific leg*
+    const fakeCarrierData = populateFakeCarriersData();
+
+    // 2. Loop through the generated data for this leg and prepare it for createMany
+    fakeCarrierData.forEach((carrier) => {
+      carriersToCreate.push({
+        // This is the Foreign Key linking back to the Legs table
+        carrier_id: legId,
+        name: carrier.name,
+        logo: carrier.logo,
+        code: carrier.code,
+      });
+    });
+  }
+
+  // 3. Execute the efficient bulk insert
+  await prisma.carriers.createMany({
+    data: carriersToCreate,
+  });
+
+  const flightTimesData = Array.from(
+    { length: faker.number.int({ min: 1, max: 3 }) },
+    () => ({
+      flight_times_id: createdData.id, // Link to the parent Data
+    })
+  );
+
+  await prisma.shortLayoverConnection.create({
+    data: {
+      ...populateFakeShortLayover(),
+      layover_id: createdData.id,
+    },
+  });
+
+  await prisma.departureInterval.createMany({
+    data: populateFakeDepartureIntervals().map((item) => ({
+      ...item,
+      interval_id: createdData.id,
+    })),
+  });
+
+  await prisma.baggage.createMany({
+    data: populateFakeBaggage().map((item) => ({
+      ...item,
+      baggage_id: createdData.id,
+    })),
+  });
+
+  await prisma.duration.createMany({
+    data: populateFakeDuration().map((item) => ({
+      ...item,
+      duration_id: createdData.id,
+    })),
+  });
+
+  const stopsData = populateFakeStops().map((item) => ({
+    ...item,
+    stop_id: createdData.id,
+  }));
+  await prisma.stop.createMany({
+    data: stopsData,
+  });
+
+  // Get the first Stop record to connect to MinPrice
+  const firstStop = await prisma.stop.findFirst({
+    where: { stop_id: createdData.id },
+  });
+
+  // 4. Create Airlines and capture an Airline ID
+  const airlinesData = populateFakeAirlines().map((item) => ({
+    ...item,
+    airline_id: createdData.id,
+  }));
+  await prisma.airlines.createMany({
+    data: airlinesData,
+  });
+  // Get the first Airlines record to connect to MinPrice
+  const firstAirline = await prisma.airlines.findFirst({
+    where: { airline_id: createdData.id },
+  });
+
+  if (firstStop && firstAirline) {
+    await prisma.minPrice.create({
+      data: {
+        ...populateFakeMinPrice(),
+        min_price_data_id: createdData.id, // Linked to Data
+        min_price_airline_id: firstAirline.id, // Linked to Airlines
+        min_price_stop_id: firstStop.id, // Linked to Stop
+      },
+    });
+  }
+
+  for (const item of flightTimesData) {
+    const createdFlightTime = await prisma.flightTimes.create({
+      data: item,
+    });
+
+    // Now we use the generated FlightTimes ID to create Arrival/Depart records
+    await prisma.arrival.createMany({
+      data: populateFakeArrivalData().map((arrival) => ({
+        ...arrival,
+        arrival_id: createdFlightTime.id, // Injecting required FK
+      })),
+    });
+
+    await prisma.depart.createMany({
+      data: populateFakeDepartData().map((depart) => ({
+        ...depart,
+        depart_id: createdFlightTime.id, // Injecting required FK
+      })),
+    });
+  }
+}
+
+main()
+  .then(async () => {
+    console.info("creation successfully");
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error("An error occurred during creation: ", e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
