@@ -22,8 +22,10 @@ model Airport {
   image_url    String? // optional field
   city         String
   country      String
-  departures   DepartureAirport[]
-  arrivals     ArrivalAirport[]
+  departure_segment Segment[] @relation("DepartureSegment") // using a unique name for relation because a single Airport is related to Segment twice same goes for Legs model
+  arrival_segment Segment[] @relation("ArrivalSegment")
+  departure_leg Legs[] @relation("DepartureLegs")
+  arrival_legs Legs[] @relation("ArrivalLegs")
 }
 
 model Data {
@@ -136,7 +138,7 @@ model FlightOffers {
   token             String
   trip_type         String
   flight_key        String
-  segments          Segments[]
+  segments          Segment[]
   price_breakdown   PriceBreakdown?
   traveler_price    TravelerPrice[]
   seat_availability SeatAvailability?
@@ -144,11 +146,13 @@ model FlightOffers {
   FlightData        Data              @relation(fields: [flight_offer_id], references: [id])
 }
 
-model Segments {
+model Segment {
   id                 Int               @id @default(autoincrement())
   segment_id         String // FK
-  departure_airports DepartureAirport?
-  arrival_airports   ArrivalAirport?
+  departure_airport_code String //FK
+  arrival_airport_code   String //FK
+  departure_airports Airport  @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code])
+  arrival_airports   Airport  @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
   departure_time     String
   arrival_time       String
   total_time         Int
@@ -156,38 +160,20 @@ model Segments {
   segmentData        FlightOffers      @relation(fields: [segment_id], references: [id])
 }
 
-model DepartureAirport {
-  id            Int      @id @default(autoincrement())
-  depart_id     Int      @unique
-  depart_leg_id Int      @unique
-  airport_code  String
-  airport       Airport  @relation(fields: [airport_code], references: [airport_code])
-  departSegment Segments @relation(fields: [depart_id], references: [id])
-  departLeg     Legs     @relation(fields: [depart_leg_id], references: [id])
-}
-
-model ArrivalAirport {
-  id             Int      @id @default(autoincrement())
-  arrival_id     Int      @unique
-  arrival_leg_id Int      @unique
-  airport_code   String
-  airport        Airport  @relation(fields: [airport_code], references: [airport_code])
-  arrivalSegment Segments @relation(fields: [arrival_id], references: [id])
-  arrivalLeg     Legs     @relation(fields: [arrival_leg_id], references: [id])
-}
-
 model Legs {
   id                Int               @id @default(autoincrement())
   leg_id            Int               @unique
+  departure_airport_code String //FK
+  arrival_airport_code   String //FK
   departure_time    String
   arrival_time      String
   cabin_class       String
   total_time        Int
-  departure_airport DepartureAirport?
-  arrival_airport   ArrivalAirport?
+  departure_airport Airport  @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
+  arrival_airport   Airport  @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
   carriers          Carriers[]
   flight_info       FlightInfo?
-  legSegment        Segments          @relation(fields: [leg_id], references: [id])
+  legSegment        Segment          @relation(fields: [leg_id], references: [id])
 }
 
 model Carriers {

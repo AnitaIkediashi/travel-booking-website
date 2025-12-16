@@ -1,7 +1,8 @@
+import { prisma } from "../lib/prisma";
 import { AirportProps } from "@/types/flight_type";
 import { faker } from "@faker-js/faker";
 
-function populateFakeAirports(): AirportProps[] {
+function populateFakeAirports() {
   return Array.from({ length: faker.number.int({ min: 3, max: 5 }) }, () => {
     const airportName = faker.airline.airport().name;
     const airportCode = faker.airline.airport().iataCode;
@@ -18,28 +19,26 @@ function populateFakeAirports(): AirportProps[] {
   });
 }
 
-const airportsArray: AirportProps[] = populateFakeAirports();
+const fakeAirports = populateFakeAirports();
 
-function populateFlightData() {
-  return Array.from({ length: faker.number.int({ min: 5, max: 10 }) }, () => {
-    const cabinClassArray = [
-      "Economy",
-      "Premium Economy",
-      "Business",
-      "First Class",
-    ];
-    const durationMin = faker.number.int({ min: 60, max: 300 });
-    const durationMax = durationMin + faker.number.int({ min: 30, max: 180 });
-    const cabinClass = faker.helpers.arrayElement(cabinClassArray);
-    return {
-      duration_min: durationMin,
-      duration_max: durationMax,
-      cabin_class: cabinClass,
-    };
-  });
+function populateFakeFlightData() {
+  const cabinClassArray = [
+    "Economy",
+    "Premium Economy",
+    "Business",
+    "First Class",
+  ];
+  const durationMin = faker.number.int({ min: 60, max: 300 });
+  const durationMax = durationMin + faker.number.int({ min: 30, max: 180 });
+  const cabinClass = faker.helpers.arrayElement(cabinClassArray);
+  return {
+    duration_min: durationMin,
+    duration_max: durationMax,
+    cabin_class: cabinClass,
+  };
 }
 
-function populateDepartureIntervals() {
+function populateFakeDepartureIntervals() {
   return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
@@ -64,20 +63,20 @@ function populateDepartureIntervals() {
   });
 }
 
-function populateShortLayover() {
+function populateFakeShortLayover() {
   return {
     count: faker.number.int({ min: 1, max: 3 }),
   };
 }
 
-function populateMinPrice() {
+function populateFakeMinPrice() {
   return {
     currency_code: "USD",
     amount: faker.number.int({ min: 100, max: 3000 }),
   };
 }
 
-function populateBaggage() {
+function populateFakeBaggage() {
   const baggageTypeArray = ["cabin", "checked", "personal"];
   const paramNamesArray = [
     "includedBaggage",
@@ -105,7 +104,7 @@ function populateBaggage() {
   });
 }
 
-function populateStops() {
+function populateFakeStops() {
   Array.from({ length: faker.number.int({ min: 0, max: 2 }) }, () => {
     const stopNo = faker.number.int({ min: 0, max: 4 });
     const count = faker.number.int({ min: 5, max: 20 });
@@ -117,7 +116,7 @@ function populateStops() {
   });
 }
 
-function populateAirlines() {
+function populateFakeAirlines() {
   Array.from({ length: faker.number.int({ min: 5, max: 10 }) }, () => {
     const airlineName = faker.airline.airline().name;
     const airlineCode = faker.airline.airline().iataCode;
@@ -131,7 +130,7 @@ function populateAirlines() {
   });
 }
 
-function populateDuration() {
+function populateFakeDuration() {
   Array.from({ length: faker.number.int({ min: 2, max: 4 }) }, () => {
     const min = faker.number.int({ min: 60, max: 300 });
     const max = min + faker.number.int({ min: 30, max: 180 });
@@ -143,7 +142,7 @@ function populateDuration() {
   });
 }
 
-function populateArrivalData() {
+function populateFakeArrivalData() {
   return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
@@ -168,7 +167,7 @@ function populateArrivalData() {
   });
 }
 
-function populateDepartData() {
+function populateFakeDepartData() {
   return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
@@ -193,7 +192,7 @@ function populateDepartData() {
   });
 }
 
-function populateFlightOffers() {
+function populateFakeFlightOffers() {
   return Array.from({ length: faker.number.int({ min: 5, max: 10 }) }, () => {
     const token = faker.string.nanoid({ min: 40, max: 80 });
     const tripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
@@ -206,7 +205,7 @@ function populateFlightOffers() {
   });
 }
 
-function populateSegments() {
+function populateFakeSegments() {
   const today = new Date();
   const twoMonthsLater = new Date(today);
   twoMonthsLater.setMonth(today.getMonth() + 2);
@@ -229,16 +228,11 @@ function populateSegments() {
   });
 }
 
-function populateLegsData() {
+function populateFakeLegsData() {
   const today = new Date();
   const twoMonthsLater = new Date(today);
   twoMonthsLater.setMonth(today.getMonth() + 2);
-  const cabinClassArray = [
-    "Economy",
-    "Premium Economy",
-    "Business",
-    "First Class",
-  ];
+  const data = populateFakeFlightData();
   return Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => {
     const totalDuration = faker.number.int({ min: 60, max: 600 });
     const departureTime = faker.date.between({
@@ -250,17 +244,17 @@ function populateLegsData() {
     );
     const departureTimeIso = departureTime.toISOString();
     const arrivalTimeIso = arrivalTime.toISOString();
-    const cabinClass = faker.helpers.arrayElement(cabinClassArray);
+  
     return {
       total_time: totalDuration,
       departure_time: departureTimeIso,
       arrival_time: arrivalTimeIso,
-      cabin_class: cabinClass,
+      cabin_class: data.cabin_class,
     };
   });
 }
 
-function populateCarriersData() {
+function populateFakeCarriersData() {
   return Array.from({ length: faker.number.int({ min: 3, max: 6 }) }, () => {
     const carrierName = faker.airline.airline().name;
     const carrierCode = faker.airline.airline().iataCode;
@@ -273,7 +267,7 @@ function populateCarriersData() {
   });
 }
 
-function populateFlightInfo() {
+function populateFakeFlightInfo() {
   return {
     flight_number: faker.airline.flightNumber({
       addLeadingZeros: true,
@@ -282,16 +276,16 @@ function populateFlightInfo() {
   };
 }
 
-function populateCarrierInfoData() {
+function populateFakeCarrierInfoData() {
   return {
     operating_carrier: faker.airline.airline().name,
   };
 }
 
-function populateTotalPrice() {
-  const baseAmount = populateBaseFarePrice().amount;
-  const taxAmount = populateTaxPriceBreakdown().amount;
-  const discountAmount = populateDiscountPrice().amount;
+function populateFakeTotalPrice() {
+  const baseAmount = populateFakeBaseFarePrice().amount;
+  const taxAmount = populateFakeTaxPriceBreakdown().amount;
+  const discountAmount = populateFakeDiscountPrice().amount;
   const totalAmount = baseAmount + taxAmount - discountAmount;
   return {
     currency_code: "USD",
@@ -299,28 +293,28 @@ function populateTotalPrice() {
   };
 }
 
-function populateBaseFarePrice() {
+function populateFakeBaseFarePrice() {
   return {
     currency_code: "USD",
     amount: faker.number.int({ min: 100, max: 2000 }),
   };
 }
 
-function populateTaxPriceBreakdown() {
+function populateFakeTaxPriceBreakdown() {
   return {
     currency_code: "USD",
     amount: faker.number.int({ min: 100, max: 500 }),
   };
 }
 
-function populateDiscountPrice() {
+function populateFakeDiscountPrice() {
   return {
     currency_code: "USD",
     amount: faker.number.int({ min: 0, max: 100 }),
   };
 }
 
-function populateTravelerPrice() {
+function populateFakeTravelerPrice() {
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const travelerReference = faker.number.int({ min: 1, max: 10 });
     const travelerType = faker.helpers.arrayElement([
@@ -335,25 +329,20 @@ function populateTravelerPrice() {
   });
 }
 
-function populateSeatAvailability() {
+function populateFakeSeatAvailability() {
   return {
     seats_left: faker.number.int({ min: 1, max: 10 }),
   };
 }
 
-function populateBrandedFareInfo() {
-  const cabinClassArray = [
-    "Economy",
-    "Premium Economy",
-    "Business",
-    "First Class",
-  ];
+function populateFakeBrandedFareInfo() {
+  const data = populateFakeFlightData();
   return {
-    cabin_class: faker.helpers.arrayElement(cabinClassArray),
+    cabin_class: data.cabin_class
   };
 }
 
-function populateFeatures() {
+function populateFakeFeatures() {
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const featureNames = faker.helpers.arrayElement([
       "CABIN_BAGGAGE",
