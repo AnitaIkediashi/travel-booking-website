@@ -255,7 +255,7 @@ function populateFakeLegsData() {
 }
 
 function populateFakeCarriersData() {
-  return Array.from({ length: faker.number.int({ min: 2, max: 3 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const carrierName = faker.airline.airline().name;
     const carrierCode = faker.airline.airline().iataCode;
     const carrierLogo = faker.image.url({ width: 100, height: 100 });
@@ -316,7 +316,7 @@ function populateFakeDiscountPrice() {
 
 function populateFakeTravelerPrice() {
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-    const travelerReference = faker.number.int({ min: 1, max: 10 });
+    const travelerReference = faker.number.int({ min: 1, max: 5 });
     const travelerType = faker.helpers.arrayElement([
       "adult",
       "child",
@@ -404,11 +404,11 @@ async function clearDatabase() {
 }
 
 async function main() {
-  // 💡 NEW STEP: Clear the database before creating new data
+  // 💡 Step 0: Clear the database before creating new data
   await clearDatabase();
-  console.info("starting...");
+  console.info("Starting seed process...");
 
-  // 1. create Airports
+  // 1. Create Airports
   const createdAirports = [];
   for (const airport of fakeAirports) {
     const created = await prisma.airport.create({
@@ -422,51 +422,30 @@ async function main() {
     });
     createdAirports.push(created);
   }
+
   if (createdAirports.length < 2) {
     throw new Error("Not enough airports created for a valid flight path.");
   }
 
-  // 2. create the flight data and all its nested relations
+  // 2. Prepare Flight Data
   const flightInputData = populateFakeFlightData();
-
-  // using destructuring method the unpack and assign to the corresponding values - depAirport and arrAirport
-
   const [depAirport, arrAirport] = faker.helpers.arrayElements(
     createdAirports,
     2
   );
-
   const fakeFlightNumber = populateFakeFlightNumber();
 
-  //using create method cos it works on relational fields
+  // 3. Create Main Data Record with non-multiplying nested relations
   const createdData = await prisma.data.create({
     data: {
       duration_min: flightInputData.duration_min,
       duration_max: flightInputData.duration_max,
       cabin_class: flightInputData.cabin_class,
-
-      //nested relations
       flight_offers: {
         create: populateFakeFlightOffers().map((offer) => ({
           token: offer.token,
           trip_type: offer.trip_type,
           flight_key: offer.flight_key,
-          price_breakdown: {
-            create: {
-              total: {
-                create: populateFakeTotalPrice(),
-              },
-              base_fare: {
-                create: populateFakeBaseFarePrice(),
-              },
-              tax: {
-                create: populateFakeTaxPriceBreakdown(),
-              },
-              discount: {
-                create: populateFakeDiscountPrice(),
-              },
-            },
-          },
           seat_availability: {
             create: populateFakeSeatAvailability(),
           },
@@ -485,14 +464,10 @@ async function main() {
           segments: {
             create: populateFakeSegments().map((segment) => ({
               departure_airports: {
-                connect: {
-                  airport_code: depAirport.airport_code,
-                },
+                connect: { airport_code: depAirport.airport_code },
               },
               arrival_airports: {
-                connect: {
-                  airport_code: arrAirport.airport_code,
-                },
+                connect: { airport_code: arrAirport.airport_code },
               },
               departure_time: segment.departure_time,
               arrival_time: segment.arrival_time,
@@ -500,27 +475,15 @@ async function main() {
               legs: {
                 create: populateFakeLegsData().map((leg) => ({
                   departure_airport: {
-                    connect: {
-                      airport_code: depAirport.airport_code,
-                    },
+                    connect: { airport_code: depAirport.airport_code },
                   },
                   arrival_airport: {
-                    connect: {
-                      airport_code: arrAirport.airport_code,
-                    },
+                    connect: { airport_code: arrAirport.airport_code },
                   },
                   departure_time: leg.departure_time,
                   arrival_time: leg.arrival_time,
                   cabin_class: leg.cabin_class,
                   total_time: leg.total_time,
-                  flight_info: {
-                    create: {
-                      flight_number: fakeFlightNumber.flight_number,
-                      carrier_info: {
-                        create: populateFakeCarrierInfoData(),
-                      },
-                    },
-                  },
                 })),
               },
             })),
@@ -529,80 +492,107 @@ async function main() {
             create: populateFakeTravelerPrice().map((traveler) => ({
               traveler_reference: traveler.traveler_reference,
               traveler_type: traveler.traveler_type,
-              price_breakdown: {
-                create: {
-                  total: {
-                    create: populateFakeTotalPrice(),
-                  },
-                  base_fare: {
-                    create: populateFakeBaseFarePrice(),
-                  },
-                  tax: {
-                    create: populateFakeTaxPriceBreakdown(),
-                  },
-                  discount: {
-                    create: populateFakeDiscountPrice(),
-                  },
-                },
-              },
             })),
           },
         })),
       },
     },
-  });
-
-  // loop other one to many models
-  const flightOffers = await prisma.flightOffers.findMany({
-    where: {
-      flight_offer_id: createdData.id,
+    include: {
+      flight_offers: {
+        include: {
+          segments: { include: { legs: true } },
+          traveler_price: true,
+        },
+      },
     },
-    include: { segments: { include: { legs: true } } },
   });
 
-  const allLegs = flightOffers.flatMap((offer) =>
+  // --- 4. POST-CREATION: UN-NESTED DATA LINKING ---
+
+  // A. Link Carriers and FlightInfo/CarrierInfo to Legs
+  const allLegs = createdData.flight_offers.flatMap((offer) =>
     offer.segments.flatMap((segment) => segment.legs)
   );
 
-  const allLegsIds = allLegs.map((leg) => leg.id);
-
-  if (allLegsIds.length === 0) {
-    throw new Error("No legs were created for linking carriers.");
-  }
   const carriersToCreate: CarrierDataProps[] = [];
-  for (const legId of allLegsIds) {
-    // 1. Determine the dynamic number and data for carriers for *this specific leg*
-    const fakeCarrierData = populateFakeCarriersData();
+  const carrierInfoToCreate = [];
 
-    // 2. Loop through the generated data for this leg and prepare it for createMany
+  for (const leg of allLegs) {
+    // Handle Many-to-One: Carriers
+    const fakeCarrierData = populateFakeCarriersData();
     fakeCarrierData.forEach((carrier) => {
       carriersToCreate.push({
-        // This is the Foreign Key linking back to the Legs table
-        carrier_id: legId,
+        carrier_id: leg.id,
         name: carrier.name,
         logo: carrier.logo,
         code: carrier.code,
       });
     });
+
+    // Handle One-to-One: FlightInfo
+    const newFlightInfo = await prisma.flightInfo.create({
+      data: {
+        flight_info_id: leg.id,
+        flight_number: fakeFlightNumber.flight_number,
+      },
+    });
+
+    // Handle One-to-One: CarrierInfo (Linked to FlightInfo)
+    const carrierData = populateFakeCarrierInfoData();
+    carrierInfoToCreate.push({
+      operating_carrier: carrierData.operating_carrier,
+      carrier_info_id: newFlightInfo.id,
+    });
   }
 
-  // 3. Execute the efficient bulk insert
-  await prisma.carriers.createMany({
-    data: carriersToCreate,
-  });
+  // B. Handle PriceBreakdown for FlightOffers
+  for (const offer of createdData.flight_offers) {
+    const pb = await prisma.priceBreakdown.create({
+      data: { price_breakdown_id: offer.id },
+    });
 
-  const flightTimesData = Array.from(
-    { length: faker.number.int({ min: 1, max: 3 }) },
-    () => ({
-      flight_times_id: createdData.id, // Link to the parent Data
-    })
-  );
+    await prisma.$transaction([
+      prisma.totalPrice.create({
+        data: { ...populateFakeTotalPrice(), total_price_id: pb.id },
+      }),
+      prisma.baseFare.create({
+        data: { ...populateFakeBaseFarePrice(), base_price_id: pb.id },
+      }),
+      prisma.tax.create({
+        data: { ...populateFakeTaxPriceBreakdown(), tax_id: pb.id },
+      }),
+    ]);
 
+    // C. Handle PriceBreakdown for TravelerPrices within this offer
+    for (const tp of offer.traveler_price) {
+      const tpPb = await prisma.priceBreakdown.create({
+        data: { traveler_price_id: tp.id },
+      });
+
+      await prisma.$transaction([
+        prisma.totalPrice.create({
+          data: { ...populateFakeTotalPrice(), total_price_id: tpPb.id },
+        }),
+        prisma.baseFare.create({
+          data: { ...populateFakeBaseFarePrice(), base_price_id: tpPb.id },
+        }),
+        prisma.tax.create({
+          data: { ...populateFakeTaxPriceBreakdown(), tax_id: tpPb.id },
+        }),
+        prisma.discount.create({
+          data: { ...populateFakeDiscountPrice(), discount_id: tpPb.id },
+        }),
+      ]);
+    }
+  }
+
+  // --- 5. EXECUTE BULK INSERTS ---
+  await prisma.carriers.createMany({ data: carriersToCreate });
+  await prisma.carrierInfo.createMany({ data: carrierInfoToCreate });
+
+  // --- 6. ADD AUXILIARY DATA (Baggage, Stops, Airlines, FlightTimes) ---
   await prisma.shortLayoverConnection.create({
-    data: {
-      ...populateFakeShortLayover(),
-      layover_id: createdData.id,
-    },
+    data: { ...populateFakeShortLayover(), layover_id: createdData.id },
   });
 
   await prisma.departureInterval.createMany({
@@ -626,28 +616,24 @@ async function main() {
     })),
   });
 
-  const stopsData = populateFakeStops().map((item) => ({
-    ...item,
-    stop_id: createdData.id,
-  }));
   await prisma.stop.createMany({
-    data: stopsData,
+    data: populateFakeStops().map((item) => ({
+      ...item,
+      stop_id: createdData.id,
+    })),
   });
 
-  // Get the first Stop record to connect to MinPrice
   const firstStop = await prisma.stop.findFirst({
     where: { stop_id: createdData.id },
   });
 
-  // 4. Create Airlines and capture an Airline ID
-  const airlinesData = populateFakeAirlines().map((item) => ({
-    ...item,
-    airline_id: createdData.id,
-  }));
   await prisma.airlines.createMany({
-    data: airlinesData,
+    data: populateFakeAirlines().map((item) => ({
+      ...item,
+      airline_id: createdData.id,
+    })),
   });
-  // Get the first Airlines record to connect to MinPrice
+
   const firstAirline = await prisma.airlines.findFirst({
     where: { airline_id: createdData.id },
   });
@@ -656,33 +642,36 @@ async function main() {
     await prisma.minPrice.create({
       data: {
         ...populateFakeMinPrice(),
-        min_price_data_id: createdData.id, // Linked to Data
-        min_price_airline_id: firstAirline.id, // Linked to Airlines
-        min_price_stop_id: firstStop.id, // Linked to Stop
+        min_price_data_id: createdData.id,
+        min_price_airline_id: firstAirline.id,
+        min_price_stop_id: firstStop.id,
       },
     });
   }
 
-  for (const item of flightTimesData) {
+  // 7. Create FlightTimes and their children
+  const flightTimesCount = faker.number.int({ min: 1, max: 3 });
+  for (let i = 0; i < flightTimesCount; i++) {
     const createdFlightTime = await prisma.flightTimes.create({
-      data: item,
+      data: { flight_times_id: createdData.id },
     });
 
-    // Now we use the generated FlightTimes ID to create Arrival/Depart records
     await prisma.arrival.createMany({
       data: populateFakeArrivalData().map((arrival) => ({
         ...arrival,
-        arrival_id: createdFlightTime.id, // Injecting required FK
+        arrival_id: createdFlightTime.id,
       })),
     });
 
     await prisma.depart.createMany({
       data: populateFakeDepartData().map((depart) => ({
         ...depart,
-        depart_id: createdFlightTime.id, // Injecting required FK
+        depart_id: createdFlightTime.id,
       })),
     });
   }
+
+  console.info("✅ Database seeding completed successfully.");
 }
 
 main()
