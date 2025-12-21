@@ -205,51 +205,57 @@ function populateFakeFlightOffers() {
   });
 }
 
-function populateFakeSegments() {
-  const today = new Date();
-  const twoMonthsLater = new Date(today);
-  twoMonthsLater.setMonth(today.getMonth() + 2);
+function populateFakeSegments(windowStart: Date, windowEnd: Date) {
+ 
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const totalDuration = faker.number.int({ min: 60, max: 600 });
+    // Pick a departure within the 2-month window
     const departureTime = faker.date.between({
-      from: today,
-      to: twoMonthsLater,
+      from: windowStart,
+      to: windowEnd,
     });
+
+    // Arrival is strictly Departure + Duration
     const arrivalTime = new Date(
       departureTime.getTime() + totalDuration * 60 * 1000
     );
-    const departureTimeIso = departureTime.toISOString();
-    const arrivalTimeIso = arrivalTime.toISOString();
     return {
       total_time: totalDuration,
-      departure_time: departureTimeIso,
-      arrival_time: arrivalTimeIso,
+      departure_time: departureTime, // Keep as Date object for now to help the Leg function
+      arrival_time: arrivalTime,
+      departure_time_iso: departureTime.toISOString(),
+      arrival_time_iso: arrivalTime.toISOString(),
     };
   });
 }
 
-function populateFakeLegsData() {
-  const today = new Date();
-  const twoMonthsLater = new Date(today);
-  twoMonthsLater.setMonth(today.getMonth() + 2);
-  const data = populateFakeFlightData();
+function populateFakeLegsData(
+  segmentStart: Date,
+  segmentEnd: Date,
+  cabinClass: string
+) {
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-    const totalDuration = faker.number.int({ min: 60, max: 600 });
-    const departureTime = faker.date.between({
-      from: today,
-      to: twoMonthsLater,
+    // Leg departure is sometime after segment starts, but before it ends
+    const legDeparture = faker.date.between({
+      from: segmentStart,
+      to: segmentEnd,
     });
-    const arrivalTime = new Date(
-      departureTime.getTime() + totalDuration * 60 * 1000
+
+    // Leg arrival is sometime after leg departure, but before segment ends
+    const legArrival = faker.date.between({
+      from: legDeparture,
+      to: segmentEnd,
+    });
+
+    const legDuration = Math.floor(
+      (legArrival.getTime() - legDeparture.getTime()) / (60 * 1000)
     );
-    const departureTimeIso = departureTime.toISOString();
-    const arrivalTimeIso = arrivalTime.toISOString();
 
     return {
-      total_time: totalDuration,
-      departure_time: departureTimeIso,
-      arrival_time: arrivalTimeIso,
-      cabin_class: data.cabin_class,
+      total_time: legDuration,
+      departure_time: legDeparture.toISOString(),
+      arrival_time: legArrival.toISOString(),
+      cabin_class: cabinClass,
     };
   });
 }
@@ -365,38 +371,43 @@ async function clearDatabase() {
 
   // Use a transaction to ensure all deletes happen quickly and atomically
   await prisma.$transaction([
-    // 1. Delete deeply nested models first (Keep the other fixes from prior answers here!)
+    // 1. Delete deeply nested models first
     prisma.carrierInfo.deleteMany(),
     prisma.flightInfo.deleteMany(),
-    prisma.features.deleteMany(), // Ensure this is before BrandedFareInfo
+    prisma.features.deleteMany(),
     prisma.brandedFareInfo.deleteMany(),
     prisma.carriers.deleteMany(),
     prisma.arrival.deleteMany(),
     prisma.depart.deleteMany(),
-    prisma.flightTimes.deleteMany(), // 2. Delete the price breakdown component models
+    prisma.flightTimes.deleteMany(),
 
+    // 2. Delete intermediary nested models
     prisma.totalPrice.deleteMany(),
     prisma.baseFare.deleteMany(),
     prisma.tax.deleteMany(),
-    prisma.discount.deleteMany(), // 3. Delete intermediate models
+    prisma.discount.deleteMany(),
 
+    // 3. Delete main nested models that has deep nesting
     prisma.priceBreakdown.deleteMany(),
     prisma.travelerPrice.deleteMany(),
     prisma.legs.deleteMany(),
     prisma.segment.deleteMany(),
-    prisma.seatAvailability.deleteMany(), // <-- Moved up here (Child before parent FlightOffers)
-    prisma.flightOffers.deleteMany(), // <-- Parent // 4. Delete top-level helper models
+    prisma.seatAvailability.deleteMany(),
+    prisma.flightOffers.deleteMany(),
 
+    // 4. delete the less nested models
     prisma.departureInterval.deleteMany(),
     prisma.shortLayoverConnection.deleteMany(),
     prisma.minPrice.deleteMany(),
     prisma.stop.deleteMany(),
     prisma.airlines.deleteMany(),
     prisma.duration.deleteMany(),
-    prisma.baggage.deleteMany(), // 5. Delete the main parent model
+    prisma.baggage.deleteMany(),
 
-    prisma.data.deleteMany(), // 6. Delete static look-up data (Airports)
+    // 5. Delete the main parent model
+    prisma.data.deleteMany(),
 
+    // 6. Delete static look-up data (Airports)
     prisma.airport.deleteMany(),
   ]);
 
@@ -408,7 +419,7 @@ async function main() {
   await clearDatabase();
   console.info("Starting seed process...");
 
-  // 1. Create Airports
+  // 1. Create fake Airports
   const createdAirports = [];
   for (const airport of fakeAirports) {
     const created = await prisma.airport.create({
@@ -427,13 +438,19 @@ async function main() {
     throw new Error("Not enough airports created for a valid flight path.");
   }
 
-  // 2. Prepare Flight Data
+  // 2. Prepare Flight Data - only one data is generated for each flight searched
   const flightInputData = populateFakeFlightData();
   const [depAirport, arrAirport] = faker.helpers.arrayElements(
     createdAirports,
     2
-  );
+  ); //select two airports - departure and arrival
+
   const fakeFlightNumber = populateFakeFlightNumber();
+
+  // Define the 2-month window once
+  const searchStart = new Date();
+  const searchEnd = new Date();
+  searchEnd.setMonth(searchStart.getMonth() + 2);
 
   // 3. Create Main Data Record with non-multiplying nested relations
   const createdData = await prisma.data.create({
@@ -462,31 +479,37 @@ async function main() {
             },
           },
           segments: {
-            create: populateFakeSegments().map((segment) => ({
-              departure_airports: {
-                connect: { airport_code: depAirport.airport_code },
-              },
-              arrival_airports: {
-                connect: { airport_code: arrAirport.airport_code },
-              },
-              departure_time: segment.departure_time,
-              arrival_time: segment.arrival_time,
-              total_time: segment.total_time,
-              legs: {
-                create: populateFakeLegsData().map((leg) => ({
-                  departure_airport: {
-                    connect: { airport_code: depAirport.airport_code },
-                  },
-                  arrival_airport: {
-                    connect: { airport_code: arrAirport.airport_code },
-                  },
-                  departure_time: leg.departure_time,
-                  arrival_time: leg.arrival_time,
-                  cabin_class: leg.cabin_class,
-                  total_time: leg.total_time,
-                })),
-              },
-            })),
+            create: populateFakeSegments(searchStart, searchEnd).map(
+              (segment) => ({
+                departure_airports: {
+                  connect: { airport_code: depAirport.airport_code },
+                },
+                arrival_airports: {
+                  connect: { airport_code: arrAirport.airport_code },
+                },
+                departure_time: segment.departure_time_iso,
+                arrival_time: segment.arrival_time_iso,
+                total_time: segment.total_time,
+                legs: {
+                  create: populateFakeLegsData(
+                    segment.departure_time, // Pass actual Date objects
+                    segment.arrival_time,
+                    flightInputData.cabin_class
+                  ).map((leg) => ({
+                    departure_airport: {
+                      connect: { airport_code: depAirport.airport_code },
+                    },
+                    arrival_airport: {
+                      connect: { airport_code: arrAirport.airport_code },
+                    },
+                    departure_time: leg.departure_time,
+                    arrival_time: leg.arrival_time,
+                    cabin_class: leg.cabin_class,
+                    total_time: leg.total_time,
+                  })),
+                },
+              })
+            ),
           },
           traveler_price: {
             create: populateFakeTravelerPrice().map((traveler) => ({
@@ -545,44 +568,30 @@ async function main() {
     });
   }
 
-  // B. Handle PriceBreakdown for FlightOffers
+  // B. Shared price breakdown for flight offers and traveler price
   for (const offer of createdData.flight_offers) {
-    const pb = await prisma.priceBreakdown.create({
-      data: { price_breakdown_id: offer.id },
+    // 1. Create ONE PriceBreakdown for the entire offer
+    const sharedPB = await prisma.priceBreakdown.create({
+      data: {
+        total: { create: populateFakeTotalPrice() },
+        base_fare: { create: populateFakeBaseFarePrice() },
+        tax: { create: populateFakeTaxPriceBreakdown() },
+        discount: { create: populateFakeDiscountPrice() },
+      },
     });
 
-    await prisma.$transaction([
-      prisma.totalPrice.create({
-        data: { ...populateFakeTotalPrice(), total_price_id: pb.id },
-      }),
-      prisma.baseFare.create({
-        data: { ...populateFakeBaseFarePrice(), base_price_id: pb.id },
-      }),
-      prisma.tax.create({
-        data: { ...populateFakeTaxPriceBreakdown(), tax_id: pb.id },
-      }),
-    ]);
+    // 2. Link the FlightOffer to this PriceBreakdown
+    await prisma.flightOffers.update({
+      where: { id: offer.id },
+      data: { price_id: sharedPB.id }, // Assume schema change: price_id added to FlightOffers
+    });
 
-    // C. Handle PriceBreakdown for TravelerPrices within this offer
+    // 3. Link ALL Travelers in this offer to the SAME PriceBreakdown
     for (const tp of offer.traveler_price) {
-      const tpPb = await prisma.priceBreakdown.create({
-        data: { traveler_price_id: tp.id },
+      await prisma.travelerPrice.update({
+        where: { id: tp.id },
+        data: { price_id: sharedPB.id }, // Assume schema change: price_id added to TravelerPrice
       });
-
-      await prisma.$transaction([
-        prisma.totalPrice.create({
-          data: { ...populateFakeTotalPrice(), total_price_id: tpPb.id },
-        }),
-        prisma.baseFare.create({
-          data: { ...populateFakeBaseFarePrice(), base_price_id: tpPb.id },
-        }),
-        prisma.tax.create({
-          data: { ...populateFakeTaxPriceBreakdown(), tax_id: tpPb.id },
-        }),
-        prisma.discount.create({
-          data: { ...populateFakeDiscountPrice(), discount_id: tpPb.id },
-        }),
-      ]);
     }
   }
 

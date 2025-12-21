@@ -62,8 +62,8 @@ model ShortLayoverConnection {
 model MinPrice {
   id                   Int       @id @default(autoincrement())
   min_price_data_id    String    @unique // FK
-  min_price_airline_id String?    @unique // FK
-  min_price_stop_id    Int?       @unique // FK
+  min_price_airline_id String?   @unique // FK
+  min_price_stop_id    Int?      @unique // FK
   currency_code        String?
   amount               Int
   minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id])
@@ -135,11 +135,13 @@ model Depart {
 model FlightOffers {
   id                String            @id @default(uuid())
   flight_offer_id   String // FK
+  price_id          Int? // FK
   token             String
   trip_type         String
   flight_key        String
   segments          Segment[]
-  price_breakdown   PriceBreakdown?
+  // price_breakdown   PriceBreakdown? 
+  price_breakdown   PriceBreakdown?   @relation(fields: [price_id], references: [id])
   traveler_price    TravelerPrice[]
   seat_availability SeatAvailability?
   branded_fareinfo  BrandedFareInfo?
@@ -162,7 +164,7 @@ model Segment {
 
 model Legs {
   id                     Int         @id @default(autoincrement())
-  leg_id                 Int  // FK
+  leg_id                 Int // FK
   departure_airport_code String //FK
   arrival_airport_code   String //FK
   departure_time         String
@@ -201,15 +203,17 @@ model CarrierInfo {
 }
 
 model PriceBreakdown {
-  id                 Int           @id @default(autoincrement())
-  price_breakdown_id String?        @unique // FK
-  traveler_price_id  Int?           @unique // FK
-  total              TotalPrice?
-  base_fare          BaseFare?
-  tax                Tax?
-  discount           Discount?
-  priceFlight        FlightOffers?  @relation(fields: [price_breakdown_id], references: [id])
-  travelerPrice      TravelerPrice? @relation(fields: [traveler_price_id], references: [id])
+  id             Int             @id @default(autoincrement())
+  // price_breakdown_id String?        @unique // FK
+  // traveler_price_id  Int?           @unique // FK
+  total          TotalPrice?
+  base_fare      BaseFare?
+  tax            Tax?
+  discount       Discount?
+  // priceFlight        FlightOffers?  @relation(fields: [price_breakdown_id], references: [id])
+  // travelerPrice      TravelerPrice? @relation(fields: [traveler_price_id], references: [id])
+  flightOffers   FlightOffers[]
+  travelerPrices TravelerPrice[]
 }
 
 model TotalPrice {
@@ -247,9 +251,11 @@ model Discount {
 model TravelerPrice {
   id                     Int             @id @default(autoincrement())
   traveler_price_id      String // FK
+  price_id               Int? // FK
   traveler_reference     String
   traveler_type          String
-  price_breakdown        PriceBreakdown?
+  // price_breakdown        PriceBreakdown?
+  price_breakdown        PriceBreakdown? @relation(fields: [price_id], references: [id])
   travelerPricePerFlight FlightOffers    @relation(fields: [traveler_price_id], references: [id])
 }
 
