@@ -418,22 +418,60 @@ function populateFakeFeatures() {
 //   console.info("✅ Database data cleared successfully.");
 // }
 
+// async function clearStaleData() {
+//   // const now = new Date();
+//   console.info("🧹 Cleaning up stale data (past departures)...");
+
+//   // // Deleting segments that have already departed in the past and not future ones
+//   // // This will cascade delete related legs if your schema is set up with ON DELETE CASCADE
+//   // await prisma.segment.deleteMany({
+//   //   where: {
+//   //     departure_time: {
+//   //       lt: now.toISOString(), // lt = "less than" (in the past)
+//   //     },
+//   //   },
+//   // });
+
+//   await prisma.data.deleteMany({}); // this to retain only 10- 20 flights for now instead of creating so many data
+//   console.info("✨ Stale data removed.");
+// }
+
 async function clearStaleData() {
-  // const now = new Date();
+  const now = new Date();
   console.info("🧹 Cleaning up stale data (past departures)...");
 
-  // // Deleting segments that have already departed in the past and not future ones
-  // // This will cascade delete related legs if your schema is set up with ON DELETE CASCADE
-  // await prisma.segment.deleteMany({
-  //   where: {
-  //     departure_time: {
-  //       lt: now.toISOString(), // lt = "less than" (in the past)
-  //     },
-  //   },
-  // });
+  // 1. Find the IDs of 'Data' records that have segments in the past
+  const staleFlights = await prisma.data.findMany({
+    where: {
+      flight_offers: {
+        some: {
+          segments: {
+            some: {
+              departure_time: {
+                lt: now.toISOString(),
+              },
+            },
+          },
+        },
+      },
+    },
+    select: { id: true },
+  });
 
-  await prisma.data.deleteMany({}); // this to retain only 10- 20 flights for now instead of creating so many data
-  console.info("✨ Stale data removed.");
+  const idsToDelete = staleFlights.map((f) => f.id);
+
+  if (idsToDelete.length > 0) {
+    // 2. Delete the parent 'Data' records
+    // This will trigger the Cascade delete for segments, legs, offers, etc.
+    await prisma.data.deleteMany({
+      where: {
+        id: { in: idsToDelete },
+      },
+    });
+    console.info(`✨ Removed ${idsToDelete.length} stale flight records.`);
+  } else {
+    console.info("✅ No stale data found.");
+  }
 }
 
 async function main() {
@@ -441,6 +479,18 @@ async function main() {
   // await clearDatabase();
   await clearStaleData();
   console.info("Starting seed process...");
+
+  // Check how many flights we have
+  const count = await prisma.data.count();
+
+  if (count > 50) {
+    console.info(
+      "⏸️ Database is full enough (50+ flights). Skipping creation this hour."
+    );
+    return;
+  }
+
+  console.info("🌱 Database has room. Generating new flight data...");
 
   // 1. Create fake Airports
   const createdAirports = [];
@@ -775,7 +825,7 @@ console.info(
 
 let isRunning = false;
 
-cron.schedule("*/5 * * * *", async () => {
+cron.schedule("0 * * * *", async () => {
   if (isRunning) {
     console.warn("⚠️ Automation skipped: Previous run is still in progress.");
     return;

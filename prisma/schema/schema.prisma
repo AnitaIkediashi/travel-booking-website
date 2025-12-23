@@ -154,11 +154,14 @@ model Segment {
   arrival_airport_code   String //FK
   departure_airports     Airport      @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code])
   arrival_airports       Airport      @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
-  departure_time         String
+  departure_time         String 
   arrival_time           String
   total_time             Int
   legs                   Legs[]
   segmentData            FlightOffers @relation(fields: [segment_id], references: [id], onDelete: Cascade)
+
+  //index the departure_time for faster queries and faster cpu performance
+  @@index([departure_time])
 }
 
 model Legs {
