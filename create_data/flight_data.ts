@@ -1,6 +1,10 @@
 import { CarrierDataProps } from "@/types/flight_type";
 import { prisma } from "../lib/prisma";
 import { faker } from "@faker-js/faker";
+import cron from "node-cron";
+
+
+console.log("🚀 SCRIPT INITIALIZED");
 
 function populateFakeAirports() {
   return Array.from({ length: faker.number.int({ min: 3, max: 5 }) }, () => {
@@ -206,7 +210,6 @@ function populateFakeFlightOffers() {
 }
 
 function populateFakeSegments(windowStart: Date, windowEnd: Date) {
- 
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const totalDuration = faker.number.int({ min: 60, max: 600 });
     // Pick a departure within the 2-month window
@@ -365,58 +368,76 @@ function populateFakeFeatures() {
   });
 }
 
-async function clearDatabase() {
-  console.info("🗑️ Clearing existing database data...");
-  //note: delete from child first to parent last
+// async function clearDatabase() {
+//   console.info("🗑️ Clearing existing database data...");
+//   //note: delete from child first to parent last
 
-  // Use a transaction to ensure all deletes happen quickly and atomically
-  await prisma.$transaction([
-    // 1. Delete deeply nested models first
-    prisma.carrierInfo.deleteMany(),
-    prisma.flightInfo.deleteMany(),
-    prisma.features.deleteMany(),
-    prisma.brandedFareInfo.deleteMany(),
-    prisma.carriers.deleteMany(),
-    prisma.arrival.deleteMany(),
-    prisma.depart.deleteMany(),
-    prisma.flightTimes.deleteMany(),
+//   // Use a transaction to ensure all deletes happen quickly and atomically
+//   await prisma.$transaction([
+//     // 1. Delete deeply nested models first
+//     prisma.carrierInfo.deleteMany(),
+//     prisma.flightInfo.deleteMany(),
+//     prisma.features.deleteMany(),
+//     prisma.brandedFareInfo.deleteMany(),
+//     prisma.carriers.deleteMany(),
+//     prisma.arrival.deleteMany(),
+//     prisma.depart.deleteMany(),
+//     prisma.flightTimes.deleteMany(),
 
-    // 2. Delete intermediary nested models
-    prisma.totalPrice.deleteMany(),
-    prisma.baseFare.deleteMany(),
-    prisma.tax.deleteMany(),
-    prisma.discount.deleteMany(),
+//     // 2. Delete intermediary nested models
+//     prisma.totalPrice.deleteMany(),
+//     prisma.baseFare.deleteMany(),
+//     prisma.tax.deleteMany(),
+//     prisma.discount.deleteMany(),
 
-    // 3. Delete main nested models that has deep nesting
-    prisma.priceBreakdown.deleteMany(),
-    prisma.travelerPrice.deleteMany(),
-    prisma.legs.deleteMany(),
-    prisma.segment.deleteMany(),
-    prisma.seatAvailability.deleteMany(),
-    prisma.flightOffers.deleteMany(),
+//     // 3. Delete main nested models that has deep nesting
+//     prisma.priceBreakdown.deleteMany(),
+//     prisma.travelerPrice.deleteMany(),
+//     prisma.legs.deleteMany(),
+//     prisma.segment.deleteMany(),
+//     prisma.seatAvailability.deleteMany(),
+//     prisma.flightOffers.deleteMany(),
 
-    // 4. delete the less nested models
-    prisma.departureInterval.deleteMany(),
-    prisma.shortLayoverConnection.deleteMany(),
-    prisma.minPrice.deleteMany(),
-    prisma.stop.deleteMany(),
-    prisma.airlines.deleteMany(),
-    prisma.duration.deleteMany(),
-    prisma.baggage.deleteMany(),
+//     // 4. delete the less nested models
+//     prisma.departureInterval.deleteMany(),
+//     prisma.shortLayoverConnection.deleteMany(),
+//     prisma.minPrice.deleteMany(),
+//     prisma.stop.deleteMany(),
+//     prisma.airlines.deleteMany(),
+//     prisma.duration.deleteMany(),
+//     prisma.baggage.deleteMany(),
 
-    // 5. Delete the main parent model
-    prisma.data.deleteMany(),
+//     // 5. Delete the main parent model
+//     prisma.data.deleteMany(),
 
-    // 6. Delete static look-up data (Airports)
-    prisma.airport.deleteMany(),
-  ]);
+//     // 6. Delete static look-up data (Airports)
+//     prisma.airport.deleteMany(),
+//   ]);
 
-  console.info("✅ Database data cleared successfully.");
+//   console.info("✅ Database data cleared successfully.");
+// }
+
+async function clearStaleData() {
+  const now = new Date();
+  console.info("🧹 Cleaning up stale data (past departures)...");
+
+  // Deleting segments that have already departed
+  // This will cascade delete related legs if your schema is set up with ON DELETE CASCADE
+  await prisma.segment.deleteMany({
+    where: {
+      departure_time: {
+        lt: now.toISOString(), // lt = "less than" (in the past)
+      },
+    },
+  });
+
+  console.info("✨ Stale data removed.");
 }
 
 async function main() {
   // 💡 Step 0: Clear the database before creating new data
-  await clearDatabase();
+  // await clearDatabase();
+  await clearStaleData();
   console.info("Starting seed process...");
 
   // 1. Create fake Airports
@@ -683,13 +704,45 @@ async function main() {
   console.info("✅ Database seeding completed successfully.");
 }
 
-main()
-  .then(async () => {
-    console.info("creation successfully");
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error("An error occurred during creation: ", e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+// main()
+//   .then(async () => {
+//     console.info("creation successfully");
+//     await prisma.$disconnect();
+//   })
+//   .catch(async (e) => {
+//     console.error("An error occurred during creation: ", e);
+//     await prisma.$disconnect();
+//     process.exit(1);
+//   });
+
+//automate flight data creation every day at every 1 hour
+async function runFlightDataCreateAutomation() {
+  const startTime = new Date();
+  console.info(
+    `Flight data creation automation started at ${startTime.toLocaleString()}`
+  );
+  try {
+    await main();
+    const endTime = new Date();
+    console.info(
+      `Flight data creation automation ended at ${endTime.toLocaleString()}`
+    );
+  } catch (error) {
+    console.error(
+      `❌ Flight data creation automation failed: ${error} on ${new Date().toLocaleString()}`
+    );
+  }
+}
+
+runFlightDataCreateAutomation();
+console.info(
+  "⏳ Flight Data Automator is running. Waiting for the next scheduled hour..."
+);
+
+/**
+ * 0 * * * * ---> Schedule flight data creation automation to run every hour.
+ */
+cron.schedule("0 * * * *", () => {
+  runFlightDataCreateAutomation();
+});
+
