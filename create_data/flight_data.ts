@@ -626,13 +626,19 @@ async function main() {
       data: { price_id: sharedPB.id }, // Assume schema change: price_id added to FlightOffers
     });
 
-    // 3. Link ALL Travelers in this offer to the SAME PriceBreakdown
-    for (const tp of offer.traveler_price) {
-      await prisma.travelerPrice.update({
-        where: { id: tp.id },
-        data: { price_id: sharedPB.id }, // Assume schema change: price_id added to TravelerPrice
-      });
-    }
+    // // 3. Link ALL Travelers in this offer to the SAME PriceBreakdown
+    // for (const tp of offer.traveler_price) {
+    //   await prisma.travelerPrice.update({
+    //     where: { id: tp.id },
+    //     data: { price_id: sharedPB.id }, // Assume schema change: price_id added to TravelerPrice
+    //   });
+    // }
+
+    // 3. Link ALL Travelers in this offer to the SAME PriceBreakdown in one go
+    await prisma.travelerPrice.updateMany({
+      where: { id: { in: offer.traveler_price.map((tp) => tp.id) } },
+      data: { price_id: sharedPB.id },
+    });
   }
 
   // --- 5. EXECUTE BULK INSERTS ---
@@ -755,13 +761,31 @@ async function runFlightDataCreateAutomation() {
 
 runFlightDataCreateAutomation();
 console.info(
-  "⏳ Flight Data Automator is running. Waiting for the next scheduled hour..."
+  "⏳ Flight Data Automation is running. Waiting for the next scheduled hour..."
 );
 
 /**
  * 0 * * * * ---> Schedule flight data creation automation to run every hour.
  */
-cron.schedule("0 * * * *", () => {
-  runFlightDataCreateAutomation();
+// cron.schedule("0 * * * *", () => {
+//   runFlightDataCreateAutomation();
+// });
+
+let isRunning = false;
+
+cron.schedule("*/5 * * * *", async () => {
+  if (isRunning) {
+    console.warn("⚠️ Automation skipped: Previous run is still in progress.");
+    return;
+  }
+
+  isRunning = true;
+  try {
+    await runFlightDataCreateAutomation();
+  } catch (err) {
+    console.error("CRITICAL CRON ERROR:", err);
+  } finally {
+    isRunning = false; // Always release the lock
+  }
 });
 
