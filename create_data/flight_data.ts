@@ -438,40 +438,44 @@ function populateFakeFeatures() {
 
 async function clearStaleData() {
   const now = new Date();
-  console.info("🧹 Cleaning up stale data (past departures)...");
+  const MAX_FLIGHTS = 50;
 
-  // 1. Find the IDs of 'Data' records that have segments in the past
-  const staleFlights = await prisma.data.findMany({
+  console.info("🧹 Maintenance started...");
+
+  // --- PART 1: DELETE STALE DATA ---
+  const staleDelete = await prisma.data.deleteMany({
     where: {
       flight_offers: {
         some: {
           segments: {
             some: {
               departure_time: {
-                lt: now.toISOString(),
+                lt: now.toISOString(), // Deletes everything in the past
               },
             },
           },
         },
       },
     },
-    select: { id: true },
   });
 
-  const idsToDelete = staleFlights.map((f) => f.id);
-
-  if (idsToDelete.length > 0) {
-    // 2. Delete the parent 'Data' records
-    // This will trigger the Cascade delete for segments, legs, offers, etc.
-    await prisma.data.deleteMany({
-      where: {
-        id: { in: idsToDelete },
-      },
-    });
-    console.info(`✨ Removed ${idsToDelete.length} stale flight records.`);
-  } else {
-    console.info("✅ No stale data found.");
+  if (staleDelete.count > 0) {
+    console.info(
+      `✅ Successfully removed ${staleDelete.count} expired flights.`
+    );
   }
+
+  // --- PART 2: CHECK TOTAL CAPACITY ---
+  const currentCount = await prisma.data.count();
+
+  if (currentCount >= MAX_FLIGHTS) {
+    console.info(
+      `⚠️ Database has ${currentCount} future flights. Capacity reached.`
+    );
+    return false; // Tells main() NOT to add more
+  }
+
+  return true; // Tells main() "Yes, we have room for more flights"
 }
 
 async function main() {
@@ -480,13 +484,13 @@ async function main() {
   await clearStaleData();
   console.info("Starting seed process...");
 
-  // Check how many flights we have
-  const count = await prisma.data.count();
+  //  Run maintenance (deletes stale data AND checks the count)
+  const isHealthyAndHasRoom = await clearStaleData();
 
-  if (count > 50) {
-    console.info(
-      "⏸️ Database is full enough (50+ flights). Skipping creation this hour."
-    );
+  //  Decide whether to proceed based on the result above
+  if (!isHealthyAndHasRoom) {
+    // If clearStaleData returned 'false', it means we reached the 50-flight limit.
+    // We stop here.
     return;
   }
 
