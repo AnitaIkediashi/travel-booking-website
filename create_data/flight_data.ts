@@ -442,9 +442,28 @@ async function main() {
 
   // 1. Create fake Airports
   const createdAirports = [];
+  // for (const airport of fakeAirports) {
+  //   const created = await prisma.airport.create({
+  //     data: {
+  //       airport_code: airport.code,
+  //       airport_name: airport.name,
+  //       image_url: airport.imageUrl,
+  //       city: airport.city,
+  //       country: airport.country,
+  //     },
+  //   });
+  //   createdAirports.push(created);
+  // }
   for (const airport of fakeAirports) {
-    const created = await prisma.airport.create({
-      data: {
+    const created = await prisma.airport.upsert({
+      where: { airport_code: airport.code },
+      update: {
+        airport_name: airport.name,
+        image_url: airport.imageUrl,
+        city: airport.city,
+        country: airport.country,
+      },
+      create: {
         airport_code: airport.code,
         airport_name: airport.name,
         image_url: airport.imageUrl,
