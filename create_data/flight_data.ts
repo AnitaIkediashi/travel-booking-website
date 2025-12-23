@@ -3,7 +3,6 @@ import { prisma } from "../lib/prisma";
 import { faker } from "@faker-js/faker";
 import cron from "node-cron";
 
-
 console.log("🚀 SCRIPT INITIALIZED");
 
 function populateFakeAirports() {
@@ -209,27 +208,76 @@ function populateFakeFlightOffers() {
   });
 }
 
-function populateFakeSegments(windowStart: Date, windowEnd: Date) {
-  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-    const totalDuration = faker.number.int({ min: 60, max: 600 });
-    // Pick a departure within the 2-month window
-    const departureTime = faker.date.between({
-      from: windowStart,
-      to: windowEnd,
-    });
+// function populateFakeSegments(windowStart: Date, windowEnd: Date) {
+//   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
+//     const totalDuration = faker.number.int({ min: 90, max: 720 });
+//     // Pick a departure within the 2-month window
+//     const departureTime = faker.date.between({
+//       from: windowStart,
+//       to: windowEnd,
+//     });
 
-    // Arrival is strictly Departure + Duration
-    const arrivalTime = new Date(
-      departureTime.getTime() + totalDuration * 60 * 1000
-    );
-    return {
-      total_time: totalDuration,
-      departure_time: departureTime, // Keep as Date object for now to help the Leg function
+//     // Arrival is strictly Departure + Duration
+//     const arrivalTime = new Date(
+//       departureTime.getTime() + totalDuration * 60 * 1000
+//     );
+//     return {
+//       total_time: totalDuration,
+//       departure_time: departureTime, // Keep as Date object for now to help the Leg function
+//       arrival_time: arrivalTime,
+//       departure_time_iso: departureTime.toISOString(),
+//       arrival_time_iso: arrivalTime.toISOString(),
+//     };
+//   });
+// }
+
+function populateFakeSegments(
+  windowStart: Date,
+  windowEnd: Date,
+  tripType: string
+) {
+  // 1. Generate Outbound Segment
+  const outboundDuration = faker.number.int({ min: 90, max: 720 });
+  const departureTime = faker.date.between({
+    from: windowStart,
+    to: windowEnd,
+  });
+  const arrivalTime = new Date(
+    departureTime.getTime() + outboundDuration * 60 * 1000
+  );
+
+  const segments = [
+    {
+      total_time: outboundDuration,
+      departure_time: departureTime,
       arrival_time: arrivalTime,
       departure_time_iso: departureTime.toISOString(),
       arrival_time_iso: arrivalTime.toISOString(),
-    };
-  });
+    },
+  ];
+
+  // 2. If it's a round-trip, add the return segment
+  if (tripType === "round-trip") {
+    const stayDays = faker.number.int({ min: 2, max: 10 });
+    // Return departs X days after the first flight arrives
+    const returnDeparture = new Date(
+      arrivalTime.getTime() + stayDays * 24 * 60 * 60 * 1000
+    );
+    const returnDuration = faker.number.int({ min: 90, max: 720 });
+    const returnArrival = new Date(
+      returnDeparture.getTime() + returnDuration * 60 * 1000
+    );
+
+    segments.push({
+      total_time: returnDuration,
+      departure_time: returnDeparture,
+      arrival_time: returnArrival,
+      departure_time_iso: returnDeparture.toISOString(),
+      arrival_time_iso: returnArrival.toISOString(),
+    });
+  }
+
+  return segments;
 }
 
 function populateFakeLegsData(
@@ -237,30 +285,37 @@ function populateFakeLegsData(
   segmentEnd: Date,
   cabinClass: string
 ) {
-  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-    // Leg departure is sometime after segment starts, but before it ends
-    const legDeparture = faker.date.between({
-      from: segmentStart,
-      to: segmentEnd,
-    });
+  const numLegs = faker.number.int({ min: 1, max: 2 });
+  const legs = [];
 
-    // Leg arrival is sometime after leg departure, but before segment ends
-    const legArrival = faker.date.between({
-      from: legDeparture,
-      to: segmentEnd,
-    });
+  let currentStart = new Date(segmentStart);
 
-    const legDuration = Math.floor(
-      (legArrival.getTime() - legDeparture.getTime()) / (60 * 1000)
-    );
+  // Total segment duration in ms
+  const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime();
+  // Average duration per leg (minus some time for a layover)
+  const legDurationMs = (totalSegmentMs * 0.7) / numLegs;
 
-    return {
-      total_time: legDuration,
-      departure_time: legDeparture.toISOString(),
-      arrival_time: legArrival.toISOString(),
+  for (let i = 0; i < numLegs; i++) {
+    const arrival = new Date(currentStart.getTime() + legDurationMs);
+
+    legs.push({
+      total_time: Math.floor(legDurationMs / 60000),
+      departure_time: currentStart.toISOString(),
+      arrival_time: arrival.toISOString(),
       cabin_class: cabinClass,
-    };
-  });
+    });
+
+    // SET UP FOR NEXT LEG: Add a 45-120 minute layover
+    const layoverMs = faker.number.int({ min: 45, max: 120 }) * 60 * 1000;
+    currentStart = new Date(arrival.getTime() + layoverMs);
+
+    // Safety check: Don't let the last leg arrival exceed segment end
+    if (i === numLegs - 1) {
+      legs[i].arrival_time = segmentEnd.toISOString();
+    }
+  }
+
+  return legs;
 }
 
 function populateFakeCarriersData() {
@@ -437,12 +492,30 @@ function populateFakeFeatures() {
 // }
 
 async function clearStaleData() {
+  // 1. Create a "cutoff" time (30 minutes in the past)
   const now = new Date();
+  const bufferTime = new Date(now.getTime() - 30 * 60 * 1000);
   const MAX_FLIGHTS = 50;
 
   console.info("🧹 Maintenance started...");
 
   // --- PART 1: DELETE STALE DATA ---
+  // const staleDelete = await prisma.data.deleteMany({
+  //   where: {
+  //     flight_offers: {
+  //       some: {
+  //         segments: {
+  //           some: {
+  //             departure_time: {
+  //               lt: now.toISOString(), // Deletes everything in the past
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
+
   const staleDelete = await prisma.data.deleteMany({
     where: {
       flight_offers: {
@@ -450,7 +523,7 @@ async function clearStaleData() {
           segments: {
             some: {
               departure_time: {
-                lt: now.toISOString(), // Deletes everything in the past
+                lt: bufferTime.toISOString(), // Use bufferTime here - like adding 30 mins grace period
               },
             },
           },
@@ -548,7 +621,11 @@ async function main() {
   const searchEnd = new Date();
   searchEnd.setMonth(searchStart.getMonth() + 2);
 
-  // 3. Create Main Data Record with non-multiplying nested relations
+  // 3. PRE-GENERATE OFFERS to know the Trip Type
+  const fakeOffers = populateFakeFlightOffers();
+  const currentTripType = fakeOffers[0].trip_type; // Use the first offer's type as the master type
+
+  // 4. Create Main Data Record with non-multiplying nested relations
   const createdData = await prisma.data.create({
     data: {
       duration_min: flightInputData.duration_min,
@@ -574,38 +651,78 @@ async function main() {
               },
             },
           },
+          // segments: {
+          //   create: populateFakeSegments(searchStart, searchEnd).map(
+          //     (segment) => ({
+          //       departure_airports: {
+          //         connect: { airport_code: depAirport.airport_code },
+          //       },
+          //       arrival_airports: {
+          //         connect: { airport_code: arrAirport.airport_code },
+          //       },
+          //       departure_time: segment.departure_time_iso,
+          //       arrival_time: segment.arrival_time_iso,
+          //       total_time: segment.total_time,
+          //       legs: {
+          //         create: populateFakeLegsData(
+          //           segment.departure_time, // Pass actual Date objects
+          //           segment.arrival_time,
+          //           flightInputData.cabin_class
+          //         ).map((leg) => ({
+          //           departure_airport: {
+          //             connect: { airport_code: depAirport.airport_code },
+          //           },
+          //           arrival_airport: {
+          //             connect: { airport_code: arrAirport.airport_code },
+          //           },
+          //           departure_time: leg.departure_time,
+          //           arrival_time: leg.arrival_time,
+          //           cabin_class: leg.cabin_class,
+          //           total_time: leg.total_time,
+          //         })),
+          //       },
+          //     })
+          //   ),
+          // },
           segments: {
-            create: populateFakeSegments(searchStart, searchEnd).map(
-              (segment) => ({
-                departure_airports: {
-                  connect: { airport_code: depAirport.airport_code },
-                },
-                arrival_airports: {
-                  connect: { airport_code: arrAirport.airport_code },
-                },
+            create: populateFakeSegments(
+              searchStart,
+              searchEnd,
+              currentTripType
+            ).map((segment, index) => {
+              // --- AIRPORT SWAP LOGIC ---
+              // If index 0: Departure -> Arrival
+              // If index 1 (Return): Arrival -> Departure
+              const isReturn = index === 1;
+              const segDep = isReturn
+                ? arrAirport.airport_code
+                : depAirport.airport_code;
+              const segArr = isReturn
+                ? depAirport.airport_code
+                : arrAirport.airport_code;
+
+              return {
+                departure_airports: { connect: { airport_code: segDep } },
+                arrival_airports: { connect: { airport_code: segArr } },
                 departure_time: segment.departure_time_iso,
                 arrival_time: segment.arrival_time_iso,
                 total_time: segment.total_time,
                 legs: {
                   create: populateFakeLegsData(
-                    segment.departure_time, // Pass actual Date objects
+                    segment.departure_time,
                     segment.arrival_time,
                     flightInputData.cabin_class
                   ).map((leg) => ({
-                    departure_airport: {
-                      connect: { airport_code: depAirport.airport_code },
-                    },
-                    arrival_airport: {
-                      connect: { airport_code: arrAirport.airport_code },
-                    },
+                    departure_airport: { connect: { airport_code: segDep } },
+                    arrival_airport: { connect: { airport_code: segArr } },
                     departure_time: leg.departure_time,
                     arrival_time: leg.arrival_time,
                     cabin_class: leg.cabin_class,
                     total_time: leg.total_time,
                   })),
                 },
-              })
-            ),
+              };
+            }),
           },
           traveler_price: {
             create: populateFakeTravelerPrice().map((traveler) => ({
@@ -844,4 +961,3 @@ cron.schedule("0 * * * *", async () => {
     isRunning = false; // Always release the lock
   }
 });
-
