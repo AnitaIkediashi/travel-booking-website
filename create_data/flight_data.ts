@@ -368,6 +368,7 @@ function populateFakeFeatures() {
   });
 }
 
+// --- CLEAR DATABASE FUNCTION (OPTIONAL) --- but it would have be cumbersome for which has more nested relations
 // async function clearDatabase() {
 //   console.info("🗑️ Clearing existing database data...");
 //   //note: delete from child first to parent last
@@ -418,19 +419,20 @@ function populateFakeFeatures() {
 // }
 
 async function clearStaleData() {
-  const now = new Date();
+  // const now = new Date();
   console.info("🧹 Cleaning up stale data (past departures)...");
 
-  // Deleting segments that have already departed
-  // This will cascade delete related legs if your schema is set up with ON DELETE CASCADE
-  await prisma.segment.deleteMany({
-    where: {
-      departure_time: {
-        lt: now.toISOString(), // lt = "less than" (in the past)
-      },
-    },
-  });
+  // // Deleting segments that have already departed in the past and not future ones
+  // // This will cascade delete related legs if your schema is set up with ON DELETE CASCADE
+  // await prisma.segment.deleteMany({
+  //   where: {
+  //     departure_time: {
+  //       lt: now.toISOString(), // lt = "less than" (in the past)
+  //     },
+  //   },
+  // });
 
+  await prisma.data.deleteMany({}); // this to retain only 10- 20 flights for now instead of creating so many data
   console.info("✨ Stale data removed.");
 }
 

@@ -49,14 +49,14 @@ model DepartureInterval {
   interval_id     String // FK
   start           String
   end             String
-  departureFlight Data   @relation(fields: [interval_id], references: [id])
+  departureFlight Data   @relation(fields: [interval_id], references: [id], onDelete: Cascade)
 }
 
 model ShortLayoverConnection {
   id            Int    @id @default(autoincrement()) // PK
   layover_id    String @unique // FK
   count         Int?
-  layoverFlight Data   @relation(fields: [layover_id], references: [id])
+  layoverFlight Data   @relation(fields: [layover_id], references: [id], onDelete: Cascade)
 }
 
 model MinPrice {
@@ -66,9 +66,9 @@ model MinPrice {
   min_price_stop_id    Int?      @unique // FK
   currency_code        String?
   amount               Int
-  minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id])
-  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id])
-  minPricePerStop      Stop?     @relation(fields: [min_price_stop_id], references: [id])
+  minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id], onDelete: Cascade)
+  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade)
+  minPricePerStop      Stop?     @relation(fields: [min_price_stop_id], references: [id], onDelete: Cascade)
 }
 
 model Stop {
@@ -76,7 +76,7 @@ model Stop {
   stop_id     String // FK
   no_of_stops Int
   count       Int?
-  stopCount   Data      @relation(fields: [stop_id], references: [id])
+  stopCount   Data      @relation(fields: [stop_id], references: [id], onDelete: Cascade)
   min_price   MinPrice?
 }
 
@@ -87,7 +87,7 @@ model Airlines {
   logo          String
   iata_code     String
   min_price     MinPrice?
-  airlineFlight Data      @relation(fields: [airline_id], references: [id])
+  airlineFlight Data      @relation(fields: [airline_id], references: [id], onDelete: Cascade)
 }
 
 model Duration {
@@ -95,7 +95,7 @@ model Duration {
   duration_id    String // FK
   min            Int
   max            Int
-  durationFlight Data   @relation(fields: [duration_id], references: [id])
+  durationFlight Data   @relation(fields: [duration_id], references: [id], onDelete: Cascade)
 }
 
 model Baggage {
@@ -105,13 +105,13 @@ model Baggage {
   included      Boolean
   weight        Int?
   param_name    String?
-  baggageFlight Data    @relation(fields: [baggage_id], references: [id])
+  baggageFlight Data    @relation(fields: [baggage_id], references: [id], onDelete: Cascade)
 }
 
 model FlightTimes {
   id                String    @id @default(uuid()) // PK
   flight_times_id   String // FK
-  flight_times_data Data      @relation(fields: [flight_times_id], references: [id])
+  flight_times_data Data      @relation(fields: [flight_times_id], references: [id], onDelete: Cascade)
   arrival           Arrival[]
   depart            Depart[]
 }
@@ -121,7 +121,7 @@ model Arrival {
   arrival_id    String // FK
   start         String
   end           String
-  arrival_times FlightTimes @relation(fields: [arrival_id], references: [id])
+  arrival_times FlightTimes @relation(fields: [arrival_id], references: [id], onDelete: Cascade)
 }
 
 model Depart {
@@ -129,7 +129,7 @@ model Depart {
   depart_id    String // FK
   start        String
   end          String
-  depart_times FlightTimes @relation(fields: [depart_id], references: [id])
+  depart_times FlightTimes @relation(fields: [depart_id], references: [id], onDelete: Cascade)
 }
 
 model FlightOffers {
@@ -144,7 +144,7 @@ model FlightOffers {
   traveler_price    TravelerPrice[]
   seat_availability SeatAvailability?
   branded_fareinfo  BrandedFareInfo?
-  FlightData        Data              @relation(fields: [flight_offer_id], references: [id])
+  FlightData        Data              @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
 }
 
 model Segment {
@@ -158,7 +158,7 @@ model Segment {
   arrival_time           String
   total_time             Int
   legs                   Legs[]
-  segmentData            FlightOffers @relation(fields: [segment_id], references: [id])
+  segmentData            FlightOffers @relation(fields: [segment_id], references: [id], onDelete: Cascade)
 }
 
 model Legs {
@@ -174,7 +174,7 @@ model Legs {
   arrival_airport        Airport     @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
   carriers               Carriers[]
   flight_info            FlightInfo?
-  legSegment             Segment     @relation(fields: [leg_id], references: [id])
+  legSegment             Segment     @relation(fields: [leg_id], references: [id], onDelete: Cascade)
 }
 
 model Carriers {
@@ -183,7 +183,7 @@ model Carriers {
   name       String
   logo       String
   code       String
-  legCarrier Legs   @relation(fields: [carrier_id], references: [id])
+  legCarrier Legs   @relation(fields: [carrier_id], references: [id], onDelete: Cascade)
 }
 
 model FlightInfo {
@@ -191,14 +191,14 @@ model FlightInfo {
   flight_info_id Int          @unique // FK
   flight_number  String
   carrier_info   CarrierInfo?
-  flightLeg      Legs         @relation(fields: [flight_info_id], references: [id])
+  flightLeg      Legs         @relation(fields: [flight_info_id], references: [id], onDelete: Cascade)
 }
 
 model CarrierInfo {
   id                Int        @id @default(autoincrement()) // PK
   carrier_info_id   Int        @unique // FK
   operating_carrier String
-  carrierFlight     FlightInfo @relation(fields: [carrier_info_id], references: [id])
+  carrierFlight     FlightInfo @relation(fields: [carrier_info_id], references: [id], onDelete: Cascade)
 }
 
 model PriceBreakdown {
@@ -216,7 +216,7 @@ model TotalPrice {
   total_price_id      Int            @unique // FK
   currency_code       String
   amount              Int
-  totalPricePerFlight PriceBreakdown @relation(fields: [total_price_id], references: [id])
+  totalPricePerFlight PriceBreakdown @relation(fields: [total_price_id], references: [id], onDelete: Cascade)
 }
 
 model BaseFare {
@@ -224,7 +224,7 @@ model BaseFare {
   base_price_id      Int            @unique // FK
   currency_code      String
   amount             Int
-  basePricePerFlight PriceBreakdown @relation(fields: [base_price_id], references: [id])
+  basePricePerFlight PriceBreakdown @relation(fields: [base_price_id], references: [id], onDelete: Cascade)
 }
 
 model Tax {
@@ -232,7 +232,7 @@ model Tax {
   tax_id        Int            @unique // FK
   currency_code String
   amount        Int
-  taxPerFlight  PriceBreakdown @relation(fields: [tax_id], references: [id])
+  taxPerFlight  PriceBreakdown @relation(fields: [tax_id], references: [id], onDelete: Cascade)
 }
 
 model Discount {
@@ -240,7 +240,7 @@ model Discount {
   discount_id       Int            @unique // FK
   currency_code     String
   amount            Int
-  discountPerFlight PriceBreakdown @relation(fields: [discount_id], references: [id])
+  discountPerFlight PriceBreakdown @relation(fields: [discount_id], references: [id], onDelete: Cascade)
 }
 
 model TravelerPrice {
@@ -250,14 +250,14 @@ model TravelerPrice {
   traveler_reference     String
   traveler_type          String
   price_breakdown        PriceBreakdown? @relation(fields: [price_id], references: [id])
-  travelerPricePerFlight FlightOffers    @relation(fields: [traveler_price_id], references: [id])
+  travelerPricePerFlight FlightOffers    @relation(fields: [traveler_price_id], references: [id], onDelete: Cascade)
 }
 
 model SeatAvailability {
   id                        Int          @id @default(autoincrement()) // PK
   seat_availability_id      String       @unique // FK
   seats_left                Int
-  seatAvailabilityPerFlight FlightOffers @relation(fields: [seat_availability_id], references: [id])
+  seatAvailabilityPerFlight FlightOffers @relation(fields: [seat_availability_id], references: [id], onDelete: Cascade)
 }
 
 model BrandedFareInfo {
@@ -265,7 +265,7 @@ model BrandedFareInfo {
   branded_fareinfo_id      String       @unique // FK
   cabin_class              String
   features                 Features[]
-  brandedFareInfoPerFlight FlightOffers @relation(fields: [branded_fareinfo_id], references: [id])
+  brandedFareInfoPerFlight FlightOffers @relation(fields: [branded_fareinfo_id], references: [id], onDelete: Cascade)
 }
 
 model Features {
@@ -274,5 +274,5 @@ model Features {
   feature_name           String
   category               String
   availability           String
-  featureBrandedFareInfo BrandedFareInfo @relation(fields: [feature_id], references: [id])
+  featureBrandedFareInfo BrandedFareInfo @relation(fields: [feature_id], references: [id], onDelete: Cascade)
 }
