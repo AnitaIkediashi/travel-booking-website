@@ -208,29 +208,6 @@ function populateFakeFlightOffers() {
   });
 }
 
-// function populateFakeSegments(windowStart: Date, windowEnd: Date) {
-//   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-//     const totalDuration = faker.number.int({ min: 90, max: 720 });
-//     // Pick a departure within the 2-month window
-//     const departureTime = faker.date.between({
-//       from: windowStart,
-//       to: windowEnd,
-//     });
-
-//     // Arrival is strictly Departure + Duration
-//     const arrivalTime = new Date(
-//       departureTime.getTime() + totalDuration * 60 * 1000
-//     );
-//     return {
-//       total_time: totalDuration,
-//       departure_time: departureTime, // Keep as Date object for now to help the Leg function
-//       arrival_time: arrivalTime,
-//       departure_time_iso: departureTime.toISOString(),
-//       arrival_time_iso: arrivalTime.toISOString(),
-//     };
-//   });
-// }
-
 function populateFakeSegments(
   windowStart: Date,
   windowEnd: Date,
@@ -391,55 +368,6 @@ function populateFakeFeatures() {
   });
 }
 
-// --- CLEAR DATABASE FUNCTION (OPTIONAL) --- but it would have be cumbersome for which has more nested relations
-// async function clearDatabase() {
-//   console.info("🗑️ Clearing existing database data...");
-//   //note: delete from child first to parent last
-
-//   // Use a transaction to ensure all deletes happen quickly and atomically
-//   await prisma.$transaction([
-//     // 1. Delete deeply nested models first
-//     prisma.carrierInfo.deleteMany(),
-//     prisma.flightInfo.deleteMany(),
-//     prisma.features.deleteMany(),
-//     prisma.brandedFareInfo.deleteMany(),
-//     prisma.carriers.deleteMany(),
-//     prisma.arrival.deleteMany(),
-//     prisma.depart.deleteMany(),
-//     prisma.flightTimes.deleteMany(),
-
-//     // 2. Delete intermediary nested models
-//     prisma.totalPrice.deleteMany(),
-//     prisma.baseFare.deleteMany(),
-//     prisma.tax.deleteMany(),
-//     prisma.discount.deleteMany(),
-
-//     // 3. Delete main nested models that has deep nesting
-//     prisma.priceBreakdown.deleteMany(),
-//     prisma.travelerPrice.deleteMany(),
-//     prisma.legs.deleteMany(),
-//     prisma.segment.deleteMany(),
-//     prisma.seatAvailability.deleteMany(),
-//     prisma.flightOffers.deleteMany(),
-
-//     // 4. delete the less nested models
-//     prisma.departureInterval.deleteMany(),
-//     prisma.shortLayoverConnection.deleteMany(),
-//     prisma.minPrice.deleteMany(),
-//     prisma.stop.deleteMany(),
-//     prisma.airlines.deleteMany(),
-//     prisma.duration.deleteMany(),
-//     prisma.baggage.deleteMany(),
-
-//     // 5. Delete the main parent model
-//     prisma.data.deleteMany(),
-
-//     // 6. Delete static look-up data (Airports)
-//     prisma.airport.deleteMany(),
-//   ]);
-
-//   console.info("✅ Database data cleared successfully.");
-// }
 
 // async function clearStaleData() {
 //   // const now = new Date();

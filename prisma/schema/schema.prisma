@@ -22,26 +22,26 @@ model Airport {
   image_url         String? // optional field
   city              String
   country           String
-  departure_segment Segment[] @relation("DepartureSegment") // using a unique name for relation because a single Airport is related to Segment twice same goes for Legs model
-  arrival_segment   Segment[] @relation("ArrivalSegment")
-  departure_leg     Legs[]    @relation("DepartureLegs")
-  arrival_legs      Legs[]    @relation("ArrivalLegs")
+  departure_segment Segment[] @relation("DepartureSegment") // using a unique name for relation because a single Airport is related to Segment twice same goes for Legs model -- 1:M relation with Segment
+  arrival_segment   Segment[] @relation("ArrivalSegment") // 1:M relation with Segment
+  departure_leg     Legs[]    @relation("DepartureLegs") // 1:M relation with Legs
+  arrival_legs      Legs[]    @relation("ArrivalLegs") // 1:M relation with Legs
 }
 
 model Data {
   id                       String                  @id @default(uuid()) // PK
-  departure_intervals      DepartureInterval[]
+  departure_intervals      DepartureInterval[] // 1:M relation
   duration_min             Int
   duration_max             Int
-  short_layover_connection ShortLayoverConnection?
-  min_price                MinPrice?
-  baggage                  Baggage[]
+  short_layover_connection ShortLayoverConnection? // 1:1 relation
+  min_price                MinPrice? // 1:1 relation
+  baggage                  Baggage[] // 1:M relation
   cabin_class              String
-  stops                    Stop[]
-  airlines                 Airlines[]
-  duration                 Duration[]
-  flight_times             FlightTimes[]
-  flight_offers            FlightOffers[]
+  stops                    Stop[] // 1:M relation and also a relational list
+  airlines                 Airlines[] // 1:M relation
+  duration                 Duration[] // 1:M relation
+  flight_times             FlightTimes[] // 1:M relation
+  flight_offers            FlightOffers[] // 1:M relation
 }
 
 model DepartureInterval {
@@ -49,14 +49,14 @@ model DepartureInterval {
   interval_id     String // FK
   start           String
   end             String
-  departureFlight Data   @relation(fields: [interval_id], references: [id], onDelete: Cascade)
+  departureFlight Data   @relation(fields: [interval_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related DepartureInterval records are also deleted
 }
 
 model ShortLayoverConnection {
   id            Int    @id @default(autoincrement()) // PK
-  layover_id    String @unique // FK
-  count         Int?
-  layoverFlight Data   @relation(fields: [layover_id], references: [id], onDelete: Cascade)
+  layover_id    String @unique // FK -- those without ? are required fields
+  count         Int? // ? means optional field
+  layoverFlight Data   @relation(fields: [layover_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related ShortLayoverConnection records are also deleted
 }
 
 model MinPrice {
@@ -66,9 +66,9 @@ model MinPrice {
   min_price_stop_id    Int?      @unique // FK
   currency_code        String?
   amount               Int
-  minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id], onDelete: Cascade)
-  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade)
-  minPricePerStop      Stop?     @relation(fields: [min_price_stop_id], references: [id], onDelete: Cascade)
+  minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
+  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
+  minPricePerStop      Stop?     @relation(fields: [min_price_stop_id], references: [id], onDelete: Cascade) // relation to Stop model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
 }
 
 model Stop {
@@ -76,8 +76,8 @@ model Stop {
   stop_id     String // FK
   no_of_stops Int
   count       Int?
-  stopCount   Data      @relation(fields: [stop_id], references: [id], onDelete: Cascade)
-  min_price   MinPrice?
+  stopCount   Data      @relation(fields: [stop_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related Stop records are also deleted
+  min_price   MinPrice? // 1:1 relation
 }
 
 model Airlines {
@@ -121,7 +121,7 @@ model Arrival {
   arrival_id    String // FK
   start         String
   end           String
-  arrival_times FlightTimes @relation(fields: [arrival_id], references: [id], onDelete: Cascade)
+  arrival_times FlightTimes @relation(fields: [arrival_id], references: [id], onDelete: Cascade) // relation to FlightTimes model the onDelete: Cascade ensures that if a flightTimes record is deleted, all related Arrival records are also deleted
 }
 
 model Depart {
@@ -152,7 +152,7 @@ model Segment {
   segment_id             String // FK
   departure_airport_code String //FK
   arrival_airport_code   String //FK
-  departure_airports     Airport      @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code])
+  departure_airports     Airport      @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code]) // the need for unique relation names arises because a single Airport is related to Segment twice (same goes for Legs model) -- Disambiguating relations
   arrival_airports       Airport      @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
   departure_time         String 
   arrival_time           String
@@ -160,7 +160,7 @@ model Segment {
   legs                   Legs[]
   segmentData            FlightOffers @relation(fields: [segment_id], references: [id], onDelete: Cascade)
 
-  //index the departure_time for faster queries and faster cpu performance
+  //index the departure_time for faster queries and faster cpu performance -- its like sorting in advance or like map the data based on departure_time
   @@index([departure_time])
 }
 
