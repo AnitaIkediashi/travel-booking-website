@@ -8,6 +8,9 @@ import { AddIcon } from "../icons/add";
 import { Button } from "./button";
 import { PaperPlaneIcon } from "../icons/paperPlane";
 import { ArrowDownIcon } from "../icons/arrow_down";
+import { useDebouncedCallback } from "@/utils/debounceCallback";
+import { AirportProps } from "@/types/flight_type";
+import { FlightSuggestions } from "../dropdowns/flight_suggestions";
 
 /**
  * NOTES: 1. Day.js is a minimalist JavaScript library designed to make parsing, validating, manipulating, and displaying dates and times in web applications much easier and more efficient than using the built-in JavaScript Date object
@@ -46,6 +49,31 @@ export const SearchFlights = () => {
   });
   const [showDropDown, setShowDropDown] = useState(false);
 
+  const [showAirportsSuggestions, setShowAirportsSuggestions] = useState(false);
+
+  const [airports, setAirports] = useState<AirportProps[]>([]); // store the airports suggestions
+
+  const debounceHandleLocationChange = useDebouncedCallback(
+    async (query: string) => {
+      if (query.trim() === "") {
+        setAirports([]);
+        setShowAirportsSuggestions(false)
+        return
+      }
+      try {
+        const response = await fetch(`/api/flights/airports?query=${query}`);
+        const data = await response.json();
+        console.log("Location suggestions:", data);
+        setAirports(data);
+        setShowAirportsSuggestions(true)
+      } catch (error) {
+        console.error("Error fetching location suggestions:", error);
+        setShowAirportsSuggestions(false)
+      }
+    },
+    300
+  ); // hoisting
+
   const handleDropDownClick = () => {
     setShowDropDown(!showDropDown);
   };
@@ -62,6 +90,7 @@ export const SearchFlights = () => {
         [name]: value,
       };
     });
+    debounceHandleLocationChange(value);
   };
 
   const handleTripChange = (value: string) => {
@@ -184,7 +213,7 @@ export const SearchFlights = () => {
   return (
     <div className="flex flex-col gap-8 font-montserrat">
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6">
-        <div>
+        <div className="relative">
           <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
             <legend className="text-blackish-green text-sm capitalize">
               from - to
@@ -202,6 +231,9 @@ export const SearchFlights = () => {
               </div>
             </div>
           </fieldset>
+          {
+            showAirportsSuggestions && <FlightSuggestions airports={airports} />
+          }
         </div>
         <div>
           <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">

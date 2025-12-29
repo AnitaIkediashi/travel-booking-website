@@ -449,7 +449,6 @@ async function clearStaleData() {
 
 async function main() {
   // 💡 Step 0: Clear the database before creating new data
-  await clearStaleData();
   console.info("Starting seed process...");
 
   //  1. Run maintenance (deletes stale data AND checks the count)
