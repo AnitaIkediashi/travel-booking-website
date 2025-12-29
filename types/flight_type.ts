@@ -1,6 +1,6 @@
 export type AirportProps = {
-  name: string;
-  code: string;
+  airport_name: string;
+  airport_code: string;
   imageUrl: string;
   city: string;
   country: string;

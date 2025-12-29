@@ -53,6 +53,10 @@ export const SearchFlights = () => {
 
   const [airports, setAirports] = useState<AirportProps[]>([]); // store the airports suggestions
 
+  const handleAirportsClick = (airport_code: string) => {
+    
+  }
+
   const debounceHandleLocationChange = useDebouncedCallback(
     async (query: string) => {
       if (query.trim() === "") {
@@ -63,7 +67,6 @@ export const SearchFlights = () => {
       try {
         const response = await fetch(`/api/flights/airports?query=${query}`);
         const data = await response.json();
-        console.log("Location suggestions:", data);
         setAirports(data);
         setShowAirportsSuggestions(true)
       } catch (error) {
