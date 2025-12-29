@@ -213,7 +213,7 @@ function populateFakeSegments(
   windowEnd: Date,
   tripType: string
 ) {
-  // 1. Generate Outbound Segment
+  // 1. Generate Outbound Segment - one-way trip
   const outboundDuration = faker.number.int({ min: 90, max: 720 });
   const departureTime = faker.date.between({
     from: windowStart,
@@ -449,7 +449,6 @@ async function clearStaleData() {
 
 async function main() {
   // 💡 Step 0: Clear the database before creating new data
-  // await clearDatabase();
   await clearStaleData();
   console.info("Starting seed process...");
 
@@ -497,7 +496,7 @@ async function main() {
     const [depAirport, arrAirport] = faker.helpers.arrayElements(
       createdAirports,
       2
-    ); //select two airports - departure and arrival
+    ); //select two airports
 
     const fakeFlightNumber = populateFakeFlightNumber();
 
@@ -805,11 +804,12 @@ console.info(
 /**
  * 0 * * * * ---> Schedule flight data creation automation to run every hour.
  */
+
 // cron.schedule("0 * * * *", () => {
 //   runFlightDataCreateAutomation();
 // });
 
-let isRunning = false;
+let isRunning = false; // adding a lock to prevent overlapping runs
 
 cron.schedule("0 * * * *", async () => {
   if (isRunning) {
