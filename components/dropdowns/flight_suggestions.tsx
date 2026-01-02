@@ -2,9 +2,10 @@ import { AirportProps } from "@/types/flight_type";
 
 type FlightSuggestionsProps = {
   airports: AirportProps[];
+  onAirportSelect: (airport_code: string) => void;
 };
 
-export const FlightSuggestions = ({ airports }: FlightSuggestionsProps) => {
+export const FlightSuggestions = ({ airports, onAirportSelect }: FlightSuggestionsProps) => {
   return (
     <ul
       className={`${
@@ -17,7 +18,7 @@ export const FlightSuggestions = ({ airports }: FlightSuggestionsProps) => {
         </li>
       ) : (
         airports.map((airport) => (
-          <li className="flex flex-col gap-2 p-2 hover:bg-mint-green-100 cursor-pointer rounded-sm" key={airport.airport_code}>
+          <li className="flex flex-col gap-2 p-2 hover:bg-mint-green-100 cursor-pointer rounded-sm" key={airport.airport_code} onClick={() => onAirportSelect(airport.airport_code)}>
             <h4 className="font-semibold text-blackish-green-10">
               {airport.airport_name},{" "}
               <span className="text-blackish-green-10/40">

@@ -47,6 +47,11 @@ export const SearchFlights = () => {
     childrenCount: 0,
     cabinClass: "Economy",
   });
+
+  const [activeField, setActiveField] = useState<
+    "fromValue" | "toValue" | null
+  >(null);
+
   const [showDropDown, setShowDropDown] = useState(false);
 
   const [showAirportsSuggestions, setShowAirportsSuggestions] = useState(false);
@@ -54,7 +59,14 @@ export const SearchFlights = () => {
   const [airports, setAirports] = useState<AirportProps[]>([]); // store the airports suggestions
 
   const handleAirportsClick = (airport_code: string) => {
-    
+    if (!activeField) return;
+    setInitialValues((prevValues) => ({
+      ...prevValues,
+      [activeField]: airport_code,
+    }));
+    // clean up
+    setShowAirportsSuggestions(false);
+    setAirports([]);
   }
 
   const debounceHandleLocationChange = useDebouncedCallback(
@@ -87,6 +99,9 @@ export const SearchFlights = () => {
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Set the active field so we know where the suggestion goes later
+    setActiveField(name as "fromValue" | "toValue");
+
     setInitialValues((prevValues) => {
       return {
         ...prevValues,
@@ -235,7 +250,7 @@ export const SearchFlights = () => {
             </div>
           </fieldset>
           {
-            showAirportsSuggestions && <FlightSuggestions airports={airports} />
+            showAirportsSuggestions && <FlightSuggestions airports={airports} onAirportSelect={handleAirportsClick} />
           }
         </div>
         <div>
