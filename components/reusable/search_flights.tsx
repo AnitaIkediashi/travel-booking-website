@@ -100,7 +100,7 @@ export const SearchFlights = () => {
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     // Set the active field so we know where the suggestion goes later
-    setActiveField(name as "fromValue" | "toValue");
+    setActiveField(name as "fromValue" | "toValue"); // this means to only pick inputs name attributes that are either fromValue or toValue - Type Assertion
 
     setInitialValues((prevValues) => {
       return {
