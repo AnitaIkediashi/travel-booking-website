@@ -1,3 +1,4 @@
+import { FlightHotelCard } from "@/components/navigation/flight_hotels_card";
 import { HomeNavbar } from "@/components/navigation/home_navbar";
 import { PlanTrip } from "@/components/sections/home/plan-trip";
 
@@ -7,6 +8,7 @@ export default function Home() {
     <section className="w-full">
       <HomeNavbar />
       <PlanTrip />
+      <FlightHotelCard />
     </section>
   );
 }
