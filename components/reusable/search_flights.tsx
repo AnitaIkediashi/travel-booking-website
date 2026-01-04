@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { SwapIcon } from "../icons/swap";
 import { DatePicker, Select } from "antd";
 import { FlightDropdown } from "./flight_dropdown";
@@ -11,6 +11,8 @@ import { ArrowDownIcon } from "../icons/arrow_down";
 import { useDebouncedCallback } from "@/utils/debounceCallback";
 import { AirportProps } from "@/types/flight_type";
 import { FlightSuggestions } from "../dropdowns/flight_suggestions";
+import { ValidateFlightsInputEntriesModal } from "../modals/validate_flights_input_entries_modal";
+import { useRouter } from "next/navigation";
 
 /**
  * NOTES: 1. Day.js is a minimalist JavaScript library designed to make parsing, validating, manipulating, and displaying dates and times in web applications much easier and more efficient than using the built-in JavaScript Date object
@@ -22,7 +24,12 @@ const { RangePicker } = DatePicker;
 
 export const dateFormat = "DD MMM YY "; // From antd documentation
 
-type InitialState = {
+const disabledDate = (current: dayjs.Dayjs) => {
+  // Can not select days before today
+  return current < dayjs().startOf("day");
+}
+
+export type InitialState = {
   fromValue: string;
   toValue: string;
   trip: string;
@@ -57,6 +64,13 @@ export const SearchFlights = () => {
   const [showAirportsSuggestions, setShowAirportsSuggestions] = useState(false);
 
   const [airports, setAirports] = useState<AirportProps[]>([]); // store the airports suggestions
+
+  const [showValidateModal, setShowValidateModal] = useState(false);
+
+  const [isPending, startTransition] = useTransition(); // useTransition hook is used to render part of the UI in the background
+
+  const router = useRouter();
+
 
   const handleAirportsClick = (airport_code: string) => {
     if (!activeField) return;
@@ -228,113 +242,171 @@ export const SearchFlights = () => {
   const totalPassengers =
     initialValues.adultCount + initialValues.childrenCount;
 
+  function validateEntries() {
+    // check for from and to entries if empty
+    if(initialValues.fromValue.trim() === "" || initialValues.toValue.trim() === "") {
+      return false;
+    }
+
+    if(initialValues.trip === "") {
+      return false;
+    }
+
+    if(initialValues.trip === "" && !initialValues.entryDate && !initialValues.startDate) {
+      return false;
+    }
+
+    if(initialValues.trip === "one-way" && !initialValues.entryDate) {
+      return false;
+    }
+
+    if(initialValues.trip === "round-trip" && (!initialValues.startDate || !initialValues.endDate)) {
+      return false;
+    }
+    return true;
+  }
+
+  function handleShowFlights() {
+    const isValid = validateEntries();
+    if (isValid) {
+      // proceed to show flights
+      setShowValidateModal(false);
+      startTransition(() => {
+        if(initialValues.trip === "one-way") {
+          router.push(`/flight-flow/flight-listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
+        } else {
+          router.push(`/flight-flow/flight-listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format('YYYY-MM-DD')}&return=${initialValues.endDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
+        }
+      });
+    } else {
+      setShowValidateModal(true);
+    }
+  }
+
+  function handleCloseModal() {
+    setShowValidateModal(false);
+  }
+
   return (
-    <div className="flex flex-col gap-8 font-montserrat">
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6">
-        <div className="relative">
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
-            <legend className="text-blackish-green text-sm capitalize">
-              from - to
-            </legend>
-            <div className="w-full flex items-center space-between relative h-full">
-              <div className="w-[calc(100%-48px)] flex items-center">
-                <div className="w-1/2 mr-1">{inputA}</div>-
-                <div className="w-1/2 ml-1">{inputB}</div>
+    <>
+      <div className="flex flex-col gap-8 font-montserrat">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_120px_1fr_1fr] xl:grid-cols-[1fr_140px_1fr_1fr] gap-6">
+          <div className="relative">
+            <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+              <legend className="text-blackish-green text-sm capitalize">
+                from - to
+              </legend>
+              <div className="w-full flex items-center space-between relative h-full">
+                <div className="w-[calc(100%-48px)] flex items-center">
+                  <div className="w-1/2 mr-1">{inputA}</div>-
+                  <div className="w-1/2 ml-1">{inputB}</div>
+                </div>
+                <div
+                  className="w-12 h-full grid place-items-center cursor-pointer"
+                  onClick={handleSwap}
+                >
+                  <SwapIcon />
+                </div>
               </div>
-              <div
-                className="w-12 h-full grid place-items-center cursor-pointer"
-                onClick={handleSwap}
-              >
-                <SwapIcon />
-              </div>
-            </div>
-          </fieldset>
-          {
-            showAirportsSuggestions && <FlightSuggestions airports={airports} onAirportSelect={handleAirportsClick} />
-          }
-        </div>
-        <div>
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
-            <legend className="text-blackish-green text-sm capitalize">
-              trip
-            </legend>
-            <Select
-              options={tripOptions}
-              allowClear
-              className="w-full text-blackish-green-10"
-              onChange={handleTripChange}
-            />
-          </fieldset>
-        </div>
-        <div>
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
-            <legend className="text-blackish-green text-sm capitalize">
-              {initialValues.trip === "one-way"
-                ? "departure"
-                : "departure - return"}
-            </legend>
-            {initialValues.trip === "one-way" ? (
-              <DatePicker
-                format={dateFormat}
-                className="w-full text-blackish-green-10"
-                onChange={handleSingleDateChange}
-              />
-            ) : (
-              <RangePicker
-                format={dateFormat}
-                onChange={handleDateRangeChange}
-                className="text-blackish-green-10"
+            </fieldset>
+            {showAirportsSuggestions && (
+              <FlightSuggestions
+                airports={airports}
+                onAirportSelect={handleAirportsClick}
               />
             )}
-          </fieldset>
+          </div>
+          <div>
+            <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
+              <legend className="text-blackish-green text-sm capitalize">
+                trip
+              </legend>
+              <Select
+                options={tripOptions}
+                allowClear
+                className="w-full text-blackish-green-10"
+                onChange={handleTripChange}
+              />
+            </fieldset>
+          </div>
+          <div>
+            <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 date_wrapper">
+              <legend className="text-blackish-green text-sm capitalize">
+                {initialValues.trip === "one-way"
+                  ? "departure"
+                  : "departure - return"}
+              </legend>
+              {initialValues.trip === "one-way" ? (
+                <DatePicker
+                  format={dateFormat}
+                  className="w-full text-blackish-green-10"
+                  onChange={handleSingleDateChange}
+                  disabledDate={disabledDate}
+                />
+              ) : (
+                <RangePicker
+                  format={dateFormat}
+                  onChange={handleDateRangeChange}
+                  className="text-blackish-green-10"
+                  disabledDate={disabledDate}
+                />
+              )}
+            </fieldset>
+          </div>
+          <div className="relative">
+            <fieldset
+              className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer"
+              onClick={handleDropDownClick}
+            >
+              <legend className="text-blackish-green text-sm capitalize">
+                passenger - class
+              </legend>
+              <p className="w-full h-full capitalize text-blackish-green-10 flex items-center justify-between">
+                {totalPassengers > 0
+                  ? `${totalPassengers} passenger${
+                      totalPassengers > 1 ? "s, " : ", "
+                    }`
+                  : ""}
+                {initialValues.cabinClass}
+                <span className="mr-2">
+                  <ArrowDownIcon />
+                </span>
+              </p>
+            </fieldset>
+            <FlightDropdown
+              adultCount={initialValues.adultCount}
+              childrenCount={initialValues.childrenCount}
+              onAdultIncrement={handleAdultIncrement}
+              onAdultDecrement={handleAdultDecrement}
+              onChildrenIncrement={handleChildrenIncrement}
+              onChildrenDecrement={handleChildrenDecrement}
+              cabinType={initialValues.cabinClass}
+              onCabinClassChange={handleCabinClassChange}
+              showDropDown={showDropDown}
+              onClose={handleDropDownClick}
+            />
+          </div>
         </div>
-        <div className="relative">
-          <fieldset
-            className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 cursor-pointer"
-            onClick={handleDropDownClick}
-          >
-            <legend className="text-blackish-green text-sm capitalize">
-              passenger - class
-            </legend>
-            <p className="w-full h-full capitalize text-blackish-green-10 flex items-center justify-between">
-              {totalPassengers > 0
-                ? `${totalPassengers} passenger${
-                    totalPassengers > 1 ? "s, " : ", "
-                  }`
-                : ""}
-              {initialValues.cabinClass}
-              <span className="mr-2">
-                <ArrowDownIcon />
-              </span>
-            </p>
-          </fieldset>
-          <FlightDropdown
-            adultCount={initialValues.adultCount}
-            childrenCount={initialValues.childrenCount}
-            onAdultIncrement={handleAdultIncrement}
-            onAdultDecrement={handleAdultDecrement}
-            onChildrenIncrement={handleChildrenIncrement}
-            onChildrenDecrement={handleChildrenDecrement}
-            cabinType={initialValues.cabinClass}
-            onCabinClassChange={handleCabinClassChange}
-            showDropDown={showDropDown}
-            onClose={handleDropDownClick}
+        <div className="md:self-end flex md:flex-row flex-col md:items-center gap-6">
+          <Button
+            label="add promo code"
+            className="uppercase text-blackish-green font-medium text-sm flex items-center gap-1 md:w-[161px] w-full h-12 justify-center"
+            icon={<AddIcon />}
+            type="button"
+          />
+          <Button
+            label={`${isPending ? "Searching..." : "show flights"}`}
+            className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center hover:bg-blackish-green/30 transition ease-in-out duration-300"
+            icon={<PaperPlaneIcon />}
+            onClick={handleShowFlights}
           />
         </div>
       </div>
-      <div className="md:self-end flex md:flex-row flex-col md:items-center gap-6">
-        <Button
-          label="add promo code"
-          className="uppercase text-blackish-green font-medium text-sm flex items-center gap-1 md:w-[161px] w-full h-12 justify-center"
-          icon={<AddIcon />}
-          type="button"
-        />
-        <Button
-          label="show flights"
-          className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center hover:bg-blackish-green/30 transition ease-in-out duration-300"
-          icon={<PaperPlaneIcon />}
-        />
-      </div>
-    </div>
+      <ValidateFlightsInputEntriesModal
+        flightInputEntries={initialValues}
+        onClose={handleCloseModal}
+        showValidateModal={showValidateModal}
+      />
+    </>
   );
 };
