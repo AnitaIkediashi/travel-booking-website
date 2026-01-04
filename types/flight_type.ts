@@ -12,3 +12,10 @@ export type CarrierDataProps = {
   logo: string;
   code: string;
 };
+
+export type LocationProps = {
+  airport_code?: string;
+  image_url: string | null;
+  city: string;
+  country: string;
+};

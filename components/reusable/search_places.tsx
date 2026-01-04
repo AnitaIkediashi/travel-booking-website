@@ -12,7 +12,7 @@ export const SearchPlaces = () => {
     setActiveTab(tab);
   };
   return (
-    <div className="lg:w-[80%] md:w-[86%] w-[96%] mx-auto rounded-2xl bg-white shadow-light relative -top-[105px] pl-8 pr-4 pt-4 pb-8 font-montserrat">
+    <div className="lg:w-[80%] md:w-[86%] w-full mx-auto rounded-2xl bg-white shadow-light relative -top-[105px] pl-8 pr-4 pt-4 pb-8 font-montserrat">
       <div className="w-full">
         <div className="flex items-center h-12">
           <div

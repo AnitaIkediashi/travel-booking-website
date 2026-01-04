@@ -245,7 +245,7 @@ export const SearchFlights = () => {
   function validateEntries() {
     // check for from and to entries if empty
     if(initialValues.fromValue.trim() === "" || initialValues.toValue.trim() === "") {
-      return false;
+      return false; // stop here
     }
 
     if(initialValues.trip === "") {
@@ -263,7 +263,7 @@ export const SearchFlights = () => {
     if(initialValues.trip === "round-trip" && (!initialValues.startDate || !initialValues.endDate)) {
       return false;
     }
-    return true;
+    return true; // else continue
   }
 
   function handleShowFlights() {
