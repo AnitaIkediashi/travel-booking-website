@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Link from "next/link";
 import { BedIcon } from "../icons/bed";
@@ -9,6 +9,8 @@ import logo from "@/public/logos/logo_mint.svg";
 import { Button } from "../reusable/button";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { MenuIcon } from "../icons/menu";
+import { MobileMenu } from "./mobile_menu";
 
 const NavLinksDark: NavLinkProp[] = [
   {
@@ -25,11 +27,14 @@ const NavLinksDark: NavLinkProp[] = [
 export const Navbar = () => {
   const pathname = usePathname();
 
-  const [active, setActive] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const handleClick = () => {
+    setShowMenu(!showMenu);
+  };
 
   return (
     <>
-      <header className="w-full h-[90px] bg-white px-[104px] py-[27px] flex items-center justify-center shadow-light font-montserrat">
+      <header className="w-full h-[90px] bg-white lg:px-[104px] px-8 py-[27px] flex items-center justify-center shadow-light font-montserrat fixed top-0 left-0 right-0 z-50">
         <nav className="w-full flex items-center justify-between">
           {/* links */}
           <div className="lg:flex items-center gap-8 hidden transition-all duration-200">
@@ -67,8 +72,12 @@ export const Navbar = () => {
               className="text-sm font-semibold px-6 py-[15.5px] rounded-lg bg-blackish-green text-white"
             />
           </div>
+          <div className="cursor-pointer lg:hidden block" onClick={handleClick}>
+            <MenuIcon fillColor="#112211" />
+          </div>
         </nav>
       </header>
+      <MobileMenu showMenu={showMenu} />
     </>
   );
 };

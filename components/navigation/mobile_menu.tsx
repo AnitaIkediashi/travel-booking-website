@@ -10,7 +10,7 @@ type MenuProps = {
 export const MobileMenu = ({showMenu}: MenuProps) => {
   return (
     <ul
-      className={`absolute top-[69px] lg:hidden bg-white md:w-[210px] w-44 rounded-lg flex flex-col gap-6 p-4 transition-all duration-300 ease-in-out ${
+      className={`absolute top-[69px] lg:hidden bg-white md:w-[210px] w-44 rounded-lg flex flex-col gap-6 p-4 transition-all duration-300 ease-in-out z-50 font-montserrat ${
         showMenu
           ? "right-0 -translate-x-8  opacity-100"
           : "right-0 translate-x-0 opacity-0"
