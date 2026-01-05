@@ -44,13 +44,11 @@ export const Reviews = () => {
       </div>
       <div className="w-full overflow-x-hidden">
         <div className="flex max-w-full overflow-scroll hide_scroll">
-            {
-                reviewContents.map((item, index) => (
-                    <ReviewCard item={item} key={index} />
-                ))
-            }
+          {reviewContents.map((item, index) => (
+            <ReviewCard item={item} key={index} />
+          ))}
         </div>
       </div>
     </section>
   );
-}
+};
