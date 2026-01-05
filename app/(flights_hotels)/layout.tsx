@@ -1,8 +1,14 @@
+import { Navbar } from "@/components/navigation/navbar";
 
 export default function FlightHotelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <Navbar />
+      {children}
+    </>
+  );
 }
