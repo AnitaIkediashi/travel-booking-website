@@ -11,7 +11,6 @@ import { MenuIcon } from "../icons/menu";
 import { SearchPlaces } from "../reusable/search_places";
 import Link from "next/link";
 
-
 export type NavLinkProp = {
   label: string;
   href: string;
@@ -21,12 +20,12 @@ export type NavLinkProp = {
 const NavLinks: NavLinkProp[] = [
   {
     label: "find flight",
-    href: "",
+    href: "/flight-flow/flight-search",
     icon: <FlightIcon fillColor="white" />,
   },
   {
     label: "find stays",
-    href: "",
+    href: "/hotel-flow/hotel-search",
     icon: <BedIcon fillColor="white" />,
   },
 ];
@@ -44,7 +43,11 @@ export const HomeNavbar = () => {
           <nav className="flex items-center justify-between text-white">
             <div className="lg:flex items-center gap-8 hidden">
               {NavLinks.map((link, index) => (
-                <Link key={index} href={link.href} className="flex items-center gap-[3.5px]">
+                <Link
+                  key={index}
+                  href={link.href}
+                  className="flex items-center gap-[3.5px]"
+                >
                   {link.icon}
                   <span className="capitalize text-sm font-semibold">
                     {link.label}

@@ -273,9 +273,9 @@ export const SearchFlights = () => {
       setShowValidateModal(false);
       startTransition(() => {
         if(initialValues.trip === "one-way") {
-          router.push(`/flight-flow/flight-listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
+          router.push(`/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
         } else {
-          router.push(`/flight-flow/flight-listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format('YYYY-MM-DD')}&return=${initialValues.endDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
+          router.push(`/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format('YYYY-MM-DD')}&return=${initialValues.endDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
         }
       });
     } else {
