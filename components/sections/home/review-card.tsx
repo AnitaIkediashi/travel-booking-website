@@ -55,7 +55,7 @@ export const ReviewCard = ({item}: ReviewCardProps) => {
             alt="review card"
             width={377}
             height={200}
-            className="w-full h-[200px] rounded-lg"
+            className="w-full rounded-lg"
           />
         </div>
       </div>
