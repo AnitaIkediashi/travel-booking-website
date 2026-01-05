@@ -24,12 +24,14 @@ export const PlanTrip = async () => {
             item.country.length > 15
               ? `${item.country.slice(0, 15)}...`
               : item.country;
+          const shortenCityLength = item.city.length > 9 ? `${item.city.slice(0, 9)}...` : item.city
           return (
             <RandomLocationCard
               key={index}
               item={item}
               index={index}
               shortenCountryLength={shortenCountryLength}
+              shortenCityLength={shortenCityLength}
             />
           );
         })}

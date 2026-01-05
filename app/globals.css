@@ -11,6 +11,7 @@
   --blackish-green-10: #1C1B1F;
   --blackish-green-20: #79747E;
   --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05);
+  --box-shadow-medium: 2px 4px 16px rgba(17, 34, 17, 0.1);
 }
 
 /* referencing other colors using the inline keyword */
@@ -25,6 +26,7 @@
   --color-salmon-100: var(--salmon-100);
   --color-neutrals-70: var(--neutrals-70);
   --shadow-light: var(--box-shadow-light);
+  --shadow-medium: var(--box-shadow-medium)
 }
 
 
@@ -42,4 +44,8 @@ body {
 .ant-select-single .ant-select-selector,
 .ant-picker .ant-picker-input >input {
   font-family: var(--font-montserrat);
+}
+
+.hide_scroll::-webkit-scrollbar {
+  display: none;
 }

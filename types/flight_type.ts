@@ -19,3 +19,11 @@ export type LocationProps = {
   city: string;
   country: string;
 };
+
+export type ReviewContentProps = {
+  title: string;
+  desc: string;
+  user: string;
+  company: string;
+  image: string;
+};
