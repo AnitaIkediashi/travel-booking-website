@@ -34,7 +34,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <header className="w-full h-[90px] bg-white lg:px-[104px] px-8 py-[27px] flex items-center justify-center shadow-light font-montserrat fixed top-0 left-0 right-0 z-50">
+      <header className="w-full h-[90px] bg-white lg:px-[147px] px-8 py-[27px] flex items-center justify-center shadow-light font-montserrat fixed top-0 left-0 right-0 z-50">
         <nav className="w-full flex items-center justify-between">
           {/* links */}
           <div className="lg:flex items-center gap-8 hidden transition-all duration-200">

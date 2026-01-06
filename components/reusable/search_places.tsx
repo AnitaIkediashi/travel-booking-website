@@ -12,7 +12,7 @@ export const SearchPlaces = () => {
     setActiveTab(tab);
   };
   return (
-    <div className="lg:w-[80%] md:w-[86%] w-full mx-auto rounded-2xl bg-white shadow-light relative -top-[105px] pl-8 pr-4 pt-4 pb-8 font-montserrat">
+    <div className="lg:w-[77%] md:w-[80%] w-full mx-auto rounded-2xl bg-white shadow-light pl-8 pr-4 pt-4 pb-8 font-montserrat">
       <div className="w-full">
         <div className="flex items-center h-12">
           <div
@@ -40,13 +40,7 @@ export const SearchPlaces = () => {
           </div>
         </div>
         <div className="w-full mt-12">
-            {
-                activeTab === "flights" ? (
-                    <SearchFlights />
-                ) : (
-                    <SearchStays />
-                )
-            }
+          {activeTab === "flights" ? <SearchFlights /> : <SearchStays />}
         </div>
       </div>
     </div>
