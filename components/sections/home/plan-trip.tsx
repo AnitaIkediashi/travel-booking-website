@@ -16,7 +16,10 @@ export const PlanTrip = async () => {
             Search Flights & Places Hire to our most popular destinations
           </p>
         </div>
-        <SeeMorePlaces />
+        <SeeMorePlaces
+          label="See more places"
+          href="/flight-flow/flight-search"
+        />
       </div>
       <div className="flex flex-wrap gap-8 justify-between">
         {randomData.map((item, index) => {
@@ -24,7 +27,8 @@ export const PlanTrip = async () => {
             item.country.length > 15
               ? `${item.country.slice(0, 15)}...`
               : item.country;
-          const shortenCityLength = item.city.length > 9 ? `${item.city.slice(0, 9)}...` : item.city
+          const shortenCityLength =
+            item.city.length > 9 ? `${item.city.slice(0, 9)}...` : item.city;
           return (
             <RandomLocationCard
               key={index}

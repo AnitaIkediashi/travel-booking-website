@@ -60,7 +60,9 @@ export const Navbar = () => {
             })}
           </div>
           {/* logo */}
-          <Image src={logo} alt="company logo" />
+          <Link href="/">
+            <Image src={logo} alt="company logo" />
+          </Link>
           {/* authentication */}
           <div className="lg:flex items-center gap-8 hidden">
             <Button

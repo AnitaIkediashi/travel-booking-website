@@ -56,7 +56,9 @@ export const HomeNavbar = () => {
                   </Link>
                 ))}
               </div>
-              <Image src={logo} alt="company logo" />
+              <Link href="/">
+                <Image src={logo} alt="company logo" />
+              </Link>
               <div className="lg:flex items-center gap-8 hidden">
                 <Button
                   label="login"
