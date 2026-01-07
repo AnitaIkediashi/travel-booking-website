@@ -4,7 +4,7 @@ export const PlacesToGo = () => {
   return (
     <section className="pt-[266px] font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] w-full mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
           <div className="flex flex-col gap-y-4">
             <h2 className="font-semibold md:text-[32px] text-xl text-black">
               Let&apos;s go places together
@@ -16,6 +16,9 @@ export const PlacesToGo = () => {
           </div>
           <SeeMorePlaces label="See All" href="/flight-flow/flight-search/listing" />
         </div>
+      </div>
+      <div className="w-full">
+        
       </div>
     </section>
   );
