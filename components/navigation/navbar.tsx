@@ -79,7 +79,7 @@ export const Navbar = () => {
           </div>
         </nav>
       </header>
-      <MobileMenu showMenu={showMenu} />
+      <MobileMenu topSize="top-[90px]" showMenu={showMenu} />
     </>
   );
 };

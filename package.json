@@ -10,13 +10,14 @@
     "generate_flights": "tsx create_data/flight_data.ts"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^6.19.0",
     "antd": "^5.27.6",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",
-    "gsap": "^3.13.0",
+    "gsap": "^3.14.2",
     "next": "16.0.0",
     "node-cron": "^4.2.1",
     "pg": "^8.16.3",

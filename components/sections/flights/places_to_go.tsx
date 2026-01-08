@@ -1,9 +1,11 @@
 import { SeeMorePlaces } from "@/components/navigation/see_more_places";
+import Image from "next/image";
+import plainMap from "@/public/flights/plain_map.png";
 
 export const PlacesToGo = () => {
   return (
-    <section className="pt-[266px] font-montserrat pb-20">
-      <div className="lg:w-[77%] md:w-[80%] w-full mx-auto">
+    <section className="md:pt-[266px] pt-[553px] font-montserrat pb-20">
+      <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
           <div className="flex flex-col gap-y-4">
             <h2 className="font-semibold md:text-[32px] text-xl text-black">
@@ -14,12 +16,15 @@ export const PlacesToGo = () => {
               trip with us.
             </p>
           </div>
-          <SeeMorePlaces label="See All" href="/flight-flow/flight-search/listing" />
+          <SeeMorePlaces
+            label="See All"
+            href="/flight-flow/flight-search/listing"
+          />
         </div>
       </div>
-      <div className="w-full">
-        
+      <div className="w-full relative h-[486px]">
+        <Image src={plainMap} alt="plain map" className="w-full h-full" />
       </div>
     </section>
   );
-}
+};
