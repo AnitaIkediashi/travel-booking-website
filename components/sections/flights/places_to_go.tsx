@@ -2,7 +2,7 @@ import { SeeMorePlaces } from "@/components/navigation/see_more_places";
 
 export const PlacesToGo = () => {
   return (
-    <section className="pt-[266px] font-montserrat">
+    <section className="pt-[266px] font-montserrat pb-20">
       <div className="lg:w-[77%] md:w-[80%] w-full mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
           <div className="flex flex-col gap-y-4">
