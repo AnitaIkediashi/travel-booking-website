@@ -18,19 +18,6 @@ export type NavLinkProp = {
   icon: React.ReactNode;
 };
 
-const NavLinks: NavLinkProp[] = [
-  {
-    label: "find flight",
-    href: "/flight-flow/flight-search",
-    icon: <FlightIcon fillColor="white" />,
-  },
-  {
-    label: "find stays",
-    href: "/hotel-flow/hotel-search",
-    icon: <BedIcon fillColor="white" />,
-  },
-];
-
 export const HomeNavbar = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -39,7 +26,20 @@ export const HomeNavbar = () => {
     setShowMenu(!showMenu);
   };
 
-  // Handle scroll logic
+  const NavLinks: NavLinkProp[] = [
+    {
+      label: "find flight",
+      href: "/flight-flow/flight-search",
+      icon: <FlightIcon fillColor={isScrolled ? "#112211" : "white"} />,
+    },
+    {
+      label: "find stays",
+      href: "/hotel-flow/hotel-search",
+      icon: <BedIcon fillColor={isScrolled ? "#112211" : "white"} />,
+    },
+  ];
+
+  // Handle scroll logic - side effect
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -58,11 +58,17 @@ export const HomeNavbar = () => {
       <section className="md:mx-[30px] md:mt-[30px] mx-3 mt-4 font-montserrat">
         <div className="bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.7)),url(/landing_page/home_bg.png)] bg-no-repeat bg-center bg-cover lg:h-[581px] h-[462px] rounded-3xl relative flex items-center justify-center">
           <header
-            className={`px-8 py-10 fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${
-              isScrolled ? "bg-white py-[30px] shadow-light" : ""
+            className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${
+              isScrolled
+                ? "bg-white py-[30px] shadow-light px-8"
+                : "px-16 py-[54px]"
             }`}
           >
-            <nav className="flex items-center justify-between text-white">
+            <nav
+              className={`flex items-center justify-between  ${
+                isScrolled ? "text-blackish-green" : "text-white"
+              }`}
+            >
               <div className="lg:flex items-center gap-8 hidden">
                 {NavLinks.map((link, index) => (
                   <Link
@@ -83,11 +89,15 @@ export const HomeNavbar = () => {
               <div className="lg:flex items-center gap-8 hidden">
                 <Button
                   label="login"
-                  className="capitalize text-white text-sm font-semibold"
+                  className={`capitalize text-sm font-semibold ${
+                    isScrolled ? "text-blackish-green" : "text-white"
+                  }`}
                 />
                 <Button
                   label="Sign up"
-                  className="text-sm font-semibold px-6 py-[15.5px] rounded-lg bg-white text-blackish-green"
+                  className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg ${
+                    isScrolled ? "text-white bg-blackish-green" : "text-blackish-green bg-white"
+                  }`}
                 />
               </div>
               <div
@@ -98,7 +108,10 @@ export const HomeNavbar = () => {
               </div>
             </nav>
           </header>
-          <MobileMenu showMenu={showMenu} topSize={isScrolled ? 'top-[96px]' : "top-[69px]"} />
+          <MobileMenu
+            showMenu={showMenu}
+            topSize={isScrolled ? "top-[96px]" : "top-[69px]"}
+          />
           <div className="flex flex-col items-center justify-center gap-1 text-white">
             <h3 className=" capitalize font-bold lg:text-[45px] sm:text-3xl text-2xl">
               helping others

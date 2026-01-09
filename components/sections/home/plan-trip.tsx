@@ -19,6 +19,7 @@ export const PlanTrip = async () => {
         <SeeMorePlaces
           label="See more places"
           href="/flight-flow/flight-search"
+          width="md:w-[149px]"
         />
       </div>
       <div className="flex flex-wrap gap-8 justify-between">
