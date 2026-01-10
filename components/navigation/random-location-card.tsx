@@ -20,7 +20,7 @@ export const RandomLocationCard = ({
   const router = useRouter();
 
   const handleCardClick = (code: string) => {
-    router.push(`/flight-flow/flight-search?query=${code}`);
+    router.push(`/flight-flow/flight-search?from=${code}`);
   };
   return (
     <div

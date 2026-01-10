@@ -1,29 +1,33 @@
+"use client";
+
 import { SeeMorePlaces } from "@/components/navigation/see_more_places";
 import Image from "next/image";
 import plainMap from "@/public/flights/plain_map.png";
 import { MapCards } from "@/components/reusable/map_cards";
 import gsap from "gsap";
 import { useRef } from "react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { TitleAndContent } from "@/components/reusable/title_and_content";
 
-gsap.registerPlugin(ScrollTrigger); 
+gsap.registerPlugin(ScrollTrigger);
 
 export const PlacesToGo = () => {
   const mapRef = useRef(null);
-  const boxOneRef = useRef(null)
-  const circleOneRef = useRef(null)
-  const arrowOneRef = useRef(null)
-  const boxTwoRef = useRef(null)
-  const circleTwoRef = useRef(null)
-  const arrowTwoRef = useRef(null)
-  const boxThreeRef = useRef(null)
-  const circleThreeRef = useRef(null)
-  const arrowThreeRef = useRef(null)
-  const boxFourRef = useRef(null)
-  const circleFourRef = useRef(null)
-  const arrowFourRef = useRef(null)
-  const boxFiveRef = useRef(null)
-  const circleFiveRef = useRef(null)
-  const arrowFiveRef = useRef(null)
+  const boxOneRef = useRef(null);
+  const circleOneRef = useRef(null);
+  const arrowOneRef = useRef(null);
+  const boxTwoRef = useRef(null);
+  const circleTwoRef = useRef(null);
+  const arrowTwoRef = useRef(null);
+  const boxThreeRef = useRef(null);
+  const circleThreeRef = useRef(null);
+  const arrowThreeRef = useRef(null);
+  const boxFourRef = useRef(null);
+  const circleFourRef = useRef(null);
+  const arrowFourRef = useRef(null);
+  const boxFiveRef = useRef(null);
+  const circleFiveRef = useRef(null);
+  const arrowFiveRef = useRef(null);
 
   // gsap.to()
 
@@ -31,15 +35,11 @@ export const PlacesToGo = () => {
     <section className="md:pt-[266px] pt-[553px] font-montserrat pb-20">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
-          <div className="flex flex-col gap-y-4">
-            <h2 className="font-semibold md:text-[32px] text-xl text-black">
-              Let&apos;s go places together
-            </h2>
-            <p className="text-blackish-green">
-              Discover the latest offers and news and start planning your next
-              trip with us.
-            </p>
-          </div>
+          <TitleAndContent
+            title="Let's go places together"
+            para="Discover the latest offers and news and start planning your next trip
+        with us."
+          />
           <SeeMorePlaces
             label="See All"
             href="/flight-flow/flight-search/listing"

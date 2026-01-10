@@ -1,5 +1,6 @@
 import { Button } from "@/components/reusable/button";
 import { ReviewCard } from "./review-card";
+import { TitleAndContent } from "@/components/reusable/title_and_content";
 
 const reviewContents = [
   {
@@ -29,14 +30,10 @@ export const Reviews = () => {
   return (
     <section className="pb-[90px] lg:w-[77%] md:w-[80%] w-[95%] mx-auto font-montserrat">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
-        <div className="flex flex-col gap-y-4">
-          <h2 className="font-semibold md:text-[32px] text-xl text-black">
-            Reviews
-          </h2>
-          <p className="text-blackish-green">
-            What people says about Golobe facilities
-          </p>
-        </div>
+        <TitleAndContent
+          title="Reviews"
+          para="What people says about Golobe facilities"
+        />
         <Button
           label="See All"
           className="md:w-20 w-full h-10 flex items-center justify-center border border-mint-green-100 rounded text-blackish-green font-medium text-sm hover:bg-mint-green-100"
