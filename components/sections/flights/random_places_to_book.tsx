@@ -7,7 +7,7 @@ export const RandomPlacesToBook = async () => {
   const data = await randomCountriesAndPrice();
 
   return (
-    <section className="font-montserrat pb-20">
+    <section className="font-montserrat pb-20 lg:pb-[120px]">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
           <TitleAndContent
