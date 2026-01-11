@@ -36,9 +36,9 @@ export type SearchParamsProps = {
   from?: string;
   to?: string;
   trip?: string;
-  depart?: string
-  return?: string
-  adults?: number
-  children?: number
-  cabin?: string
+  depart?: string;
+  return?: string;
+  adults?: number;
+  children?: number;
+  cabin?: string;
 };
