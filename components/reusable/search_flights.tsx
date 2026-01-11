@@ -9,7 +9,7 @@ import { Button } from "./button";
 import { PaperPlaneIcon } from "../icons/paperPlane";
 import { ArrowDownIcon } from "../icons/arrow_down";
 import { useDebouncedCallback } from "@/utils/debounceCallback";
-import { AirportProps } from "@/types/flight_type";
+import { AirportProps, SearchParamsProps } from "@/types/flight_type";
 import { FlightSuggestions } from "../dropdowns/flight_suggestions";
 import { ValidateFlightsInputEntriesModal } from "../modals/validate_flights_input_entries_modal";
 import { useRouter } from "next/navigation";
@@ -41,10 +41,10 @@ export type InitialState = {
   cabinClass: string;
 };
 
-export const SearchFlights = () => {
+export const SearchFlights = ({from}: SearchParamsProps) => {
   const [swapInput, setSwapInput] = useState(false);
   const [initialValues, setInitialValues] = useState<InitialState>({
-    fromValue: "",
+    fromValue: from || "",
     toValue: "",
     trip: "",
     entryDate: null,

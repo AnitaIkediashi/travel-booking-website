@@ -27,3 +27,18 @@ export type ReviewContentProps = {
   company: string;
   image: string;
 };
+
+export type searchParams = {
+  searchParams: SearchParamsProps;
+};
+
+export type SearchParamsProps = {
+  from?: string;
+  to?: string;
+  trip?: string;
+  depart?: string
+  return?: string
+  adults?: number
+  children?: number
+  cabin?: string
+};

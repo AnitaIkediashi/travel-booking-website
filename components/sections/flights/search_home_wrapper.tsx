@@ -1,6 +1,7 @@
 import { SearchPlaces } from "@/components/reusable/search_places";
+import { SearchParamsProps } from "@/types/flight_type";
 
-export const SearchHomeWrapper = () => {
+export const SearchHomeWrapper = ({from}: SearchParamsProps) => {
   return (
     <section className="w-full">
       <div className="pt-[90px] w-full lg:h-[537px] h-[462px] bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.7)),url(/flights/flight-hero.jpg)] bg-no-repeat bg-center bg-cover font-montserrat">
@@ -13,7 +14,7 @@ export const SearchHomeWrapper = () => {
           </p>
         </div>
         <div className="relative top-[109px]">
-          <SearchPlaces />
+          <SearchPlaces from={from} />
         </div>
       </div>
     </section>
