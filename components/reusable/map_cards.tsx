@@ -7,9 +7,9 @@ type MapCardProps = {
   userName: string;
   location: string;
   className: string;
-  arrowPosition: string
+  arrowPosition: string;
   arrowWidth: number;
-  arrowHeight: number
+  arrowHeight: number;
 };
 
 export const MapCards = ({
@@ -37,7 +37,7 @@ export const MapCards = ({
         </div>
       </div>
       {/* small circle */}
-      <div
+      <div 
         className={`absolute z-10 ${circlePosition} w-[9.9px] h-[9.58px] rounded-full bg-white`}
       />
       {/* arrow image */}
