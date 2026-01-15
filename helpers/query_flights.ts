@@ -13,23 +13,33 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
       cabin,
     } = queryParams;
 
-    const segmentFilters: Prisma.SegmentWhereInput = {
-      departure_airport_code: { contains: from },
-      arrival_airport_code: { contains: to },
+    // 1. Define Outbound Logic - one-way by default
+    // SegmentWhereInput - This contains the generated type object for the properties added to the model
+    const outboundFilter: Prisma.SegmentWhereInput = {
+      departure_airport_code: { equals: from },
+      arrival_airport_code: { equals: to },
       departure_time: { startsWith: depart },
     };
 
-    // 2. Conditionally add the return date filter
-    if (trip === "round-trip") {
-      segmentFilters.arrival_time = { startsWith: returnDate };
-    }
+    // 2. Define Inbound Logic (Swapped Airports) - when it comes to round-trip
+    const inboundFilter: Prisma.SegmentWhereInput = {
+      departure_airport_code: { equals: to },
+      arrival_airport_code: { equals: from },
+      departure_time: { startsWith: returnDate },
+    };
+
+    // 3. Combine them based on Trip Type
+    const combinedSegmentFilter: Prisma.SegmentWhereInput =
+      trip === "round-trip"
+        ? { OR: [outboundFilter, inboundFilter] }
+        : outboundFilter;
 
     const dataResponse = await prisma.data.findFirst({
       include: {
         flight_offers: {
           include: {
             segments: {
-              where: segmentFilters,
+              where: combinedSegmentFilter,
               include: {
                 legs: {
                   include: {
@@ -60,7 +70,7 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
               some: {
                 trip_type: trip,
                 segments: {
-                  some: segmentFilters,
+                  some: outboundFilter,
                 },
               },
             },
@@ -71,18 +81,9 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
         ],
       },
     });
-    console.log("data response: ", JSON.stringify(dataResponse, null, 2));
+    // console.log('data response: ', JSON.stringify(dataResponse, null, 2))
+    return dataResponse;
   } catch (error) {
     console.error("Error querying flight data: ", error);
   }
 };
-
-queryFlightData({
-  from: "JNB",
-  to: "NBO",
-  trip: "round-trip",
-  depart: "2026-01-19",
-  return: "2026-01-20",
-  cabin: "Business",
-});
-// http://localhost:3000/flight-flow/flight-search/listing?from=JNB&to=NBO&trip=round-trip&depart=2026-01-19&return=2026-01-20&adults=1&children=0&cabin=Business
