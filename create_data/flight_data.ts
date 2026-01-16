@@ -213,12 +213,27 @@ function populateFakeSegments(
   windowEnd: Date,
   tripType: string
 ) {
-  // 1. Generate Outbound Segment - one-way trip
-  const outboundDuration = faker.number.int({ min: 90, max: 720 });
-  const departureTime = faker.date.between({
+  // 1. Generate a random date between start and end
+  const rawOutboundDate = faker.date.between({
     from: windowStart,
     to: windowEnd,
   });
+
+  // NORMALIZE: Force the departure to 12:00 PM UTC
+  // This prevents "timezone shifting" where a flight at 11:00 PM
+  // might accidentally show up on the previous or next day.
+  const departureTime = new Date(
+    Date.UTC(
+      rawOutboundDate.getUTCFullYear(),
+      rawOutboundDate.getUTCMonth(),
+      rawOutboundDate.getUTCDate(),
+      12,
+      0,
+      0
+    )
+  );
+
+  const outboundDuration = faker.number.int({ min: 90, max: 720 });
   const arrivalTime = new Date(
     departureTime.getTime() + outboundDuration * 60 * 1000
   );
@@ -235,11 +250,26 @@ function populateFakeSegments(
 
   // 2. If it's a round-trip, add the return segment
   if (tripType === "round-trip") {
-    const stayDays = faker.number.int({ min: 2, max: 10 });
-    // Return departs X days after the first flight arrives
-    const returnDeparture = new Date(
+    // Increased max to 40 so your "Feb 17" searches find matches
+    const stayDays = faker.number.int({ min: 1, max: 40 });
+
+    // Calculate Return Departure based on the Outbound Arrival
+    const rawReturnDate = new Date(
       arrivalTime.getTime() + stayDays * 24 * 60 * 60 * 1000
     );
+
+    // NORMALIZE: Force the return flight to 12:00 PM UTC as well
+    const returnDeparture = new Date(
+      Date.UTC(
+        rawReturnDate.getUTCFullYear(),
+        rawReturnDate.getUTCMonth(),
+        rawReturnDate.getUTCDate(),
+        12,
+        0,
+        0
+      )
+    );
+
     const returnDuration = faker.number.int({ min: 90, max: 720 });
     const returnArrival = new Date(
       returnDeparture.getTime() + returnDuration * 60 * 1000
@@ -368,23 +398,26 @@ function populateFakeFeatures() {
   });
 }
 
+// async function clearDatabase() {
+//   console.info("Emptying database...");
 
-// async function clearStaleData() {
-//   // const now = new Date();
-//   console.info("🧹 Cleaning up stale data (past departures)...");
+//   // The order matters! Delete children before parents.
+//   // We use a transaction to ensure everything is cleared or nothing is.
+//   await prisma.$transaction([
+//     prisma.legs.deleteMany(),
+//     prisma.segment.deleteMany(),
+//     prisma.travelerPrice.deleteMany(),
+//     prisma.priceBreakdown.deleteMany(),
+//     prisma.flightOffers.deleteMany(),
+//     prisma.stop.deleteMany(),
+//     prisma.airlines.deleteMany(),
+//     prisma.minPrice.deleteMany(),
+//     prisma.flightTimes.deleteMany(),
+//     prisma.data.deleteMany(), // The main parent
+//     prisma.airport.deleteMany(),
+//   ]);
 
-//   // // Deleting segments that have already departed in the past and not future ones
-//   // // This will cascade delete related legs if your schema is set up with ON DELETE CASCADE
-//   // await prisma.segment.deleteMany({
-//   //   where: {
-//   //     departure_time: {
-//   //       lt: now.toISOString(), // lt = "less than" (in the past)
-//   //     },
-//   //   },
-//   // });
-
-//   await prisma.data.deleteMany({}); // this to retain only 10- 20 flights for now instead of creating so many data
-//   console.info("✨ Stale data removed.");
+//   console.info("Database cleared! ✨");
 // }
 
 async function clearStaleData() {
@@ -461,307 +494,316 @@ async function main() {
     return;
   }
 
+  // await clearDatabase();
+
   console.info("🌱 Database has room. Generating new flight data...");
   // 3. Use Transaction for "All or Nothing" safety
-  await prisma.$transaction(async (tx) => {
-    // 4. Create fake Airports
-    const createdAirports = [];
-    for (const airport of fakeAirports) {
-      const created = await tx.airport.upsert({
-        where: { airport_code: airport.code },
-        update: {
-          airport_name: airport.name,
-          image_url: airport.imageUrl,
-          city: airport.city,
-          country: airport.country,
-        },
-        create: {
-          airport_code: airport.code,
-          airport_name: airport.name,
-          image_url: airport.imageUrl,
-          city: airport.city,
-          country: airport.country,
-        },
-      });
-      createdAirports.push(created);
-    }
+  await prisma.$transaction(
+    async (tx) => {
+      // 4. Create fake Airports
+      const createdAirports = [];
+      for (const airport of fakeAirports) {
+        const created = await tx.airport.upsert({
+          where: { airport_code: airport.code },
+          update: {
+            airport_name: airport.name,
+            image_url: airport.imageUrl,
+            city: airport.city,
+            country: airport.country,
+          },
+          create: {
+            airport_code: airport.code,
+            airport_name: airport.name,
+            image_url: airport.imageUrl,
+            city: airport.city,
+            country: airport.country,
+          },
+        });
+        createdAirports.push(created);
+      }
 
-    if (createdAirports.length < 2) {
-      throw new Error("Not enough airports created for a valid flight path.");
-    }
+      if (createdAirports.length < 2) {
+        throw new Error("Not enough airports created for a valid flight path.");
+      }
 
-    // 5. Prepare Flight Data - only one data is generated for each flight searched
-    const flightInputData = populateFakeFlightData();
-    const [depAirport, arrAirport] = faker.helpers.arrayElements(
-      createdAirports,
-      2
-    ); //select two airports
+      // 5. Prepare Flight Data - only one data is generated for each flight searched
+      const flightInputData = populateFakeFlightData();
+      const [depAirport, arrAirport] = faker.helpers.arrayElements(
+        createdAirports,
+        2
+      ); //select two airports
 
-    const fakeFlightNumber = populateFakeFlightNumber();
+      const fakeFlightNumber = populateFakeFlightNumber();
 
-    // Define the 2-month window once
-    const searchStart = new Date();
-    const searchEnd = new Date();
-    searchEnd.setMonth(searchStart.getMonth() + 2);
+      // Define the 2-month window once
+      const searchStart = new Date();
+      const searchEnd = new Date();
+      searchEnd.setMonth(searchStart.getMonth() + 2);
 
-    // 6. PRE-GENERATE OFFERS to know the Trip Type
-    const fakeOffers = populateFakeFlightOffers();
-    const currentTripType = fakeOffers[0].trip_type; // Use the first offer's type as the master type
+      // 6. PRE-GENERATE OFFERS to know the Trip Type
+      const fakeOffers = populateFakeFlightOffers();
+      const currentTripType = fakeOffers[0].trip_type; // Use the first offer's type as the master type
 
-    // 7. Create Main Data Record with non-multiplying nested relations
-    const createdData = await tx.data.create({
-      data: {
-        duration_min: flightInputData.duration_min,
-        duration_max: flightInputData.duration_max,
-        cabin_class: flightInputData.cabin_class,
-        flight_offers: {
-          create: populateFakeFlightOffers().map((offer) => ({
-            token: offer.token,
-            trip_type: offer.trip_type,
-            flight_key: offer.flight_key,
-            seat_availability: {
-              create: populateFakeSeatAvailability(),
-            },
-            branded_fareinfo: {
-              create: {
-                cabin_class: flightInputData.cabin_class,
-                features: {
-                  create: populateFakeFeatures().map((feature) => ({
-                    feature_name: feature.feature_name,
-                    category: feature.category,
-                    availability: feature.availability,
-                  })),
-                },
+      // 7. Create Main Data Record with non-multiplying nested relations
+      const createdData = await tx.data.create({
+        data: {
+          duration_min: flightInputData.duration_min,
+          duration_max: flightInputData.duration_max,
+          cabin_class: flightInputData.cabin_class,
+          flight_offers: {
+            create: populateFakeFlightOffers().map((offer) => ({
+              token: offer.token,
+              trip_type: offer.trip_type,
+              flight_key: offer.flight_key,
+              seat_availability: {
+                create: populateFakeSeatAvailability(),
               },
-            },
-            segments: {
-              create: populateFakeSegments(
-                searchStart,
-                searchEnd,
-                currentTripType
-              ).map((segment, index) => {
-                // --- AIRPORT SWAP LOGIC ---
-                // If index 0: Departure -> Arrival
-                // If index 1 (Return): Arrival -> Departure
-                const isReturn = index === 1;
-                const segDep = isReturn
-                  ? arrAirport.airport_code
-                  : depAirport.airport_code;
-                const segArr = isReturn
-                  ? depAirport.airport_code
-                  : arrAirport.airport_code;
-
-                return {
-                  departure_airports: { connect: { airport_code: segDep } },
-                  arrival_airports: { connect: { airport_code: segArr } },
-                  departure_time: segment.departure_time_iso,
-                  arrival_time: segment.arrival_time_iso,
-                  total_time: segment.total_time,
-                  legs: {
-                    create: populateFakeLegsData(
-                      segment.departure_time,
-                      segment.arrival_time,
-                      flightInputData.cabin_class
-                    ).map((leg) => ({
-                      departure_airport: { connect: { airport_code: segDep } },
-                      arrival_airport: { connect: { airport_code: segArr } },
-                      departure_time: leg.departure_time,
-                      arrival_time: leg.arrival_time,
-                      cabin_class: leg.cabin_class,
-                      total_time: leg.total_time,
+              branded_fareinfo: {
+                create: {
+                  cabin_class: flightInputData.cabin_class,
+                  features: {
+                    create: populateFakeFeatures().map((feature) => ({
+                      feature_name: feature.feature_name,
+                      category: feature.category,
+                      availability: feature.availability,
                     })),
                   },
-                };
-              }),
-            },
-            traveler_price: {
-              create: populateFakeTravelerPrice().map((traveler) => ({
-                traveler_reference: traveler.traveler_reference,
-                traveler_type: traveler.traveler_type,
-              })),
-            },
-          })),
-        },
-      },
-      include: {
-        flight_offers: {
-          include: {
-            segments: { include: { legs: true } },
-            traveler_price: true,
+                },
+              },
+              segments: {
+                create: populateFakeSegments(
+                  searchStart,
+                  searchEnd,
+                  currentTripType
+                ).map((segment, index) => {
+                  // --- AIRPORT SWAP LOGIC ---
+                  // If index 0: Departure -> Arrival
+                  // If index 1 (Return): Arrival -> Departure
+                  const isReturn = index === 1;
+                  const segDep = isReturn
+                    ? arrAirport.airport_code
+                    : depAirport.airport_code;
+                  const segArr = isReturn
+                    ? depAirport.airport_code
+                    : arrAirport.airport_code;
+
+                  return {
+                    departure_airports: { connect: { airport_code: segDep } },
+                    arrival_airports: { connect: { airport_code: segArr } },
+                    departure_time: segment.departure_time_iso,
+                    arrival_time: segment.arrival_time_iso,
+                    total_time: segment.total_time,
+                    legs: {
+                      create: populateFakeLegsData(
+                        segment.departure_time,
+                        segment.arrival_time,
+                        flightInputData.cabin_class
+                      ).map((leg) => ({
+                        departure_airport: {
+                          connect: { airport_code: segDep },
+                        },
+                        arrival_airport: { connect: { airport_code: segArr } },
+                        departure_time: leg.departure_time,
+                        arrival_time: leg.arrival_time,
+                        cabin_class: leg.cabin_class,
+                        total_time: leg.total_time,
+                      })),
+                    },
+                  };
+                }),
+              },
+              traveler_price: {
+                create: populateFakeTravelerPrice().map((traveler) => ({
+                  traveler_reference: traveler.traveler_reference,
+                  traveler_type: traveler.traveler_type,
+                })),
+              },
+            })),
           },
         },
-      },
-    });
-
-    // --- 8. POST-CREATION: UN-NESTED DATA LINKING ---
-
-    // A. Link Carriers and FlightInfo/CarrierInfo to Legs
-    const allLegs = createdData.flight_offers.flatMap((offer) =>
-      offer.segments.flatMap((segment) => segment.legs)
-    );
-
-    const carriersToCreate: CarrierDataProps[] = [];
-    const carrierInfoToCreate = [];
-
-    for (const leg of allLegs) {
-      // Handle Many-to-One: Carriers
-      const fakeCarrierData = populateFakeCarriersData();
-      fakeCarrierData.forEach((carrier) => {
-        carriersToCreate.push({
-          carrier_id: leg.id,
-          name: carrier.name,
-          logo: carrier.logo,
-          code: carrier.code,
-        });
-      });
-
-      // Handle One-to-One: FlightInfo
-      const newFlightInfo = await tx.flightInfo.create({
-        data: {
-          flight_info_id: leg.id,
-          flight_number: fakeFlightNumber.flight_number,
+        include: {
+          flight_offers: {
+            include: {
+              segments: { include: { legs: true } },
+              traveler_price: true,
+            },
+          },
         },
       });
 
-      // Handle One-to-One: CarrierInfo (Linked to FlightInfo)
-      const carrierData = populateFakeCarrierInfoData();
-      carrierInfoToCreate.push({
-        operating_carrier: carrierData.operating_carrier,
-        carrier_info_id: newFlightInfo.id,
-      });
-    }
+      // --- 8. POST-CREATION: UN-NESTED DATA LINKING ---
 
-    // B. Unique price breakdown for different traveler types
-    for (const offer of createdData.flight_offers) {
-      // 1. Determine the "Adult" base price for this specific offer
-      const isRoundTrip = offer.trip_type === "round-trip";
-      const adultBaseAmount =
-        faker.number.int({ min: 200, max: 800 }) * (isRoundTrip ? 1.8 : 1.0);
+      // A. Link Carriers and FlightInfo/CarrierInfo to Legs
+      const allLegs = createdData.flight_offers.flatMap((offer) =>
+        offer.segments.flatMap((segment) => segment.legs)
+      );
 
-      // 2. Loop through each traveler in this offer to give them a specific price
-      for (const tp of offer.traveler_price) {
-        let multiplier = 1.0; // Default for ADULT
+      const carriersToCreate: CarrierDataProps[] = [];
+      const carrierInfoToCreate = [];
 
-        if (tp.traveler_type === "CHILD") multiplier = 0.75; // Children are 75% price
-        if (tp.traveler_type === "INFANT") multiplier = 0.1; // Infants are 10% price
+      for (const leg of allLegs) {
+        // Handle Many-to-One: Carriers
+        const fakeCarrierData = populateFakeCarriersData();
+        fakeCarrierData.forEach((carrier) => {
+          carriersToCreate.push({
+            carrier_id: leg.id,
+            name: carrier.name,
+            logo: carrier.logo,
+            code: carrier.code,
+          });
+        });
 
-        const finalBase = Math.floor(adultBaseAmount * multiplier);
-        const finalTax = Math.floor(finalBase * 0.15);
-        const finalTotal = finalBase + finalTax;
-
-        // 3. Create a UNIQUE PriceBreakdown for THIS traveler
-        const travelerPB = await tx.priceBreakdown.create({
+        // Handle One-to-One: FlightInfo
+        const newFlightInfo = await tx.flightInfo.create({
           data: {
-            total: { create: { currency_code: "USD", amount: finalTotal } },
-            base_fare: { create: { currency_code: "USD", amount: finalBase } },
-            tax: { create: { currency_code: "USD", amount: finalTax } },
-            discount: { create: { currency_code: "USD", amount: 0 } },
+            flight_info_id: leg.id,
+            flight_number: fakeFlightNumber.flight_number,
           },
         });
 
-        // 4. Link this traveler to their specific price
-        await tx.travelerPrice.update({
-          where: { id: tp.id },
-          data: { price_id: travelerPB.id },
+        // Handle One-to-One: CarrierInfo (Linked to FlightInfo)
+        const carrierData = populateFakeCarrierInfoData();
+        carrierInfoToCreate.push({
+          operating_carrier: carrierData.operating_carrier,
+          carrier_info_id: newFlightInfo.id,
         });
+      }
 
-        // 5. Optional: Set the main Offer price to the ADULT price for display
-        if (tp.traveler_type === "ADULT") {
-          await tx.flightOffers.update({
-            where: { id: offer.id },
+      // B. Unique price breakdown for different traveler types
+      for (const offer of createdData.flight_offers) {
+        // 1. Determine the "Adult" base price for this specific offer
+        const isRoundTrip = offer.trip_type === "round-trip";
+        const adultBaseAmount =
+          faker.number.int({ min: 200, max: 800 }) * (isRoundTrip ? 1.8 : 1.0);
+
+        // 2. Loop through each traveler in this offer to give them a specific price
+        for (const tp of offer.traveler_price) {
+          let multiplier = 1.0; // Default for ADULT
+
+          if (tp.traveler_type === "CHILD") multiplier = 0.75; // Children are 75% price
+          if (tp.traveler_type === "INFANT") multiplier = 0.1; // Infants are 10% price
+
+          const finalBase = Math.floor(adultBaseAmount * multiplier);
+          const finalTax = Math.floor(finalBase * 0.15);
+          const finalTotal = finalBase + finalTax;
+
+          // 3. Create a UNIQUE PriceBreakdown for THIS traveler
+          const travelerPB = await tx.priceBreakdown.create({
+            data: {
+              total: { create: { currency_code: "USD", amount: finalTotal } },
+              base_fare: {
+                create: { currency_code: "USD", amount: finalBase },
+              },
+              tax: { create: { currency_code: "USD", amount: finalTax } },
+              discount: { create: { currency_code: "USD", amount: 0 } },
+            },
+          });
+
+          // 4. Link this traveler to their specific price
+          await tx.travelerPrice.update({
+            where: { id: tp.id },
             data: { price_id: travelerPB.id },
           });
+
+          // 5. Optional: Set the main Offer price to the ADULT price for display
+          if (tp.traveler_type === "ADULT") {
+            await tx.flightOffers.update({
+              where: { id: offer.id },
+              data: { price_id: travelerPB.id },
+            });
+          }
         }
       }
-    }
 
-    // --- C. EXECUTE BULK INSERTS ---
-    await tx.carriers.createMany({ data: carriersToCreate });
-    await tx.carrierInfo.createMany({ data: carrierInfoToCreate });
+      // --- C. EXECUTE BULK INSERTS ---
+      await tx.carriers.createMany({ data: carriersToCreate });
+      await tx.carrierInfo.createMany({ data: carrierInfoToCreate });
 
-    // --- D. ADD AUXILIARY DATA (Baggage, Stops, Airlines, FlightTimes) ---
-    await tx.shortLayoverConnection.create({
-      data: { ...populateFakeShortLayover(), layover_id: createdData.id },
-    });
-
-    await tx.departureInterval.createMany({
-      data: populateFakeDepartureIntervals().map((item) => ({
-        ...item,
-        interval_id: createdData.id,
-      })),
-    });
-
-    await tx.baggage.createMany({
-      data: populateFakeBaggage().map((item) => ({
-        ...item,
-        baggage_id: createdData.id,
-      })),
-    });
-
-    await tx.duration.createMany({
-      data: populateFakeDuration().map((item) => ({
-        ...item,
-        duration_id: createdData.id,
-      })),
-    });
-
-    await tx.stop.createMany({
-      data: populateFakeStops().map((item) => ({
-        ...item,
-        stop_id: createdData.id,
-      })),
-    });
-
-    const firstStop = await tx.stop.findFirst({
-      where: { stop_id: createdData.id },
-    });
-
-    await tx.airlines.createMany({
-      data: populateFakeAirlines().map((item) => ({
-        ...item,
-        airline_id: createdData.id,
-      })),
-    });
-
-    const firstAirline = await tx.airlines.findFirst({
-      where: { airline_id: createdData.id },
-    });
-
-    if (firstStop && firstAirline) {
-      await tx.minPrice.create({
-        data: {
-          ...populateFakeMinPrice(),
-          min_price_data_id: createdData.id,
-          min_price_airline_id: firstAirline.id,
-          min_price_stop_id: firstStop.id,
-        },
-      });
-    }
-
-    // E. Create FlightTimes and their children
-    const flightTimesCount = faker.number.int({ min: 1, max: 3 });
-    for (let i = 0; i < flightTimesCount; i++) {
-      const createdFlightTime = await tx.flightTimes.create({
-        data: { flight_times_id: createdData.id },
+      // --- D. ADD AUXILIARY DATA (Baggage, Stops, Airlines, FlightTimes) ---
+      await tx.shortLayoverConnection.create({
+        data: { ...populateFakeShortLayover(), layover_id: createdData.id },
       });
 
-      await tx.arrival.createMany({
-        data: populateFakeArrivalData().map((arrival) => ({
-          ...arrival,
-          arrival_id: createdFlightTime.id,
+      await tx.departureInterval.createMany({
+        data: populateFakeDepartureIntervals().map((item) => ({
+          ...item,
+          interval_id: createdData.id,
         })),
       });
 
-      await tx.depart.createMany({
-        data: populateFakeDepartData().map((depart) => ({
-          ...depart,
-          depart_id: createdFlightTime.id,
+      await tx.baggage.createMany({
+        data: populateFakeBaggage().map((item) => ({
+          ...item,
+          baggage_id: createdData.id,
         })),
       });
+
+      await tx.duration.createMany({
+        data: populateFakeDuration().map((item) => ({
+          ...item,
+          duration_id: createdData.id,
+        })),
+      });
+
+      await tx.stop.createMany({
+        data: populateFakeStops().map((item) => ({
+          ...item,
+          stop_id: createdData.id,
+        })),
+      });
+
+      const firstStop = await tx.stop.findFirst({
+        where: { stop_id: createdData.id },
+      });
+
+      await tx.airlines.createMany({
+        data: populateFakeAirlines().map((item) => ({
+          ...item,
+          airline_id: createdData.id,
+        })),
+      });
+
+      const firstAirline = await tx.airlines.findFirst({
+        where: { airline_id: createdData.id },
+      });
+
+      if (firstStop && firstAirline) {
+        await tx.minPrice.create({
+          data: {
+            ...populateFakeMinPrice(),
+            min_price_data_id: createdData.id,
+            min_price_airline_id: firstAirline.id,
+            min_price_stop_id: firstStop.id,
+          },
+        });
+      }
+
+      // E. Create FlightTimes and their children
+      const flightTimesCount = faker.number.int({ min: 1, max: 3 });
+      for (let i = 0; i < flightTimesCount; i++) {
+        const createdFlightTime = await tx.flightTimes.create({
+          data: { flight_times_id: createdData.id },
+        });
+
+        await tx.arrival.createMany({
+          data: populateFakeArrivalData().map((arrival) => ({
+            ...arrival,
+            arrival_id: createdFlightTime.id,
+          })),
+        });
+
+        await tx.depart.createMany({
+          data: populateFakeDepartData().map((depart) => ({
+            ...depart,
+            depart_id: createdFlightTime.id,
+          })),
+        });
+      }
+    },
+    {
+      timeout: 10000, // 10 seconds
     }
-  }, {
-    timeout: 10000, // 10 seconds
-  });
+  );
   console.info("✅ Database seeding completed successfully.");
 }
 

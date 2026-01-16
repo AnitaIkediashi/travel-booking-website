@@ -154,8 +154,8 @@ model Segment {
   arrival_airport_code   String //FK
   departure_airports     Airport      @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code]) // the need for unique relation names arises because a single Airport is related to Segment twice (same goes for Legs model) -- Disambiguating relations
   arrival_airports       Airport      @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
-  departure_time         String 
-  arrival_time           String
+  departure_time         DateTime 
+  arrival_time           DateTime
   total_time             Int
   legs                   Legs[]
   segmentData            FlightOffers @relation(fields: [segment_id], references: [id], onDelete: Cascade)
@@ -169,8 +169,8 @@ model Legs {
   leg_id                 Int // FK
   departure_airport_code String //FK
   arrival_airport_code   String //FK
-  departure_time         String
-  arrival_time           String
+  departure_time         DateTime
+  arrival_time           DateTime
   cabin_class            String
   total_time             Int
   departure_airport      Airport     @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
