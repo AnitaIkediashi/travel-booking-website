@@ -88,10 +88,45 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
       include: {
         flight_offers: {
           include: {
-            segments: {
-              where: trip === 'round-trip' ? roundTripFilter : oneWayFilter,
+            branded_fareinfo: {
               include: {
-                legs: { include: { carriers: true } },
+                features: true,
+              },
+            },
+            price_breakdown: {
+              include: {
+                base_fare: true,
+                discount: true,
+                tax: true,
+                total: true,
+              },
+            },
+            seat_availability: true,
+            traveler_price: {
+              include: {
+                price_breakdown: {
+                  include: {
+                    base_fare: true,
+                    discount: true,
+                    tax: true,
+                    total: true,
+                  },
+                },
+              },
+            },
+            segments: {
+              where: trip === "round-trip" ? roundTripFilter : oneWayFilter,
+              include: {
+                legs: {
+                  include: {
+                    carriers: true,
+                    flight_info: {
+                      include: {
+                        carrier_info: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -108,9 +143,10 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
         airlines: true,
         duration: true,
         departure_intervals: true,
+        baggage: true,
       },
     });
-    console.log("data response: ", JSON.stringify(dataResponse, null, 2));
+    // console.log("data response: ", JSON.stringify(dataResponse, null, 2));
     return dataResponse;
   } catch (error) {
     console.error("Error querying flight data: ", error);

@@ -1,4 +1,3 @@
-
 export type AirportProps = {
   airport_name: string;
   airport_code: string;
@@ -45,14 +44,96 @@ export type SearchParamsProps = {
 };
 
 export type FlightDataProps = {
-  id?: string;
+  id: string;
   duration_min?: number;
   duration_max?: number;
   cabin_class?: string;
-  flight_offers?: FlightOffersProps[]
+  min_price?: MinPrice;
+  short_layover_connection?: ShortLayoverConnection;
+  baggage?: Baggage[];
+  departure_intervals?: DepartureInterval[];
+  stops?: Stop[];
+  airlines?: Airline[];
+  duration?: Duration[];
+  flight_times?: FlightTime[];
+  flight_offers?: FlightOffer[];
 };
 
-type FlightOffersProps = {
+type DepartureInterval = {
+  id?: number
+  interval_id?: string
+  start?: string
+  end?: string
+}
+
+type ShortLayoverConnection = {
+  id?: number;
+  layover_id?: string;
+  count?: number;
+};
+
+type MinPrice = {
+  id?: number;
+  min_price_data_id?: string;
+  min_price_airline_id?: string;
+  min_price_stop_id?: number;
+  currency_code?: string;
+  amount?: number;
+};
+
+type Stop = {
+  id?: number;
+  stop_id?: string;
+  no_of_stops?: number;
+  count?: number;
+};
+
+type Airline = {
+  id?: string;
+  airline_id?: string;
+  name?: string;
+  logo?: string;
+  iata_code?: string;
+};
+
+type Duration = {
+  id?: number;
+  duration_id?: string;
+  min?: number;
+  max?: number;
+};
+
+type Baggage = {
+  id?: number;
+  baggage_id?: string;
+  type?: string;
+  included?: boolean;
+  weight?: number;
+  param_name?: string;
+}; 
+
+type FlightTime = {
+  id?: string;
+  flight_times_id?: string;
+  arrival?: Arrival[];
+  depart?: Depart[];
+};
+
+type Arrival = {
+  id?: number;
+  arrival_id?: string;
+  start?: string;
+  end?: string;
+};
+
+type Depart = {
+  id?: number;
+  depart_id?: string;
+  start?: string;
+  end?: string;
+};
+
+type FlightOffer = {
   id?: string;
   flight_offer_id?: string;
   price_id?: number;
@@ -60,6 +141,10 @@ type FlightOffersProps = {
   trip_type?: string;
   flight_key?: string;
   segments?: SegmentProp[];
+  price_breakdown?: PriceBreakdown;
+  traveler_price?: TravelerPrice[];
+  seat_availability?: SeatAvailability;
+  branded_fareinfo?: BrandedFareInfo;
 };
 
 type SegmentProp = {
@@ -70,4 +155,104 @@ type SegmentProp = {
   departure_time?: string;
   arrival_time?: string;
   total_time?: number;
+  legs?: Leg[];
+};
+
+type Leg = {
+  id?: number;
+  leg_id?: number;
+  departure_airport_code?: string;
+  arrival_airport_code?: string;
+  departure_time?: string;
+  arrival_time?: string;
+  cabin_class?: string;
+  total_time?: number;
+  carriers?: Carrier[];
+  flight_info?: FlightInfo;
+};
+
+type Carrier = {
+  id?: number;
+  carrier_id?: number;
+  name?: string;
+  logo?: string;
+  code?: string;
+};
+
+type FlightInfo = {
+  id?: number;
+  flight_info_id?: number;
+  flight_number?: string;
+  carrier_info?: CarrierInfo;
+};
+
+type CarrierInfo = {
+  id?: number;
+  carrier_info_id?: number;
+  operating_carrier?: string;
+};
+
+type PriceBreakdown = {
+  id?: number;
+  total?: TotalPrice;
+  base_fare?: BaseFare;
+  tax?: Tax;
+  discount?: Discount;
+};
+
+type TotalPrice = {
+  id?: number;
+  total_price_id?: number;
+  currency_code?: string;
+  amount?: number;
+};
+
+type BaseFare = {
+  id?: number;
+  base_price_id?: number;
+  currency_code?: string;
+  amount?: number;
+};
+
+type Tax = {
+  id?: number;
+  tax_id?: number;
+  currency_code?: string;
+  amount?: number;
+};
+
+type Discount = {
+  id?: number;
+  discount_id?: number;
+  currency_code?: string;
+  amount?: number;
+};
+
+type TravelerPrice = {
+  id?: number;
+  traveler_price_id?: string;
+  price_id?: number;
+  traveler_reference?: string;
+  traveler_type?: string;
+};
+
+type SeatAvailability = {
+  id?: number;
+  seat_availability_id?: string;
+  seats_left?: number;
+};
+
+type BrandedFareInfo = {
+  id?: number;
+  branded_fareinfo_id?: string;
+  cabin_class?: string;
+  features?: Feature[];
+};
+
+type Feature = {
+  id?: number;
+  feature_id?: number;
+  feature_name?: string;
+  category?: string;
+  availability?: string;
 };
