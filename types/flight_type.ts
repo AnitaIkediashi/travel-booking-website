@@ -48,15 +48,15 @@ export type FlightDataProps = {
   duration_min?: number;
   duration_max?: number;
   cabin_class?: string;
-  min_price?: MinPrice;
-  short_layover_connection?: ShortLayoverConnection;
+  min_price?: MinPrice | null;
+  short_layover_connection?: ShortLayoverConnection | null;
   baggage?: Baggage[];
   departure_intervals?: DepartureInterval[];
   stops?: Stop[];
   airlines?: Airline[];
   duration?: Duration[];
   flight_times?: FlightTime[];
-  flight_offers?: FlightOffer[];
+  flight_offers?: FlightOffer[] | undefined;
 };
 
 type DepartureInterval = {
@@ -69,15 +69,15 @@ type DepartureInterval = {
 type ShortLayoverConnection = {
   id?: number;
   layover_id?: string;
-  count?: number;
+  count?: number | null;
 };
 
 type MinPrice = {
   id?: number;
   min_price_data_id?: string;
-  min_price_airline_id?: string;
-  min_price_stop_id?: number;
-  currency_code?: string;
+  min_price_airline_id?: string | null;
+  min_price_stop_id?: number | null;
+  currency_code?: string | null;
   amount?: number;
 };
 
@@ -85,7 +85,7 @@ type Stop = {
   id?: number;
   stop_id?: string;
   no_of_stops?: number;
-  count?: number;
+  count?: number | null;
 };
 
 type Airline = {
@@ -108,8 +108,8 @@ type Baggage = {
   baggage_id?: string;
   type?: string;
   included?: boolean;
-  weight?: number;
-  param_name?: string;
+  weight?: number | null;
+  param_name?: string | null;
 }; 
 
 type FlightTime = {
@@ -136,15 +136,15 @@ type Depart = {
 type FlightOffer = {
   id?: string;
   flight_offer_id?: string;
-  price_id?: number;
+  price_id?: number | null;
   token?: string;
   trip_type?: string;
   flight_key?: string;
   segments?: SegmentProp[];
-  price_breakdown?: PriceBreakdown;
+  price_breakdown?: PriceBreakdown | null;
   traveler_price?: TravelerPrice[];
-  seat_availability?: SeatAvailability;
-  branded_fareinfo?: BrandedFareInfo;
+  seat_availability?: SeatAvailability | null;
+  branded_fareinfo?: BrandedFareInfo | null;
 };
 
 type SegmentProp = {
@@ -168,7 +168,7 @@ type Leg = {
   cabin_class?: string;
   total_time?: number;
   carriers?: Carrier[];
-  flight_info?: FlightInfo;
+  flight_info?: FlightInfo | null;
 };
 
 type Carrier = {
@@ -194,10 +194,10 @@ type CarrierInfo = {
 
 type PriceBreakdown = {
   id?: number;
-  total?: TotalPrice;
-  base_fare?: BaseFare;
-  tax?: Tax;
-  discount?: Discount;
+  total?: TotalPrice | null;
+  base_fare?: BaseFare | null;
+  tax?: Tax | null;
+  discount?: Discount | null;
 };
 
 type TotalPrice = {
@@ -231,7 +231,7 @@ type Discount = {
 type TravelerPrice = {
   id?: number;
   traveler_price_id?: string;
-  price_id?: number;
+  price_id?: number | null;
   traveler_reference?: string;
   traveler_type?: string;
 };
