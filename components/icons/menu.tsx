@@ -1,4 +1,5 @@
-import { IconProps } from "@/prop_types/types";
+import { IconProps } from "@/types/icon_type";
+
 
 
 export const MenuIcon = ({fillColor}: IconProps) => {

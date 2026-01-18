@@ -250,7 +250,6 @@ function populateFakeSegments(
 
   // 2. If it's a round-trip, add the return segment
   if (tripType === "round-trip") {
-    // Increased max to 40 so your "Feb 17" searches find matches
     const stayDays = faker.number.int({ min: 1, max: 40 });
 
     // Calculate Return Departure based on the Outbound Arrival

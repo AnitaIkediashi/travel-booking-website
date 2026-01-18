@@ -1,3 +1,4 @@
+
 export type AirportProps = {
   airport_name: string;
   airport_code: string;
@@ -41,4 +42,32 @@ export type SearchParamsProps = {
   adults?: number;
   children?: number;
   cabin?: string;
+};
+
+export type FlightDataProps = {
+  id?: string;
+  duration_min?: number;
+  duration_max?: number;
+  cabin_class?: string;
+  flight_offers?: FlightOffersProps[]
+};
+
+type FlightOffersProps = {
+  id?: string;
+  flight_offer_id?: string;
+  price_id?: number;
+  token?: string;
+  trip_type?: string;
+  flight_key?: string;
+  segments?: SegmentProp[];
+};
+
+type SegmentProp = {
+  id?: number;
+  segment_id?: string;
+  departure_airport_code?: string;
+  arrival_airport_code?: string;
+  departure_time?: string;
+  arrival_time?: string;
+  total_time?: number;
 };

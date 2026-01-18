@@ -1,3 +1,3 @@
 export type IconProps = {
-    fillColor?: string;
-}
+  fillColor?: string;
+};
