@@ -1,7 +1,7 @@
 import { FlightSuggestions } from "@/components/dropdowns/flight_suggestions";
 import { SwapIcon } from "@/components/icons/swap";
 import { AirportProps } from "@/types/flight_type";
-import { useEffect, useState, useTransition } from "react";
+import { TransitionStartFunction, useState } from "react";
 import dayjs from "dayjs";
 import { DatePicker, Select } from "antd";
 import { useDebouncedCallback } from "@/utils/debounceCallback";
@@ -10,6 +10,7 @@ import { ArrowDownIcon } from "@/components/icons/arrow_down";
 import { ValidateFlightsInputEntriesModal } from "@/components/modals/validate_flights_input_entries_modal";
 import { Button } from "@/components/reusable/button";
 import { MagnifyingGlass } from "@/components/icons/magnifying_glass";
+import { useRouter } from "next/navigation";
 
 const { RangePicker } = DatePicker;
 
@@ -34,6 +35,7 @@ export type InitialState = {
 
 type QueryParams = {
   queryParams?: QueryParamsProps;
+  startTransition: TransitionStartFunction;
 };
 
 type QueryParamsProps = {
@@ -50,7 +52,7 @@ type QueryParamsProps = {
 const inputClassName =
   "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
-export const ListSearchFlights = ({ queryParams }: QueryParams) => {
+export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams) => {
   const [initialValues, setInitialValues] = useState<InitialState>({
     fromValue: queryParams?.from || "",
     toValue: queryParams?.to || "",
@@ -62,6 +64,7 @@ export const ListSearchFlights = ({ queryParams }: QueryParams) => {
     childrenCount: queryParams?.children || 0,
     cabinClass: queryParams?.cabin || "Economy",
   });
+  const router = useRouter();
 
   const [swapInput, setSwapInput] = useState(false);
 
@@ -77,7 +80,6 @@ export const ListSearchFlights = ({ queryParams }: QueryParams) => {
 
   const [showValidateModal, setShowValidateModal] = useState(false);
 
-  const [isPending, startTransition] = useTransition();
 
   const handleAirportsClick = (airport_code: string) => {
     if (!activeField) return;
@@ -287,6 +289,27 @@ export const ListSearchFlights = ({ queryParams }: QueryParams) => {
     const isValid = validateEntries();
     if (isValid) {
       // proceed to show flights
+      const params = new URLSearchParams();
+      params.set("from", initialValues.fromValue);
+      params.set("to", initialValues.toValue);
+      params.set("trip", initialValues.trip);
+      params.set("adults", initialValues.adultCount.toString());
+      params.set("children", initialValues.childrenCount.toString());
+      params.set("cabin", initialValues.cabinClass);
+      const departDate =
+        initialValues.trip === "one-way"
+          ? initialValues.entryDate
+          : initialValues.startDate;
+
+      if (departDate) {
+        params.set("depart", departDate.format("YYYY-MM-DD"));
+      }
+      if (initialValues.trip === "round-trip" && initialValues.endDate) {
+        params.set("return", initialValues.endDate.format("YYYY-MM-DD"));
+      }
+      startTransition(() => {
+        router.push(`?${params.toString()}`, { scroll: false });
+      });
       setShowValidateModal(false);
     } else {
       setShowValidateModal(true);

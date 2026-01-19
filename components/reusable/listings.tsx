@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { ListSearchHotels } from "../sections/hotels/list_search_hotels";
 import { ListSearchFlights } from "../sections/flights/list_search_flights";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import dayjs from "dayjs";
 import { FlightDataFilters } from "../sections/flights/flight_data_filters";
 import { HotelDataFilters } from "../sections/hotels/hotel_data_filters";
@@ -20,11 +20,12 @@ type ListingProps<T> = {
 export const Listings = <T,>({ data }: ListingProps<T>) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const trip = searchParams.get("trip");
-  const depart = dayjs(searchParams.get("depart"));
+  const depart = dayjs(searchParams.get("depart")) || null;
   const returnDate = dayjs(searchParams.get("return")) || null;
   const adults = +(searchParams.get("adults") ?? 0);
   const children = +(searchParams.get("children") ?? 0);
@@ -49,14 +50,15 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="px-6 py-8 w-full bg-white shadow-light mb-8">
           {isFlight ? (
-            <ListSearchFlights queryParams={queryParams} />
+            <ListSearchFlights
+              queryParams={queryParams}
+              startTransition={startTransition}
+            />
           ) : isHotel ? (
             <ListSearchHotels />
           ) : null}
         </div>
-        {
-            isFlight ? <FlightDataFilters /> : <HotelDataFilters />
-        }
+        {isFlight ? <FlightDataFilters /> : <HotelDataFilters />}
       </div>
     </section>
   );
