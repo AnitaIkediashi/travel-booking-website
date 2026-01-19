@@ -1,7 +1,7 @@
 import { FlightSuggestions } from "@/components/dropdowns/flight_suggestions";
 import { SwapIcon } from "@/components/icons/swap";
 import { AirportProps } from "@/types/flight_type";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import dayjs from "dayjs";
 import { DatePicker, Select } from "antd";
 import { useDebouncedCallback } from "@/utils/debounceCallback";
@@ -32,23 +32,38 @@ export type InitialState = {
   cabinClass: string;
 };
 
+type QueryParams = {
+  queryParams?: QueryParamsProps;
+};
+
+type QueryParamsProps = {
+  from: string | null;
+  to: string | null;
+  trip: string | null;
+  depart: dayjs.Dayjs | null;
+  return: dayjs.Dayjs | null;
+  adults: number | null;
+  children: number | null;
+  cabin: string | null;
+};
+
 const inputClassName =
   "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
-export const ListSearchFlights = () => {
-  const [swapInput, setSwapInput] = useState(false);
-
+export const ListSearchFlights = ({ queryParams }: QueryParams) => {
   const [initialValues, setInitialValues] = useState<InitialState>({
-    fromValue: "",
-    toValue: "",
-    trip: "",
-    entryDate: null,
-    startDate: null,
-    endDate: null,
-    adultCount: 1,
-    childrenCount: 0,
-    cabinClass: "Economy",
+    fromValue: queryParams?.from || "",
+    toValue: queryParams?.to || "",
+    trip: queryParams?.trip || "",
+    entryDate: queryParams?.trip === "one-way" ? queryParams.depart : null,
+    startDate: queryParams?.depart || null,
+    endDate: queryParams?.return !== undefined ? queryParams?.return : null,
+    adultCount: queryParams?.adults || 1,
+    childrenCount: queryParams?.children || 0,
+    cabinClass: queryParams?.cabin || "Economy",
   });
+
+  const [swapInput, setSwapInput] = useState(false);
 
   const [activeField, setActiveField] = useState<
     "fromValue" | "toValue" | null
@@ -268,17 +283,15 @@ export const ListSearchFlights = () => {
     setShowValidateModal(false);
   }
 
-   function handleShowFlights() {
-     const isValid = validateEntries();
-     if (isValid) {
-       // proceed to show flights
-       setShowValidateModal(false);
-       
-       
-     } else {
-       setShowValidateModal(true);
-     }
-   }
+  function handleShowFlights() {
+    const isValid = validateEntries();
+    if (isValid) {
+      // proceed to show flights
+      setShowValidateModal(false);
+    } else {
+      setShowValidateModal(true);
+    }
+  }
 
   return (
     <>
@@ -317,6 +330,7 @@ export const ListSearchFlights = () => {
               options={tripOptions}
               allowClear
               className="w-full text-blackish-green-10"
+              value={initialValues.trip || undefined}
               onChange={handleTripChange}
             />
           </fieldset>
@@ -332,12 +346,14 @@ export const ListSearchFlights = () => {
               <DatePicker
                 format={dateFormat}
                 className="w-full text-blackish-green-10"
+                value={initialValues.entryDate}
                 onChange={handleSingleDateChange}
                 disabledDate={disabledDate}
               />
             ) : (
               <RangePicker
                 format={dateFormat}
+                value={[initialValues.startDate, initialValues.endDate]}
                 onChange={handleDateRangeChange}
                 className="text-blackish-green-10"
                 disabledDate={disabledDate}
@@ -353,7 +369,7 @@ export const ListSearchFlights = () => {
             <legend className="text-blackish-green text-sm capitalize">
               passenger - class
             </legend>
-            <p className="w-full h-full capitalize text-blackish-green-10 flex items-center justify-between">
+            <p className="w-full h-full capitalize text-blackish-green-10 flex items-center justify-between xl:text-sm">
               {totalPassengers > 0
                 ? `${totalPassengers} passenger${
                     totalPassengers > 1 ? "s, " : ", "
