@@ -20,14 +20,17 @@ import { useRouter } from "next/navigation";
  * 3. In React, when the state or props of a component change, React needs to determine how to update the actual DOM to reflect these changes. Instead of directly manipulating the DOM, React uses a virtual representation of the DOM called the Virtual DOM. The reconciliation process involves comparing the new Virtual DOM with the previous version to identify what has changed. This comparison is done using a diffing algorithm that efficiently determines the minimal set of changes needed to update the real DOM.
  */
 
-const { RangePicker } = DatePicker;
+export const { RangePicker } = DatePicker;
 
 export const dateFormat = "DD MMM YY "; // From antd documentation
 
-const disabledDate = (current: dayjs.Dayjs) => {
+export const disabledDate = (current: dayjs.Dayjs) => {
   // Can not select days before today
   return current < dayjs().startOf("day");
 }
+
+export const inputClassName =
+  "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
 export type InitialState = {
   fromValue: string;
@@ -207,9 +210,6 @@ export const SearchFlights = ({from}: SearchParamsProps) => {
       };
     });
   };
-
-  const inputClassName =
-    "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
   const inputA = (
     <input

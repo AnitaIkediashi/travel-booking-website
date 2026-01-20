@@ -11,27 +11,8 @@ import { ValidateFlightsInputEntriesModal } from "@/components/modals/validate_f
 import { Button } from "@/components/reusable/button";
 import { MagnifyingGlass } from "@/components/icons/magnifying_glass";
 import { useRouter } from "next/navigation";
+import { dateFormat, disabledDate, InitialState, inputClassName, RangePicker } from "@/components/reusable/search_flights";
 
-const { RangePicker } = DatePicker;
-
-export const dateFormat = "DD MMM YY "; // From antd documentation
-
-const disabledDate = (current: dayjs.Dayjs) => {
-  // Can not select days before today
-  return current < dayjs().startOf("day");
-};
-
-export type InitialState = {
-  fromValue: string;
-  toValue: string;
-  trip: string;
-  entryDate: dayjs.Dayjs | null;
-  startDate: dayjs.Dayjs | null;
-  endDate: dayjs.Dayjs | null;
-  adultCount: number;
-  childrenCount: number;
-  cabinClass: string;
-};
 
 type QueryParams = {
   queryParams?: QueryParamsProps;
@@ -48,9 +29,6 @@ type QueryParamsProps = {
   children: number | null;
   cabin: string | null;
 };
-
-const inputClassName =
-  "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
 export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams) => {
   const [initialValues, setInitialValues] = useState<InitialState>({
