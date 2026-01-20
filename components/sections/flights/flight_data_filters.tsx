@@ -1,6 +1,14 @@
 
-export const FlightDataFilters = () => {
+type FlightDataProps = {
+  isPending: boolean;
+};
+
+export const FlightDataFilters = ({isPending}: FlightDataProps) => {
   return (
-    <div>flight_data filters</div>
+    <>
+      {
+        isPending ? 'loading...' : <section>hello world</section>
+      }
+    </>
   )
 }

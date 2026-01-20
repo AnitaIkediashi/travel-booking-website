@@ -58,7 +58,7 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
             <ListSearchHotels />
           ) : null}
         </div>
-        {isFlight ? <FlightDataFilters /> : <HotelDataFilters />}
+        {isFlight ? <FlightDataFilters isPending={isPending} /> : <HotelDataFilters />}
       </div>
     </section>
   );
