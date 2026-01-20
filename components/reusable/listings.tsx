@@ -23,6 +23,11 @@ type ListingProps<T> = {
  * 4. usePathname to determine which page/path you are on from the browser
  * NOTE TO TAKE: the useSearchParams converts the params to string, so some of the parameters,
  * i reconverted them to their designated types needed for my search component
+ * 5. The reason I used type assertion because since ListingProps is shared component for
+ * flights and hotels, so the use of type assertion is needed telling typescript compiler, i know the type of value 
+ * i want to use for flights or hotels when passed to their various components.
+ * 6. Unknown type is like counterpart to any but more safer. It is used when you don't know the type of a value beforehand, 
+ * but want to enforce type checking and safety before performing operations on that value.  
  */
 export const Listings = <T,>({ data }: ListingProps<T>) => {
   const pathname = usePathname();
@@ -71,7 +76,7 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
         {isFlight ? (
           <FlightDataFilters
             isPending={isPending}
-            data={data as unknown as FlightDataProps[]} // Type assertion
+            data={data as unknown as FlightDataProps[]} // Type assertion - Narrowed to FlightDataProps type
           />
         ) : (
           <HotelDataFilters />

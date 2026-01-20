@@ -397,6 +397,7 @@ function populateFakeFeatures() {
   });
 }
 
+// this to use to clear all data
 // async function clearDatabase() {
 //   console.info("Emptying database...");
 
@@ -668,23 +669,32 @@ async function main() {
         });
       }
 
-      // B. Unique price breakdown for different traveler types
       for (const offer of createdData.flight_offers) {
         // 1. Determine the "Adult" base price for this specific offer
         const isRoundTrip = offer.trip_type === "round-trip";
         const adultBaseAmount =
           faker.number.int({ min: 200, max: 800 }) * (isRoundTrip ? 1.8 : 1.0);
 
-        // 2. Loop through each traveler in this offer to give them a specific price
+        // --- NEW: Track totals for the entire offer ---
+        let offerTotalBase = 0;
+        let offerTotalTax = 0;
+        let offerTotalAmount = 0;
+
+        // 2. Loop through each traveler in this offer
         for (const tp of offer.traveler_price) {
           let multiplier = 1.0; // Default for ADULT
 
-          if (tp.traveler_type === "CHILD") multiplier = 0.75; // Children are 75% price
-          if (tp.traveler_type === "INFANT") multiplier = 0.1; // Infants are 10% price
+          if (tp.traveler_type === "CHILD") multiplier = 0.75;
+          if (tp.traveler_type === "INFANT") multiplier = 0.1;
 
           const finalBase = Math.floor(adultBaseAmount * multiplier);
           const finalTax = Math.floor(finalBase * 0.15);
           const finalTotal = finalBase + finalTax;
+
+          // --- NEW: Accumulate the totals ---
+          offerTotalBase += finalBase;
+          offerTotalTax += finalTax;
+          offerTotalAmount += finalTotal;
 
           // 3. Create a UNIQUE PriceBreakdown for THIS traveler
           const travelerPB = await tx.priceBreakdown.create({
@@ -703,15 +713,27 @@ async function main() {
             where: { id: tp.id },
             data: { price_id: travelerPB.id },
           });
-
-          // 5. Optional: Set the main Offer price to the ADULT price for display
-          if (tp.traveler_type === "ADULT") {
-            await tx.flightOffers.update({
-              where: { id: offer.id },
-              data: { price_id: travelerPB.id },
-            });
-          }
         }
+
+        // --- 5. Create the TOTAL PriceBreakdown for the Flight Offer ---
+        const offerPB = await tx.priceBreakdown.create({
+          data: {
+            total: {
+              create: { currency_code: "USD", amount: offerTotalAmount },
+            },
+            base_fare: {
+              create: { currency_code: "USD", amount: offerTotalBase },
+            },
+            tax: { create: { currency_code: "USD", amount: offerTotalTax } },
+            discount: { create: { currency_code: "USD", amount: 0 } },
+          },
+        });
+
+        // 6. Link the entire offer to its combined price
+        await tx.flightOffers.update({
+          where: { id: offer.id },
+          data: { price_id: offerPB.id },
+        });
       }
 
       // --- C. EXECUTE BULK INSERTS ---

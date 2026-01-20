@@ -49,3 +49,26 @@ body {
 .hide_scroll::-webkit-scrollbar {
   display: none;
 }
+
+.ant-slider .ant-slider-track {
+  background-color: var(--foreground);
+}
+
+.ant-slider-horizontal .ant-slider-rail, .ant-slider .ant-slider-track {
+  height: 2px;
+  top: 9px;
+}
+
+.ant-slider .ant-slider-handle,
+.ant-slider .ant-slider-handle::before,
+.ant-slider .ant-slider-handle::after,
+.ant-slider .ant-slider-handle:focus::after,
+.ant-slider .ant-slider-handle:hover::after {
+  width: 24px;
+  height: 24px;
+}
+
+.ant-slider .ant-slider-handle::after {
+  background-color: var(--mint-green-100);
+  box-shadow: none;
+}
