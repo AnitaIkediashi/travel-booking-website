@@ -1,9 +1,11 @@
+import { FlightDataProps } from "@/types/flight_type";
 
-type FlightDataProps = {
+type FlightFilterProps = {
   isPending: boolean;
+  data: FlightDataProps[] | undefined
 };
 
-export const FlightDataFilters = ({isPending}: FlightDataProps) => {
+export const FlightDataFilters = ({isPending, data}: FlightFilterProps) => {
   return (
     <>
       {

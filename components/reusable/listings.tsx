@@ -7,6 +7,7 @@ import { useTransition } from "react";
 import dayjs from "dayjs";
 import { FlightDataFilters } from "../sections/flights/flight_data_filters";
 import { HotelDataFilters } from "../sections/hotels/hotel_data_filters";
+import { FlightDataProps } from "@/types/flight_type";
 
 //using Generics
 type ListingProps<T> = {
@@ -31,8 +32,11 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const trip = searchParams.get("trip");
-  const depart = dayjs(searchParams.get("depart")) || null; //convert to a date format
-  const returnDate = dayjs(searchParams.get("return")) || null;
+  const departParam = searchParams.get("depart");
+  const depart = departParam ? dayjs(departParam) : null;
+
+  const returnParam = searchParams.get("return");
+  const returnDate = returnParam ? dayjs(returnParam) : null;
   const adults = +(searchParams.get("adults") ?? 0); //convert to number
   const children = +(searchParams.get("children") ?? 0);
   const cabin = searchParams.get("cabin");
@@ -64,7 +68,14 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
             <ListSearchHotels />
           ) : null}
         </div>
-        {isFlight ? <FlightDataFilters isPending={isPending} /> : <HotelDataFilters />}
+        {isFlight ? (
+          <FlightDataFilters
+            isPending={isPending}
+            data={data as unknown as FlightDataProps[]} // Type assertion
+          />
+        ) : (
+          <HotelDataFilters />
+        )}
       </div>
     </section>
   );
