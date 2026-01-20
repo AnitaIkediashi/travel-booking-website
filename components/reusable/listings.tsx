@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { ListSearchHotels } from "../sections/hotels/list_search_hotels";
 import { ListSearchFlights } from "../sections/flights/list_search_flights";
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 import dayjs from "dayjs";
 import { FlightDataFilters } from "../sections/flights/flight_data_filters";
 import { HotelDataFilters } from "../sections/hotels/hotel_data_filters";
@@ -15,7 +15,13 @@ type ListingProps<T> = {
 
 /**
  *
- * <T,> makes the Generic type not to look like a JSX or TSX component - like HTML tag
+ * 1. <T,> makes the Generic type not to look like a JSX or TSX component - like HTML tag
+ * 2. Get the parameters stored in the url of the browser using useSearchParams
+ * 3. using useTransition to only update  the current UI interactive and only re-render 
+ * the parts of the page that depend on the search parameters without a full browser refresh
+ * 4. usePathname to determine which page/path you are on from the browser
+ * NOTE TO TAKE: the useSearchParams converts the params to string, so some of the parameters,
+ * i reconverted them to their designated types needed for my search component
  */
 export const Listings = <T,>({ data }: ListingProps<T>) => {
   const pathname = usePathname();
@@ -25,9 +31,9 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const trip = searchParams.get("trip");
-  const depart = dayjs(searchParams.get("depart")) || null;
+  const depart = dayjs(searchParams.get("depart")) || null; //convert to a date format
   const returnDate = dayjs(searchParams.get("return")) || null;
-  const adults = +(searchParams.get("adults") ?? 0);
+  const adults = +(searchParams.get("adults") ?? 0); //convert to number
   const children = +(searchParams.get("children") ?? 0);
   const cabin = searchParams.get("cabin");
 
