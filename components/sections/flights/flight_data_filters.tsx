@@ -5,6 +5,7 @@ import { PriceFilter } from "./price_filter";
 import { useState } from "react";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import Image from "next/image";
+import { TimeFilter } from "./time_filter";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -13,6 +14,7 @@ type FlightFilterProps = {
 
 export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [timeRange, setTimeRange] = useState<[number, number] | null>(null);
   // 1. Loading state
   if (isPending) {
     return <SkeletonSection />;
@@ -33,6 +35,9 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
       ?.map((offer) => offer.price_breakdown?.total?.amount)
       .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. It is a **type predicate** and has the form **parameterName is Type**
 
+  const minDuration = data[0].duration_min ?? 0
+  const maxDuration = data[0].duration_max ?? 1440
+
   // Step B: Ensure we don't pass an empty array to Math.min (which returns Infinity)
   const hasPrices = prices.length > 0;
   const minPrice = hasPrices ? Math.min(...prices) : 0; // works with an array - using spread operator to get the rest of the items
@@ -42,6 +47,13 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
     // Since 'range' is true in the Slider, value will be number[]
     if (Array.isArray(value)) {
       setPriceRange([value[0], value[1]]);
+    }
+  };
+
+  const handleTimeChange = (value: number | number[]) => {
+    // Since 'range' is true in the Slider, value will be number[]
+    if (Array.isArray(value)) {
+      setTimeRange([value[0], value[1]]);
     }
   };
 
@@ -56,6 +68,12 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           max={maxPrice}
           onChange={handlePriceChange}
           priceRange={priceRange}
+        />
+        <TimeFilter
+          min={minDuration}
+          max={maxDuration}
+          onChange={handleTimeChange}
+          timeRange={timeRange}
         />
       </div>
       <div></div>

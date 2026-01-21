@@ -1,44 +1,38 @@
 import { FilterTitle } from "@/components/reusable/filter_title";
+import { convertMinutesToTime } from "@/helpers/convertNumberToTime";
 import { Slider } from "antd";
 
-type PriceFilterProps = {
+type TimeFilterProps = {
   min: number;
   max: number;
   onChange: (value: number | number[]) => void;
-  priceRange: [number, number] | null;
+  timeRange: [number, number] | null;
 };
 
-
-export const PriceFilter = ({
-  min,
-  max,
-  onChange,
-  priceRange,
-}: PriceFilterProps) => {
-
+export const TimeFilter = ({min, max, onChange, timeRange}: TimeFilterProps) => {
   return (
-    <div className="flex flex-col font-montserrat">
-      <FilterTitle title="price" />
+    <div className="flex flex-col font-montserrat mt-8">
+      <FilterTitle title="departure time" />
       <Slider
         range
         min={min}
         max={max}
-        value={priceRange || [min, max]}
+        value={timeRange || [min, max]}
         onChange={onChange}
         onChangeComplete={onChange}
         tooltip={{
-          formatter: (val) => `$${val}`,
+          formatter: (val) => convertMinutesToTime(val || 0),
         }}
       />
       <div className="w-full flex items-center justify-between mt-2">
         <small className="text-xs text-blackish-green font-medium">
-          ${priceRange?.[0] || min}
+          {convertMinutesToTime(timeRange?.[0] || min)}
         </small>
         <small className="text-xs text-blackish-green font-medium">
-          ${priceRange?.[1] || max}
+          {convertMinutesToTime(timeRange?.[1] || max)}
         </small>
       </div>
       <div className="mt-8 w-full h-[0.5px] bg-blackish-green/25" />
     </div>
   );
-};
+}
