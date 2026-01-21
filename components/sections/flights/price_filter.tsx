@@ -7,8 +7,14 @@ type PriceFilterProps = {
   priceRange: [number, number] | null;
 };
 
-export const PriceFilter = ({min, max, onChange, priceRange}: PriceFilterProps) => {
-    
+
+export const PriceFilter = ({
+  min,
+  max,
+  onChange,
+  priceRange,
+}: PriceFilterProps) => {
+
   return (
     <div className="flex flex-col gap-4 font-montserrat">
       <h5 className="text-blackish-green font-semibold capitalize">price</h5>
@@ -18,8 +24,19 @@ export const PriceFilter = ({min, max, onChange, priceRange}: PriceFilterProps) 
         max={max}
         value={priceRange || [min, max]}
         onChange={onChange}
-        tooltip={{ formatter: (val) => `$${val}` }}
+        onChangeComplete={onChange}
+        tooltip={{
+          formatter: (val) => `$${val}`,
+        }}
       />
+      <div className="w-full flex items-center justify-between">
+        <small className="text-xs text-blackish-green font-medium">
+          ${priceRange?.[0] || min}
+        </small>
+        <small className="text-xs text-blackish-green font-medium">
+          ${priceRange?.[1] || max}
+        </small>
+      </div>
     </div>
   );
 };
