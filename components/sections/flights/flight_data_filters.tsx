@@ -6,15 +6,45 @@ import { useState } from "react";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import Image from "next/image";
 import { TimeFilter } from "./time_filter";
+import { AirlinesFilter } from "./airlines_filter";
+import { TripFilter } from "./trip_filter";
 
 type FlightFilterProps = {
   isPending: boolean;
   data: FlightDataProps[] | undefined;
 };
 
+const tripLabels = {
+  "one-way": "One Way",
+  "round-trip": "Round Trip",
+};
+
+type TripKey = keyof typeof tripLabels;
+
 export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [timeRange, setTimeRange] = useState<[number, number] | null>(null);
+  const [openPriceFilter, setOpenPriceFilter] = useState(false);
+  const [openTimeFilter, setOpenTimeFilter] = useState(false);
+  const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
+  const [openTripFilter, setOpenTripFilter] = useState(false);
+
+  const handleOpenPriceFilter = () => {
+    setOpenPriceFilter(!openPriceFilter);
+  }
+
+  const handleOpenTimeFilter = () => {
+    setOpenTimeFilter(!openTimeFilter);
+  }
+
+  const handleOpenAirlinesFilter = () => {
+    setOpenAirlinesFilter(!openAirlinesFilter);
+  }
+
+  const handleOpenTripFilter = () => {
+    setOpenTripFilter(!openTripFilter);
+  }
+
   // 1. Loading state
   if (isPending) {
     return <SkeletonSection />;
@@ -37,6 +67,29 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
 
   const minDuration = data[0].duration_min ?? 0
   const maxDuration = data[0].duration_max ?? 1440
+
+  const airlines = data[0].airlines?.map((airline) => {
+    const name = airline?.name
+    const code = airline?.iata_code
+    return { name, code }
+  })
+
+  const tripFilter =
+    data[0].flight_offers
+      ?.map((offer) => offer.trip_type)
+      .filter(
+        (trip): trip is TripKey => trip !== undefined && trip in tripLabels,
+      ) ?? [];
+
+  const uniqueTripTypesWithLabels = Array.from(new Set(tripFilter));
+
+  const assignLabelsToTripTypes = uniqueTripTypesWithLabels.map((trip) => {
+    const newData = {
+      value: trip,
+      label: tripLabels[trip]
+    }
+    return newData
+  })
 
   // Step B: Ensure we don't pass an empty array to Math.min (which returns Infinity)
   const hasPrices = prices.length > 0;
@@ -68,12 +121,26 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           max={maxPrice}
           onChange={handlePriceChange}
           priceRange={priceRange}
+          openFilter={openPriceFilter}
+          onClose={handleOpenPriceFilter}
         />
         <TimeFilter
           min={minDuration}
           max={maxDuration}
           onChange={handleTimeChange}
           timeRange={timeRange}
+          openFilter={openTimeFilter}
+          onClose={handleOpenTimeFilter}
+        />
+        <AirlinesFilter
+          airlines={airlines}
+          openFilter={openAirlinesFilter}
+          onClose={handleOpenAirlinesFilter}
+        />
+        <TripFilter
+          trips={assignLabelsToTripTypes}
+          openFilter={openTripFilter}
+          onClose={handleOpenTripFilter}
         />
       </div>
       <div></div>

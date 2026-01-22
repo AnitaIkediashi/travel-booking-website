@@ -1,12 +1,15 @@
+import { ArrowDownIcon } from "../icons/arrow_down";
 
 type TitleProps = {
-    title: string
+    title: string;
+    onClick?: () => void;
 }
 
-export const FilterTitle = ({title}: TitleProps) => {
+export const FilterTitle = ({title, onClick}: TitleProps) => {
   return (
-    <h5 className="text-blackish-green font-semibold capitalize mb-4">
-      {title}
-    </h5>
+    <div className="mb-4 flex items-center justify-between cursor-pointer" onClick={onClick}>
+      <h5 className="text-blackish-green font-semibold capitalize">{title}</h5>
+      <ArrowDownIcon />
+    </div>
   );
 }

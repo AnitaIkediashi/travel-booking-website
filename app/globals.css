@@ -3,13 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #112211;
-  --mint-green-100: #8DD3BB;
+  --mint-green-100: #8dd3bb;
   --mint-green-70: #d7e2ee;
   --mint-green-50: #cdeae1;
-  --salmon-100: #FF8682;
+  --salmon-100: #ff8682;
   --neutrals-70: #fafbfc;
-  --blackish-green-10: #1C1B1F;
-  --blackish-green-20: #79747E;
+  --blackish-green-10: #1c1b1f;
+  --blackish-green-20: #79747e;
   --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05);
   --box-shadow-medium: 2px 4px 16px rgba(17, 34, 17, 0.1);
 }
@@ -26,9 +26,8 @@
   --color-salmon-100: var(--salmon-100);
   --color-neutrals-70: var(--neutrals-70);
   --shadow-light: var(--box-shadow-light);
-  --shadow-medium: var(--box-shadow-medium)
+  --shadow-medium: var(--box-shadow-medium);
 }
-
 
 body {
   background: var(--background);
@@ -42,7 +41,8 @@ body {
 }
 
 .ant-select-single .ant-select-selector,
-.ant-picker .ant-picker-input >input {
+.ant-picker .ant-picker-input > input,
+.ant-checkbox-wrapper {
   font-family: var(--font-montserrat);
 }
 
@@ -54,7 +54,8 @@ body {
   background-color: var(--foreground);
 }
 
-.ant-slider-horizontal .ant-slider-rail, .ant-slider .ant-slider-track {
+.ant-slider-horizontal .ant-slider-rail,
+.ant-slider .ant-slider-track {
   height: 2px;
   top: 9px;
 }
@@ -71,4 +72,26 @@ body {
 .ant-slider .ant-slider-handle::after {
   background-color: var(--mint-green-100);
   box-shadow: none;
+}
+
+.ant-checkbox-group {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+}
+
+.ant-checkbox .ant-checkbox-inner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--foreground);
+}
+
+.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover .ant-checkbox-checked:not(.ant-checkbox-disabled) .ant-checkbox-inner,
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--mint-green-100);
+}
+
+.ant-checkbox-wrapper {
+  font-weight: 500;
+  color: var(--foreground);
 }
