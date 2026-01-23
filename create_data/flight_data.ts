@@ -289,36 +289,66 @@ function populateFakeSegments(
 function populateFakeLegsData(
   segmentStart: Date,
   segmentEnd: Date,
-  cabinClass: string
+  cabinClass: string,
+  originCode: string,
+  destinationCode: string,
+  validAirportCodes: string[],
 ) {
-  const numLegs = faker.number.int({ min: 1, max: 2 });
+  // 1. First, find potential transit hubs
+  const possibleHubs = validAirportCodes.filter(
+    (code) => code !== originCode && code !== destinationCode,
+  );
+
+  // 2. Decide numLegs:
+  // If we have no hubs, it MUST be 1.
+  // If we have hubs, randomly choose 1 or 2.
+  const numLegs =
+    possibleHubs.length > 0 ? faker.number.int({ min: 1, max: 2 }) : 1;
+
   const legs = [];
-
-  let currentStart = new Date(segmentStart);
-
-  // Total segment duration in ms
   const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime();
-  // Average duration per leg (minus some time for a layover)
-  const legDurationMs = (totalSegmentMs * 0.7) / numLegs;
 
-  for (let i = 0; i < numLegs; i++) {
-    const arrival = new Date(currentStart.getTime() + legDurationMs);
-
+  // 3. Use the single numLegs variable to drive the branching logic
+  if (numLegs === 1) {
     legs.push({
-      total_time: Math.floor(legDurationMs / 60000),
-      departure_time: currentStart.toISOString(),
-      arrival_time: arrival.toISOString(),
+      total_time: Math.floor(totalSegmentMs / 60000),
+      departure_time: segmentStart.toISOString(),
+      arrival_time: segmentEnd.toISOString(),
+      departure_code: originCode,
+      arrival_code: destinationCode,
+      cabin_class: cabinClass,
+    });
+  } else {
+    // This block ONLY runs if numLegs is 2 AND possibleHubs exists
+    const transitAirport = faker.helpers.arrayElement(possibleHubs);
+
+    const layoverMs = faker.number.int({ min: 60, max: 150 }) * 60 * 1000;
+    const flyingMs = totalSegmentMs - layoverMs;
+    const firstLegMs = flyingMs * 0.45;
+    const secondLegMs = flyingMs * 0.55;
+
+    const firstLegArrival = new Date(segmentStart.getTime() + firstLegMs);
+    const secondLegDeparture = new Date(firstLegArrival.getTime() + layoverMs);
+
+    // Leg 1: Origin -> Transit
+    legs.push({
+      total_time: Math.floor(firstLegMs / 60000),
+      departure_time: segmentStart.toISOString(),
+      arrival_time: firstLegArrival.toISOString(),
+      departure_code: originCode,
+      arrival_code: transitAirport,
       cabin_class: cabinClass,
     });
 
-    // SET UP FOR NEXT LEG: Add a 45-120 minute layover
-    const layoverMs = faker.number.int({ min: 45, max: 120 }) * 60 * 1000;
-    currentStart = new Date(arrival.getTime() + layoverMs);
-
-    // Safety check: Don't let the last leg arrival exceed segment end
-    if (i === numLegs - 1) {
-      legs[i].arrival_time = segmentEnd.toISOString();
-    }
+    // Leg 2: Transit -> Destination
+    legs.push({
+      total_time: Math.floor(secondLegMs / 60000),
+      departure_time: secondLegDeparture.toISOString(),
+      arrival_time: segmentEnd.toISOString(),
+      departure_code: transitAirport,
+      arrival_code: destinationCode,
+      cabin_class: cabinClass,
+    });
   }
 
   return legs;
@@ -397,7 +427,7 @@ function populateFakeFeatures() {
   });
 }
 
-// this to use to clear all data
+// // this to use to clear all data
 // async function clearDatabase() {
 //   console.info("Emptying database...");
 
@@ -534,6 +564,8 @@ async function main() {
       ); //select two airports
 
       const fakeFlightNumber = populateFakeFlightNumber();
+      const allAvailableCodes = createdAirports.map((a) => a.airport_code);
+
 
       // Define the 2-month window once
       const searchStart = new Date();
@@ -597,12 +629,15 @@ async function main() {
                       create: populateFakeLegsData(
                         segment.departure_time,
                         segment.arrival_time,
-                        flightInputData.cabin_class
+                        flightInputData.cabin_class,
+                        segDep,
+                        segArr,
+                        allAvailableCodes,
                       ).map((leg) => ({
                         departure_airport: {
-                          connect: { airport_code: segDep },
+                          connect: { airport_code: leg.departure_code },
                         },
-                        arrival_airport: { connect: { airport_code: segArr } },
+                        arrival_airport: { connect: { airport_code: leg.arrival_code } },
                         departure_time: leg.departure_time,
                         arrival_time: leg.arrival_time,
                         cabin_class: leg.cabin_class,

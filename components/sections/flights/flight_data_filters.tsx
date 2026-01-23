@@ -8,6 +8,7 @@ import Image from "next/image";
 import { TimeFilter } from "./time_filter";
 import { AirlinesFilter } from "./airlines_filter";
 import { TripFilter } from "./trip_filter";
+import { FlightDisplayData } from "./flight_display_data";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -28,6 +29,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const [openTimeFilter, setOpenTimeFilter] = useState(false);
   const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
   const [openTripFilter, setOpenTripFilter] = useState(false);
+  const [sortBy, setSortBy] = useState("best")
 
   const handleOpenPriceFilter = () => {
     setOpenPriceFilter(!openPriceFilter);
@@ -111,8 +113,8 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   };
 
   return (
-    <section className="w-full grid lg:grid-cols-[343px_1fr] grid-cols-1 relative font-montserrat">
-      <div className="w-full lg:pr-6 lg:border-r lg:border-r-blackish-green lg:mr-[15.5px] hidden lg:block">
+    <section className="w-full grid lg:grid-cols-[343px_1fr] grid-cols-1 lg:gap-[15.5px] relative font-montserrat">
+      <aside className="w-full lg:pr-6 lg:border-r lg:border-r-blackish-green hidden lg:block">
         <h3 className="pb-8 text-blackish-green font-semibold text-xl capitalize">
           filters
         </h3>
@@ -142,8 +144,8 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           openFilter={openTripFilter}
           onClose={handleOpenTripFilter}
         />
-      </div>
-      <div></div>
+      </aside>
+      <FlightDisplayData />
     </section>
   );
 };;
