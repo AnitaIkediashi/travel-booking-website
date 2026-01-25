@@ -94,8 +94,8 @@ function populateFakeBaggage() {
       count <= 10
         ? baggageTypeArray[0]
         : count <= 20
-        ? baggageTypeArray[1]
-        : baggageTypeArray[2];
+          ? baggageTypeArray[1]
+          : baggageTypeArray[2];
     const paramName = faker.helpers.arrayElement(paramNamesArray);
     const isIncluded = faker.helpers.arrayElement(includedBaggage);
     return {
@@ -195,10 +195,9 @@ function populateFakeDepartData() {
   });
 }
 
-function populateFakeFlightOffers() {
+function populateFakeFlightOffers(tripType: string) {
   return Array.from({ length: faker.number.int({ min: 3, max: 6 }) }, () => {
     const token = faker.string.nanoid({ min: 40, max: 80 });
-    const tripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
     const flightKey = faker.string.uuid();
     return {
       token: token,
@@ -211,7 +210,7 @@ function populateFakeFlightOffers() {
 function populateFakeSegments(
   windowStart: Date,
   windowEnd: Date,
-  tripType: string
+  tripType: string,
 ) {
   // 1. Generate a random date between start and end
   const rawOutboundDate = faker.date.between({
@@ -229,13 +228,13 @@ function populateFakeSegments(
       rawOutboundDate.getUTCDate(),
       12,
       0,
-      0
-    )
+      0,
+    ),
   );
 
   const outboundDuration = faker.number.int({ min: 90, max: 720 });
   const arrivalTime = new Date(
-    departureTime.getTime() + outboundDuration * 60 * 1000
+    departureTime.getTime() + outboundDuration * 60 * 1000,
   );
 
   const segments = [
@@ -254,7 +253,7 @@ function populateFakeSegments(
 
     // Calculate Return Departure based on the Outbound Arrival
     const rawReturnDate = new Date(
-      arrivalTime.getTime() + stayDays * 24 * 60 * 60 * 1000
+      arrivalTime.getTime() + stayDays * 24 * 60 * 60 * 1000,
     );
 
     // NORMALIZE: Force the return flight to 12:00 PM UTC as well
@@ -265,13 +264,13 @@ function populateFakeSegments(
         rawReturnDate.getUTCDate(),
         12,
         0,
-        0
-      )
+        0,
+      ),
     );
 
     const returnDuration = faker.number.int({ min: 90, max: 720 });
     const returnArrival = new Date(
-      returnDeparture.getTime() + returnDuration * 60 * 1000
+      returnDeparture.getTime() + returnDuration * 60 * 1000,
     );
 
     segments.push({
@@ -428,27 +427,27 @@ function populateFakeFeatures() {
 }
 
 // // this to use to clear all data
-// async function clearDatabase() {
-//   console.info("Emptying database...");
+async function clearDatabase() {
+  console.info("Emptying database...");
 
-//   // The order matters! Delete children before parents.
-//   // We use a transaction to ensure everything is cleared or nothing is.
-//   await prisma.$transaction([
-//     prisma.legs.deleteMany(),
-//     prisma.segment.deleteMany(),
-//     prisma.travelerPrice.deleteMany(),
-//     prisma.priceBreakdown.deleteMany(),
-//     prisma.flightOffers.deleteMany(),
-//     prisma.stop.deleteMany(),
-//     prisma.airlines.deleteMany(),
-//     prisma.minPrice.deleteMany(),
-//     prisma.flightTimes.deleteMany(),
-//     prisma.data.deleteMany(), // The main parent
-//     prisma.airport.deleteMany(),
-//   ]);
+  // The order matters! Delete children before parents.
+  // We use a transaction to ensure everything is cleared or nothing is.
+  await prisma.$transaction([
+    prisma.legs.deleteMany(),
+    prisma.segment.deleteMany(),
+    prisma.travelerPrice.deleteMany(),
+    prisma.priceBreakdown.deleteMany(),
+    prisma.flightOffers.deleteMany(),
+    prisma.stop.deleteMany(),
+    prisma.airlines.deleteMany(),
+    prisma.minPrice.deleteMany(),
+    prisma.flightTimes.deleteMany(),
+    prisma.data.deleteMany(), // The main parent
+    prisma.airport.deleteMany(),
+  ]);
 
-//   console.info("Database cleared! ✨");
-// }
+  console.info("Database cleared! ✨");
+}
 
 async function clearStaleData() {
   // 1. Create a "cutoff" time (30 minutes in the past)
@@ -493,7 +492,7 @@ async function clearStaleData() {
 
   if (staleDelete.count > 0) {
     console.info(
-      `✅ Successfully removed ${staleDelete.count} expired flights.`
+      `✅ Successfully removed ${staleDelete.count} expired flights.`,
     );
   }
 
@@ -502,7 +501,7 @@ async function clearStaleData() {
 
   if (currentCount >= MAX_FLIGHTS) {
     console.info(
-      `⚠️ Database has ${currentCount} future flights. Capacity reached.`
+      `⚠️ Database has ${currentCount} future flights. Capacity reached.`,
     );
     return false; // Tells main() NOT to add more
   }
@@ -512,7 +511,7 @@ async function clearStaleData() {
 
 async function main() {
   // 💡 Step 0: Clear the database before creating new data
-  console.info("Starting seed process...");
+  // console.info("Starting seed process...");
 
   //  1. Run maintenance (deletes stale data AND checks the count)
   const isHealthyAndHasRoom = await clearStaleData();
@@ -527,6 +526,7 @@ async function main() {
   // await clearDatabase();
 
   console.info("🌱 Database has room. Generating new flight data...");
+
   // 3. Use Transaction for "All or Nothing" safety
   await prisma.$transaction(
     async (tx) => {
@@ -560,21 +560,25 @@ async function main() {
       const flightInputData = populateFakeFlightData();
       const [depAirport, arrAirport] = faker.helpers.arrayElements(
         createdAirports,
-        2
+        2,
       ); //select two airports
 
       const fakeFlightNumber = populateFakeFlightNumber();
       const allAvailableCodes = createdAirports.map((a) => a.airport_code);
-
 
       // Define the 2-month window once
       const searchStart = new Date();
       const searchEnd = new Date();
       searchEnd.setMonth(searchStart.getMonth() + 2);
 
-      // 6. PRE-GENERATE OFFERS to know the Trip Type
-      const fakeOffers = populateFakeFlightOffers();
-      const currentTripType = fakeOffers[0].trip_type; // Use the first offer's type as the master type
+      // 5. Determine the Master Trip Type for this entire Flight Data record
+      const masterTripType = faker.helpers.arrayElement([
+        "one-way",
+        "round-trip",
+      ]);
+
+      // 6. Generate offers using that Master Type
+      const fakeOffers = populateFakeFlightOffers(masterTripType);
 
       // 7. Create Main Data Record with non-multiplying nested relations
       const createdData = await tx.data.create({
@@ -583,7 +587,7 @@ async function main() {
           duration_max: flightInputData.duration_max,
           cabin_class: flightInputData.cabin_class,
           flight_offers: {
-            create: populateFakeFlightOffers().map((offer) => ({
+            create: fakeOffers.map((offer) => ({
               token: offer.token,
               trip_type: offer.trip_type,
               flight_key: offer.flight_key,
@@ -606,7 +610,7 @@ async function main() {
                 create: populateFakeSegments(
                   searchStart,
                   searchEnd,
-                  currentTripType
+                  masterTripType,
                 ).map((segment, index) => {
                   // --- AIRPORT SWAP LOGIC ---
                   // If index 0: Departure -> Arrival
@@ -637,7 +641,9 @@ async function main() {
                         departure_airport: {
                           connect: { airport_code: leg.departure_code },
                         },
-                        arrival_airport: { connect: { airport_code: leg.arrival_code } },
+                        arrival_airport: {
+                          connect: { airport_code: leg.arrival_code },
+                        },
                         departure_time: leg.departure_time,
                         arrival_time: leg.arrival_time,
                         cabin_class: leg.cabin_class,
@@ -670,7 +676,7 @@ async function main() {
 
       // A. Link Carriers and FlightInfo/CarrierInfo to Legs
       const allLegs = createdData.flight_offers.flatMap((offer) =>
-        offer.segments.flatMap((segment) => segment.legs)
+        offer.segments.flatMap((segment) => segment.legs),
       );
 
       const carriersToCreate: CarrierDataProps[] = [];
@@ -858,7 +864,7 @@ async function main() {
     },
     {
       timeout: 10000, // 10 seconds
-    }
+    },
   );
   console.info("✅ Database seeding completed successfully.");
 }
@@ -878,24 +884,24 @@ async function main() {
 async function runFlightDataCreateAutomation() {
   const startTime = new Date();
   console.info(
-    `Flight data creation automation started at ${startTime.toLocaleString()}`
+    `Flight data creation automation started at ${startTime.toLocaleString()}`,
   );
   try {
     await main();
     const endTime = new Date();
     console.info(
-      `Flight data creation automation ended at ${endTime.toLocaleString()}`
+      `Flight data creation automation ended at ${endTime.toLocaleString()}`,
     );
   } catch (error) {
     console.error(
-      `❌ Flight data creation automation failed: ${error} on ${new Date().toLocaleString()}`
+      `❌ Flight data creation automation failed: ${error} on ${new Date().toLocaleString()}`,
     );
   }
 }
 
 runFlightDataCreateAutomation();
 console.info(
-  "⏳ Flight Data Automation is running. Waiting for the next scheduled hour..."
+  "⏳ Flight Data Automation is running. Waiting for the next scheduled hour...",
 );
 
 /**

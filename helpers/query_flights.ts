@@ -11,7 +11,7 @@ const getDateRangeStrings = (dateString: string | undefined) => {
   const end = new Date(dateString);
   end.setUTCHours(23, 59, 59, 999);
 
-  // console.log(`start: ${start.toISOString()} end: ${end.toISOString()}`);
+  console.log(`start: ${start.toISOString()} end: ${end.toISOString()}`);
 
   return {
     gte: start.toISOString(),
@@ -36,47 +36,55 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
     // Construct the conditions for the where clause
     const conditions: Prisma.DataWhereInput[] = [
       { cabin_class: { contains: cabin } },
+      {flight_offers: {some: {
+        trip_type: {
+          contains: trip
+        }
+      }}}
     ];
 
-    const oneWayFilter: Prisma.SegmentWhereInput = {
+    const outboundFilter: Prisma.SegmentWhereInput = {
       departure_airport_code: {
         equals: from,
+        mode: "insensitive",
       },
       arrival_airport_code: {
         equals: to,
+        mode: "insensitive",
       },
       departure_time: departRange,
     };
 
-    const roundTripFilter: Prisma.SegmentWhereInput = {
+    const inboundFilter: Prisma.SegmentWhereInput = {
       departure_airport_code: {
-        equals: from,
-        mode: "insensitive",
-      },
-      arrival_airport_code: {
         equals: to,
         mode: "insensitive",
       },
-      departure_time: departRange,
-      arrival_time: returnRange,
+      arrival_airport_code: {
+        equals: from,
+        mode: "insensitive",
+      },
+      departure_time: returnRange,
     };
 
     if (trip === "round-trip") {
       conditions.push({
         flight_offers: {
           some: {
-            segments: {
-              some: roundTripFilter,
-            },
+            OR: [
+              { segments: { some: outboundFilter } },
+              { segments: { some: inboundFilter } },
+            ],
           },
         },
       });
-    } else {
+    } 
+    else {
       conditions.push({
         flight_offers: {
           some: {
             segments: {
-              some: oneWayFilter,
+              some: outboundFilter,
             },
           },
         },
@@ -115,9 +123,13 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
               },
             },
             segments: {
-              where: trip === "round-trip" ? roundTripFilter : oneWayFilter,
+              where:
+                trip === "round-trip"
+                  ? { OR: [outboundFilter, inboundFilter] }
+                  : outboundFilter,
               include: {
                 legs: {
+                  orderBy: { departure_time: "asc" },
                   include: {
                     carriers: true,
                     flight_info: {
@@ -146,9 +158,30 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
         baggage: true,
       },
     });
-    // console.log("data response: ", JSON.stringify(dataResponse, null, 2));
+    console.log("data response: ", JSON.stringify(dataResponse, null, 2));
     return dataResponse;
   } catch (error) {
     console.error("Error querying flight data: ", error);
   }
 };
+
+// queryFlightData({
+//   depart: "2026-02-18",
+//   return: "2026-02-27",
+//   cabin: 'Business',
+//   from: 'NRT',
+//   to: 'CHC',
+//   adults: 1,
+//   children: 0,
+//   trip: 'round-trip'
+// });
+
+// queryFlightData({
+//   depart: "2026-01-31",
+//   cabin: 'Premium',
+//   from: 'CHC',
+//   to: 'CBR',
+//   adults: 1,
+//   children: 0,
+//   trip: 'one-way'
+// });

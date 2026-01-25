@@ -62,8 +62,21 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   }
   // 3. when data exists
   // Step A: Map and filter out undefined/null in one go
+
+  const allOffers = data[0].flight_offers ?? [];
+
+  // sort by cheapest price
+  const cheapestOffers = [...allOffers].sort((a,b) => {
+    const priceA = a.price_breakdown?.total?.amount;
+    const priceB = b.price_breakdown?.total?.amount;
+    if (priceA === undefined && priceB === undefined) return 0;
+    if (priceA === undefined) return 1;
+    if (priceB === undefined) return -1;
+    return priceA - priceB;
+  })
+
   const prices =
-    data[0].flight_offers
+    allOffers
       ?.map((offer) => offer.price_breakdown?.total?.amount)
       .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. It is a **type predicate** and has the form **parameterName is Type**
 
