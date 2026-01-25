@@ -140,10 +140,10 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
               },
             },
             segments: {
-              where:
-                trip === "round-trip"
-                  ? { OR: [outboundFilter, inboundFilter] }
-                  : outboundFilter,
+              // where:
+              //   trip === "round-trip"
+              //     ? { OR: [outboundFilter, inboundFilter] }
+              //     : outboundFilter,
               orderBy: { departure_time: "asc" },
               include: {
                 legs: {
