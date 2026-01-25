@@ -1,3 +1,11 @@
+/**
+ * Generated types - they are are TypeScript types that are derived from your models.
+ * They are denoted using Prisma namespace, e.g., Prisma.UserCreateInput.
+ * These types help ensure type safety when interacting with the database.
+ * NOTE: using include method: to add related records in the query result.
+ * you can use include on deeply nested relations as well. 
+ */
+
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SearchParamsProps } from "@/types/flight_type";
@@ -11,7 +19,7 @@ const getDateRangeStrings = (dateString: string | undefined) => {
   const end = new Date(dateString);
   end.setUTCHours(23, 59, 59, 999);
 
-  console.log(`start: ${start.toISOString()} end: ${end.toISOString()}`);
+  // console.log(`start: ${start.toISOString()} end: ${end.toISOString()}`);
 
   return {
     gte: start.toISOString(),
@@ -95,6 +103,15 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
       where: { AND: conditions },
       include: {
         flight_offers: {
+          where: {
+            trip_type: { contains: trip },
+            segments: {
+              some:
+                trip === "round-trip"
+                  ? { OR: [outboundFilter, inboundFilter] }
+                  : outboundFilter,
+            },
+          },
           include: {
             branded_fareinfo: {
               include: {
@@ -127,6 +144,7 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
                 trip === "round-trip"
                   ? { OR: [outboundFilter, inboundFilter] }
                   : outboundFilter,
+              orderBy: { departure_time: "asc" },
               include: {
                 legs: {
                   orderBy: { departure_time: "asc" },
@@ -158,7 +176,7 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
         baggage: true,
       },
     });
-    console.log("data response: ", JSON.stringify(dataResponse, null, 2));
+    // console.log("data response: ", JSON.stringify(dataResponse, null, 2));
     return dataResponse;
   } catch (error) {
     console.error("Error querying flight data: ", error);
@@ -166,21 +184,21 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
 };
 
 // queryFlightData({
-//   depart: "2026-02-18",
+//   depart: "2026-02-26",
 //   return: "2026-02-27",
 //   cabin: 'Business',
-//   from: 'NRT',
-//   to: 'CHC',
+//   from: 'BSB',
+//   to: 'POM',
 //   adults: 1,
 //   children: 0,
 //   trip: 'round-trip'
 // });
 
 // queryFlightData({
-//   depart: "2026-01-31",
+//   depart: "2026-02-14",
 //   cabin: 'Premium',
-//   from: 'CHC',
-//   to: 'CBR',
+//   from: 'ATL',
+//   to: 'CJU',
 //   adults: 1,
 //   children: 0,
 //   trip: 'one-way'

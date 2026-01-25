@@ -458,21 +458,6 @@ async function clearStaleData() {
   console.info("🧹 Maintenance started...");
 
   // --- PART 1: DELETE STALE DATA ---
-  // const staleDelete = await prisma.data.deleteMany({
-  //   where: {
-  //     flight_offers: {
-  //       some: {
-  //         segments: {
-  //           some: {
-  //             departure_time: {
-  //               lt: now.toISOString(), // Deletes everything in the past
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // });
 
   const staleDelete = await prisma.data.deleteMany({
     where: {
