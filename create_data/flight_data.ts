@@ -426,6 +426,11 @@ function populateFakeFeatures() {
   });
 }
 
+/**
+ * A database **transaction** refers to a sequence of read/write operations 
+ * that are guaranteed to either succeed or fail as a whole
+ */
+
 // // this to use to clear all data
 async function clearDatabase() {
   console.info("Emptying database...");
