@@ -2,7 +2,7 @@
 
 import { FlightDataProps } from "@/types/flight_type";
 import { PriceFilter } from "./price_filter";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import Image from "next/image";
 import { TimeFilter } from "./time_filter";
@@ -30,6 +30,103 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
   const [openTripFilter, setOpenTripFilter] = useState(false);
   const [sortBy, setSortBy] = useState("best");
+  const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]); // track which airlines are selected
+  const [selectedTrips, setSelectedTrips] = useState<string[]>([]); // same with trips selected
+
+  /**
+   *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
+   * It optimizes performance by recalculating filteredSortedData only when its dependencies change.
+   */
+
+  const filteredSortedData = useMemo(() => {
+    if (!data) return [];
+
+    // 1. First, Filter the data
+    const results = data.filter((flight) => {
+      const offers = flight.flight_offers ?? [];
+
+      // Price Filter Check
+      const matchesPrice = priceRange
+        ? offers.some(
+            (o) =>
+              (o.price_breakdown?.total?.amount ?? 0) >= priceRange[0] &&
+              (o.price_breakdown?.total?.amount ?? 0) <= priceRange[1],
+          )
+        : true;
+
+      // Time Filter Check
+      const matchesTime = timeRange
+        ? offers.some(
+            (o) =>
+              (o.segments?.[0]?.total_time ?? 0) >= timeRange[0] &&
+              (o.segments?.[0]?.total_time ?? 0) <= timeRange[1],
+          ) // picking the first segment's time for filtering
+        : true;
+
+      // airlines Filter Check
+      const matchesAirlines =
+        selectedAirlines.length > 0
+          ? data[0].airlines?.some((s) =>
+              selectedAirlines.includes(s.iata_code ?? ""),
+            )
+          : true;
+      console.log("matchesAirlines", matchesAirlines);
+
+      // trip filter check
+      const matchesTrips =
+        selectedTrips.length > 0
+          ? offers.some((o) =>
+              selectedTrips.includes((o.trip_type as TripKey) ?? ""),
+            )
+          : true;
+
+      console.log("matchesTrips", matchesTrips);
+
+      return matchesPrice && matchesTime && matchesAirlines && matchesTrips;
+    });
+
+    // 2. Then, Sort the filtered results
+    return results.sort((a, b) => {
+      // Helper to get the minimum price/time from a flight's offers
+      const getMinPrice = (f: FlightDataProps) =>
+        Math.min(
+          ...(f.flight_offers?.map(
+            (o) => o.price_breakdown?.total?.amount ?? Infinity,
+          ) ?? [Infinity]),
+        );
+
+      const getMinTime = (f: FlightDataProps) =>
+        Math.min(
+          ...(f.flight_offers?.map(
+            (o) => o.segments?.[0]?.total_time ?? Infinity,
+          ) ?? [Infinity]),
+        );
+
+      if (sortBy === "cheapest") {
+        return getMinPrice(a) - getMinPrice(b);
+      }
+
+      if (sortBy === "quickest") {
+        return getMinTime(a) - getMinTime(b);
+      }
+
+      if (sortBy === "best") {
+        // Logic: Min(Price + Duration) for each flight
+        const getBestScore = (f: FlightDataProps) =>
+          Math.min(
+            ...(f.flight_offers?.map(
+              (o) =>
+                (o.price_breakdown?.total?.amount ?? 0) +
+                (o.segments?.[0]?.total_time ?? 0),
+            ) ?? [Infinity]),
+          );
+
+        return getBestScore(a) - getBestScore(b);
+      }
+
+      return 0;
+    });
+  }, [priceRange, timeRange, sortBy, selectedAirlines, selectedTrips, data]);
 
   const handleOpenPriceFilter = () => {
     setOpenPriceFilter(!openPriceFilter);
@@ -150,6 +247,14 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
     }
   };
 
+  const handleAirlineChange = (codes: string[]) => {
+    setSelectedAirlines(codes);
+  };
+
+  const handleTripChange = (types: string[]) => {
+    setSelectedTrips(types);
+  };
+
   return (
     <section className="w-full grid lg:grid-cols-[343px_1fr] grid-cols-1 lg:gap-[15.5px] relative font-montserrat">
       <aside className="w-full lg:pr-6 lg:border-r lg:border-r-blackish-green hidden lg:block">
@@ -176,11 +281,13 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           airlines={airlines}
           openFilter={openAirlinesFilter}
           onClose={handleOpenAirlinesFilter}
+          onChange={handleAirlineChange}
         />
         <TripFilter
           trips={assignLabelsToTripTypes}
           openFilter={openTripFilter}
           onClose={handleOpenTripFilter}
+          onChange={handleTripChange}
         />
       </aside>
       <FlightDisplayData
@@ -189,6 +296,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
         cheapest={cheapestOffer.price_breakdown?.total?.amount}
         best={bestOffer.price_breakdown?.total?.amount}
         quickest={quickestOffer.price_breakdown?.total?.amount}
+        filteredSortedData={filteredSortedData}
       />
     </section>
   );

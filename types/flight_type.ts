@@ -133,7 +133,7 @@ type Depart = {
   end?: string;
 };
 
-type FlightOffer = {
+export type FlightOffer = {
   id?: string;
   flight_offer_id?: string;
   price_id?: number | null;
