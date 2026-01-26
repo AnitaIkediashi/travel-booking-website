@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { FlightDataProps } from "@/types/flight_type";
 import { PriceFilter } from "./price_filter";
@@ -29,23 +29,23 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const [openTimeFilter, setOpenTimeFilter] = useState(false);
   const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
   const [openTripFilter, setOpenTripFilter] = useState(false);
-  const [sortBy, setSortBy] = useState("best")
+  const [sortBy, setSortBy] = useState("best");
 
   const handleOpenPriceFilter = () => {
     setOpenPriceFilter(!openPriceFilter);
-  }
+  };
 
   const handleOpenTimeFilter = () => {
     setOpenTimeFilter(!openTimeFilter);
-  }
+  };
 
   const handleOpenAirlinesFilter = () => {
     setOpenAirlinesFilter(!openAirlinesFilter);
-  }
+  };
 
   const handleOpenTripFilter = () => {
     setOpenTripFilter(!openTripFilter);
-  }
+  };
 
   // 1. Loading state
   if (isPending) {
@@ -55,8 +55,15 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   if (data?.length === 0 || !data) {
     return (
       <div className="w-full flex items-center justify-center flex-col gap-3">
-        <Image src="/illustrations/no-data-illustration.svg" alt="no data" width={400} height={400} />
-        <p className="font-medium text-blackish-green">No flight records, ensure to search the appropriate flights</p>
+        <Image
+          src="/illustrations/no-data-illustration.svg"
+          alt="no data"
+          width={400}
+          height={400}
+        />
+        <p className="font-medium text-blackish-green">
+          No flight records, ensure to search the appropriate flights
+        </p>
       </div>
     );
   }
@@ -66,28 +73,46 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const allOffers = data[0].flight_offers ?? [];
 
   // sort by cheapest price
-  const cheapestOffers = [...allOffers].sort((a,b) => {
+  const cheapestOffer = [...allOffers].sort((a, b) => {
     const priceA = a.price_breakdown?.total?.amount;
     const priceB = b.price_breakdown?.total?.amount;
     if (priceA === undefined && priceB === undefined) return 0;
     if (priceA === undefined) return 1;
     if (priceB === undefined) return -1;
     return priceA - priceB;
-  })
+  })[0];
+
+  // sort by best - combination of price and duration
+  const bestOffer = [...allOffers].sort((a, b) => {
+    const scoreA =
+      (a.price_breakdown?.total?.amount ?? 0) +
+      (a.segments?.[0]?.total_time ?? 0);
+    const scoreB =
+      (b.price_breakdown?.total?.amount ?? 0) +
+      (b.segments?.[0]?.total_time ?? 0);
+    return scoreA - scoreB;
+  })[0];
+
+  // sort by quickest - total min time for both outbound and inbound
+  const quickestOffer = [...allOffers].sort((a, b) => {
+    const durA = a.segments?.[0]?.total_time ?? Infinity;
+    const durB = b.segments?.[0]?.total_time ?? Infinity;
+    return durA - durB;
+  })[0];
 
   const prices =
     allOffers
       ?.map((offer) => offer.price_breakdown?.total?.amount)
       .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. It is a **type predicate** and has the form **parameterName is Type**
 
-  const minDuration = data[0].duration_min ?? 0
-  const maxDuration = data[0].duration_max ?? 1440
+  const minDuration = data[0].duration_min ?? 0;
+  const maxDuration = data[0].duration_max ?? 1440;
 
   const airlines = data[0].airlines?.map((airline) => {
-    const name = airline?.name
-    const code = airline?.iata_code
-    return { name, code }
-  })
+    const name = airline?.name;
+    const code = airline?.iata_code;
+    return { name, code };
+  });
 
   const tripFilter =
     data[0].flight_offers
@@ -101,10 +126,10 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const assignLabelsToTripTypes = uniqueTripTypesWithLabels.map((trip) => {
     const newData = {
       value: trip,
-      label: tripLabels[trip]
-    }
-    return newData
-  })
+      label: tripLabels[trip],
+    };
+    return newData;
+  });
 
   // Step B: Ensure we don't pass an empty array to Math.min (which returns Infinity)
   const hasPrices = prices.length > 0;
@@ -158,7 +183,13 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           onClose={handleOpenTripFilter}
         />
       </aside>
-      <FlightDisplayData />
+      <FlightDisplayData
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        cheapest={cheapestOffer.price_breakdown?.total?.amount}
+        best={bestOffer.price_breakdown?.total?.amount}
+        quickest={quickestOffer.price_breakdown?.total?.amount}
+      />
     </section>
   );
-};;
+};
