@@ -8,8 +8,20 @@ console.log("🚀 SCRIPT INITIALIZED");
 /**
  * Record utility type is used to define an object type with specific key-value pairs.
  * written in Record<Keys, Type>
+ * 
+ * The flights creation is based on mimicked real world flights and their configurations.
+ * The flights are based on
+ * 1. Pricing
+ * 2. Baggage allowance
+ * 3. Seat availability
+ * 4. Cabin class
+ * 5. Duration
+ * 6. flight schedules
+ * 7. Segments and legs - which depends on the outbound and inbound airports
+ * 8. Airlines operating the flights
  */
 
+//helper function to calculate price multipliers and baggage allowance based on cabin class
 const CABIN_CONFIGS: Record<
   string,
   { multiplier: number; baggage: number; seats: number }
@@ -36,8 +48,6 @@ function populateFakeAirports() {
     };
   });
 }
-
-const fakeAirports = populateFakeAirports();
 
 function populateFakeFlightData() {
   const cabinClassArray = [
@@ -490,7 +500,7 @@ async function main() {
     // We stop here.
     return;
   }
-
+  const fakeAirports = populateFakeAirports();
   // await clearDatabase();
 
   console.info("🌱 Database has room. Generating new flight data...");
@@ -545,6 +555,8 @@ async function main() {
         "Business",
         "First Class",
       ];
+
+      // create multiple flight schedules for the same route
       const schedulesToCreate = faker.number.int({ min: 3, max: 5 });
       for (let i = 0; i < schedulesToCreate; i++) {
         const flightInputData = populateFakeFlightData();
