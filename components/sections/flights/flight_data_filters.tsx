@@ -167,6 +167,8 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   // 3. when data exists
   // Step A: Map and filter out undefined/null in one go
 
+  // console.log("data:", data);
+
   const allOffers = data[0].flight_offers ?? [];
 
   // sort by cheapest price

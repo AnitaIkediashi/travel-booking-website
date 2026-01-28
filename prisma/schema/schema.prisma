@@ -171,7 +171,7 @@ model Legs {
   arrival_airport_code   String //FK
   departure_time         DateTime
   arrival_time           DateTime
-  cabin_class            String
+  cabin_class            String?
   total_time             Int
   departure_airport      Airport     @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
   arrival_airport        Airport     @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])

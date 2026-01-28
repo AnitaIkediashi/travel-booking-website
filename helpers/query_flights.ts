@@ -3,7 +3,7 @@
  * They are denoted using Prisma namespace, e.g., Prisma.UserCreateInput.
  * These types help ensure type safety when interacting with the database.
  * NOTE: using include method: to add related records in the query result.
- * you can use include on deeply nested relations as well. 
+ * you can use include on deeply nested relations as well.
  */
 
 import { Prisma } from "@/app/generated/prisma/client";
@@ -43,12 +43,21 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
 
     // Construct the conditions for the where clause
     const conditions: Prisma.DataWhereInput[] = [
-      { cabin_class: { contains: cabin } },
-      {flight_offers: {some: {
-        trip_type: {
-          contains: trip
-        }
-      }}}
+      {
+        flight_offers: {
+          some: {
+            trip_type: {
+              contains: trip,
+            },
+            branded_fareinfo: {
+              cabin_class: {
+                contains: cabin,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      },
     ];
 
     const outboundFilter: Prisma.SegmentWhereInput = {
@@ -86,8 +95,7 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
           },
         },
       });
-    } 
-    else {
+    } else {
       conditions.push({
         flight_offers: {
           some: {
@@ -105,6 +113,9 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
         flight_offers: {
           where: {
             trip_type: { contains: trip },
+            branded_fareinfo: {
+              cabin_class: { contains: cabin, mode: "insensitive" },
+            },
             segments: {
               some:
                 trip === "round-trip"
@@ -140,10 +151,6 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
               },
             },
             segments: {
-              // where:
-              //   trip === "round-trip"
-              //     ? { OR: [outboundFilter, inboundFilter] }
-              //     : outboundFilter,
               orderBy: { departure_time: "asc" },
               include: {
                 legs: {
