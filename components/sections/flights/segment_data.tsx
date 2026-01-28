@@ -1,5 +1,5 @@
 import { Button } from "@/components/reusable/button";
-import { FlightDataProps, FlightOffer } from "@/types/flight_type";
+import { FlightOffer } from "@/types/flight_type";
 
 type segmentDataProps = {
   offers: FlightOffer
