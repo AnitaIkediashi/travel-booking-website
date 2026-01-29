@@ -4,6 +4,7 @@ import { SortByPrice } from "@/components/reusable/sort_by_price";
 import { FlightDataProps } from "@/types/flight_type";
 import { Dispatch, SetStateAction } from "react";
 import { SegmentData } from "./segment_data";
+import Image from "next/image";
 
 type FlightDisplayDataProps = {
   sortBy: string;
@@ -12,6 +13,7 @@ type FlightDisplayDataProps = {
   best: number | undefined;
   quickest: number | undefined;
   filteredSortedData: FlightDataProps[];
+  isPendingFilter: boolean;
 };
 
 export const FlightDisplayData = ({
@@ -21,7 +23,29 @@ export const FlightDisplayData = ({
   best,
   quickest,
   filteredSortedData,
+  isPendingFilter,
 }: FlightDisplayDataProps) => {
+
+  const totalFlightOffered = filteredSortedData
+    .map((data) => data.flight_offers?.length ?? 0)
+    .reduce((a, b) => a + b, 0);
+  
+  if (filteredSortedData?.length === 0 || !filteredSortedData) {
+      return (
+        <div className="w-full flex items-center justify-center flex-col gap-3">
+          <Image
+            src="/illustrations/no-data-illustration.svg"
+            alt="no data"
+            width={400}
+            height={400}
+          />
+          <p className="font-medium text-blackish-green text-center text-sm">
+            No flight records found, <br /> try removing some filters to see more results.
+          </p>
+        </div>
+      );
+    }
+
   return (
     <div className="font-montserrat">
       <BoxShadow className="px-6 py-4 flex items-center justify-center shadow-light relative">
@@ -48,8 +72,8 @@ export const FlightDisplayData = ({
       </BoxShadow>
       <div className="mt-6 flex flex-col gap-y-6">
         <PageCount
-          currentCount={filteredSortedData.length}
-          totalCount={filteredSortedData.length}
+          currentCount={totalFlightOffered}
+          totalCount={totalFlightOffered}
         />
         {filteredSortedData.map((data) => {
           return (
@@ -58,9 +82,11 @@ export const FlightDisplayData = ({
                 return (
                   <BoxShadow
                     key={index}
-                    className="w-full rounded-xl shadow-light py-6 md:py-0 px-4"
+                    className={`w-full rounded-xl shadow-light py-6 md:py-0 px-4 ${isPendingFilter ? 'opacity-40': 'opacity-100'}`}
                   >
-                    <SegmentData offers={offer} />
+                    <SegmentData
+                      offers={offer}
+                    />
                   </BoxShadow>
                 );
               })}

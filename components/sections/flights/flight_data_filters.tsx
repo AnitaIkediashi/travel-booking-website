@@ -1,8 +1,8 @@
 "use client";
 
-import { FlightDataProps } from "@/types/flight_type";
+import { FlightDataProps, FlightOffer } from "@/types/flight_type";
 import { PriceFilter } from "./price_filter";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import Image from "next/image";
 import { TimeFilter } from "./time_filter";
@@ -32,6 +32,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const [sortBy, setSortBy] = useState("best");
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]); // track which airlines are selected
   const [selectedTrips, setSelectedTrips] = useState<string[]>([]); // same with trips selected
+  const [isPendingFilter, startTransition] = useTransition();
 
   /**
    *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
@@ -70,7 +71,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
               selectedAirlines.includes(s.iata_code ?? ""),
             )
           : true;
-      console.log("matchesAirlines", matchesAirlines);
+      // console.log("matchesAirlines", matchesAirlines);
 
       // trip filter check
       const matchesTrips =
@@ -80,7 +81,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
             )
           : true;
 
-      console.log("matchesTrips", matchesTrips);
+      // console.log("matchesTrips", matchesTrips);
 
       return matchesPrice && matchesTime && matchesAirlines && matchesTrips;
     });
@@ -167,8 +168,6 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   // 3. when data exists
   // Step A: Map and filter out undefined/null in one go
 
-  // console.log("data:", data);
-
   const allOffers = data[0].flight_offers ?? [];
 
   // sort by cheapest price
@@ -181,21 +180,37 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
     return priceA - priceB;
   })[0];
 
+  const getTotalFlightTime = (offer: FlightOffer) => {
+    return (
+      offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ??
+      Infinity
+    );
+  };
+
   // sort by best - combination of price and duration
   const bestOffer = [...allOffers].sort((a, b) => {
     const scoreA =
       (a.price_breakdown?.total?.amount ?? 0) +
-      (a.segments?.[0]?.total_time ?? 0);
+      getTotalFlightTime(a);
     const scoreB =
       (b.price_breakdown?.total?.amount ?? 0) +
-      (b.segments?.[0]?.total_time ?? 0);
+      getTotalFlightTime(b);
+    
     return scoreA - scoreB;
   })[0];
 
   // sort by quickest - total min time for both outbound and inbound
   const quickestOffer = [...allOffers].sort((a, b) => {
-    const durA = a.segments?.[0]?.total_time ?? Infinity;
-    const durB = b.segments?.[0]?.total_time ?? Infinity;
+    const durA = getTotalFlightTime(a);
+    const durB = getTotalFlightTime(b);
+
+    if (durA === durB) {
+      // If duration is the same, pick the cheaper one as the "winner"
+      return (
+        (a.price_breakdown?.total?.amount ?? 0) -
+        (b.price_breakdown?.total?.amount ?? 0)
+      );
+    }
     return durA - durB;
   })[0];
 
@@ -238,23 +253,31 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   const handlePriceChange = (value: number | number[]) => {
     // Since 'range' is true in the Slider, value will be number[]
     if (Array.isArray(value)) {
-      setPriceRange([value[0], value[1]]);
+      startTransition(() => {
+        setPriceRange([value[0], value[1]]);
+      });
     }
   };
 
   const handleTimeChange = (value: number | number[]) => {
     // Since 'range' is true in the Slider, value will be number[]
     if (Array.isArray(value)) {
-      setTimeRange([value[0], value[1]]);
+      startTransition(() => {
+        setTimeRange([value[0], value[1]]);
+      });
     }
   };
 
   const handleAirlineChange = (codes: string[]) => {
-    setSelectedAirlines(codes);
+    startTransition(() => {
+      setSelectedAirlines(codes);
+    });
   };
 
   const handleTripChange = (types: string[]) => {
-    setSelectedTrips(types);
+    startTransition(() => {
+      setSelectedTrips(types);
+    });
   };
 
   return (
@@ -299,6 +322,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
         best={bestOffer.price_breakdown?.total?.amount}
         quickest={quickestOffer.price_breakdown?.total?.amount}
         filteredSortedData={filteredSortedData}
+        isPendingFilter={isPendingFilter}
       />
     </section>
   );

@@ -26,3 +26,36 @@ export const formatDuration = (min: number) => {
   const m = min % 60;
   return `${h}h${m}m`;
 };
+
+export const formatDateTime = (dateString: string | undefined) => {
+  if(!dateString) return ""
+  const date = new Date(dateString);
+
+  const formattedTime = date
+    .toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "UTC",
+    })
+    .toLowerCase();
+  return formattedTime;
+};
+
+export const getDuration = (departure: string | undefined, arrival: string | undefined) => {
+  if (!departure || !arrival) return "";
+  const start = new Date(departure);
+  const end = new Date(arrival);
+
+  // 1. Get difference in milliseconds
+  const diffMs = end.getTime() - start.getTime();
+
+  // 2. Convert to total minutes
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+
+  // 3. Calculate hours and remaining minutes
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours}h ${minutes}m`;
+};

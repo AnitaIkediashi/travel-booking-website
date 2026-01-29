@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "picsum.photos",
+        pathname: "/**",
       },
     ],
     qualities: [25, 50, 75, 100],

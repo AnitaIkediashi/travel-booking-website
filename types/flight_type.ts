@@ -81,7 +81,7 @@ type MinPrice = {
   amount?: number;
 };
 
-type Stop = {
+export type Stop = {
   id?: number;
   stop_id?: string;
   no_of_stops?: number;
