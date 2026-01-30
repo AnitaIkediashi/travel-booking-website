@@ -6,6 +6,7 @@ type AirlinesFilterProps = {
   openFilter: boolean;
   onClose: () => void;
   onChange: (codes: string[]) => void;
+  selectedAirlines: string[];
 };
 
 type Airlines = {
@@ -13,11 +14,11 @@ type Airlines = {
   code: string | undefined;
 }[]
 
-export const AirlinesFilter = ({ airlines, openFilter, onClose, onChange }: AirlinesFilterProps) => {
+export const AirlinesFilter = ({ airlines, openFilter, onClose, onChange, selectedAirlines }: AirlinesFilterProps) => {
     const airlineOptions = airlines?.map((airline) => {
         return {
             label: airline.name,
-            value: airline.code
+            value: airline.code,
         }
     })
   return (
@@ -27,6 +28,7 @@ export const AirlinesFilter = ({ airlines, openFilter, onClose, onChange }: Airl
         <Checkbox.Group
           options={airlineOptions}
           onChange={(checkedValues) => onChange(checkedValues as string[])}
+          value={selectedAirlines}
         />
       )}
       <div className="mt-8 w-full h-[0.5px] bg-blackish-green/25" />

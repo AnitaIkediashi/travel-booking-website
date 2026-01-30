@@ -9,9 +9,10 @@ type TripFilterProps = {
   openFilter: boolean;
   onClose: () => void;
   onChange: (types: string[]) => void;
+  selectedTrips: string[];
 };
 
-export const TripFilter = ({ trips, openFilter, onClose, onChange }: TripFilterProps) => {
+export const TripFilter = ({ trips, openFilter, onClose, onChange, selectedTrips }: TripFilterProps) => {
   return (
     <div className="flex flex-col font-montserrat mt-8">
       <FilterTitle title="trips" onClick={onClose} />
@@ -19,6 +20,7 @@ export const TripFilter = ({ trips, openFilter, onClose, onChange }: TripFilterP
         <Checkbox.Group
           options={trips}
           onChange={(values) => onChange(values as string[])}
+          value={selectedTrips}
         />
       )}
     </div>
