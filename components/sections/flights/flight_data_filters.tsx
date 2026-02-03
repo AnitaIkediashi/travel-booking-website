@@ -9,6 +9,9 @@ import { TimeFilter } from "./time_filter";
 import { AirlinesFilter } from "./airlines_filter";
 import { TripFilter } from "./trip_filter";
 import { FlightDisplayData } from "./flight_display_data";
+import { Button } from "@/components/reusable/button";
+import { FilterIcon } from "@/components/icons/filter";
+import { Filters } from "./filters";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -37,18 +40,32 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
         .filter(Boolean) as string[]) || []
     );
   }); // track which airlines are selected
+  const [showFilters, setShowFilters] = useState(false);
+
+  /**
+   *  Implemented Lazy Initializer pattern for selectedAirlines and selectedTrips state variables.
+   * This approach ensures that the initial state is computed only once during the component's first render,
+   * improving performance by avoiding unnecessary recalculations on subsequent renders.
+   * Note: the Boolean type assertion is used to filter out any undefined values from the mapped array.
+   */
+
+  const handleShowFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
   const [selectedTrips, setSelectedTrips] = useState<string[]>(() => {
     if (!data || data.length === 0) return [];
     return Array.from(
       new Set(data[0].flight_offers?.map((o) => o.trip_type).filter(Boolean)),
     ) as string[];
   }); // same with trips selected
-  const [isPendingFilter, startTransition] = useTransition();
 
+  const [isPendingFilter, startTransition] = useTransition();
 
   /**
    *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
    * It optimizes performance by recalculating filteredSortedData only when its dependencies change.
+   * its particularly useful when dealing with large datasets or complex filtering and sorting logic.
    */
 
   const filteredSortedData = useMemo(() => {
@@ -58,7 +75,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
     const results = data.filter((flight) => {
       const offers = flight.flight_offers ?? [];
 
-      // Price Filter Check
+      // Price Filter Check - boolean check
       const matchesPrice = priceRange
         ? offers.some(
             (o) =>
@@ -67,13 +84,20 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           )
         : true;
 
-      // Time Filter Check
+      // Time Filter Check - boolean check
       const matchesTime = timeRange
-        ? offers.some(
-            (o) =>
-              (o.segments?.[0]?.total_time ?? 0) >= timeRange[0] &&
-              (o.segments?.[0]?.total_time ?? 0) <= timeRange[1],
-          ) // picking the first segment's time for filtering
+        ? offers.some((o) => {
+            // Check if EVERY segment in this offer fits the range
+            // (e.g. Outbound must be < max AND Return must be < max)
+            return (
+              o.segments?.every((segment) => {
+                const segmentTime = segment.total_time ?? 0;
+                return (
+                  segmentTime >= timeRange[0] && segmentTime <= timeRange[1]
+                );
+              }) ?? false
+            );
+          })
         : true;
 
       // airlines Filter Check
@@ -98,6 +122,13 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
       return matchesPrice && matchesTime && matchesAirlines && matchesTrips;
     });
 
+    /**
+     *
+     * By using Infinity, you are saying: "I don't know the price of this flight,
+     * so assume it is the most expensive thing in the universe."
+     * This pushes it to the bottom of the list where it won't bother the user.
+     */
+
     // 2. Then, Sort the filtered results
     return results.sort((a, b) => {
       // Helper to get the minimum price/time from a flight's offers
@@ -110,9 +141,16 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
 
       const getMinTime = (f: FlightDataProps) =>
         Math.min(
-          ...(f.flight_offers?.map(
-            (o) => o.segments?.[0]?.total_time ?? Infinity,
-          ) ?? [Infinity]),
+          ...(f.flight_offers?.map((o) => {
+            // 1. Sum up all segments (Outbound + Inbound/Layovers) for this specific offer
+            const totalOfferTime = o.segments?.reduce(
+              (acc, segment) => acc + (segment.total_time ?? 0),
+              0,
+            );
+
+            // 2. Return that total, or Infinity if no segments exist (to push it to the bottom)
+            return totalOfferTime || Infinity;
+          }) ?? [Infinity]),
         );
 
       if (sortBy === "cheapest") {
@@ -127,13 +165,18 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
         // Logic: Min(Price + Duration) for each flight
         const getBestScore = (f: FlightDataProps) =>
           Math.min(
-            ...(f.flight_offers?.map(
-              (o) =>
-                (o.price_breakdown?.total?.amount ?? 0) +
-                (o.segments?.[0]?.total_time ?? 0),
-            ) ?? [Infinity]),
-          );
+            ...(f.flight_offers?.map((o) => {
+              const totalPrice = o.price_breakdown?.total?.amount ?? 0;
 
+              // Sum all segments for the total duration
+              const totalDuration =
+                o.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ??
+                0;
+
+              // Logic: Price + Duration (Lower score is better)
+              return totalPrice + totalDuration;
+            }) ?? [Infinity]),
+          );
         return getBestScore(a) - getBestScore(b);
       }
 
@@ -299,7 +342,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   };
 
   return (
-    <section className="w-full grid lg:grid-cols-[343px_1fr] grid-cols-1 lg:gap-[15.5px] relative font-montserrat">
+    <section className="w-full grid lg:grid-cols-[225px_1fr] xl:grid-cols-[343px_1fr] grid-cols-1 lg:gap-[15.5px] relative font-montserrat">
       <aside className="w-full lg:pr-6 lg:border-r lg:border-r-blackish-green hidden lg:block">
         <h3 className="pb-8 text-blackish-green font-semibold text-xl capitalize">
           filters
@@ -335,6 +378,45 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
           selectedTrips={selectedTrips}
         />
       </aside>
+      <Filters showFilters={showFilters} onClose={handleShowFilters}>
+        <PriceFilter
+          min={minPrice}
+          max={maxPrice}
+          onChange={handlePriceChange}
+          priceRange={priceRange}
+          openFilter={openPriceFilter}
+          onClose={handleOpenPriceFilter}
+        />
+        <TimeFilter
+          min={minDuration}
+          max={maxDuration}
+          onChange={handleTimeChange}
+          timeRange={timeRange}
+          openFilter={openTimeFilter}
+          onClose={handleOpenTimeFilter}
+        />
+        <AirlinesFilter
+          airlines={airlines}
+          openFilter={openAirlinesFilter}
+          onClose={handleOpenAirlinesFilter}
+          onChange={handleAirlineChange}
+          selectedAirlines={selectedAirlines}
+        />
+        <TripFilter
+          trips={assignLabelsToTripTypes}
+          openFilter={openTripFilter}
+          onClose={handleOpenTripFilter}
+          onChange={handleTripChange}
+          selectedTrips={selectedTrips}
+        />
+      </Filters>
+      <Button
+        label="sort by"
+        type="button"
+        className="lg:hidden flex items-center justify-center gap-1 mb-6 min-w-28 h-12 px-4 rounded mx-auto bg-mint-green-100 text-sm font-medium hover:bg-blackish-green hover:text-white capitalize"
+        icon={<FilterIcon />}
+        onClick={handleShowFilters}
+      />
       <FlightDisplayData
         sortBy={sortBy}
         handleSortByChange={handleSortByChange}

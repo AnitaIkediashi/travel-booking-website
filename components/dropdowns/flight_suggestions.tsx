@@ -10,7 +10,7 @@ export const FlightSuggestions = ({ airports, onAirportSelect }: FlightSuggestio
     <ul
       className={`${
         airports.length === 0 ? "h-auto" : "max-h-[300px]"
-      } absolute w-full bg-white shadow-light left-0 right-0 z-20 font-montserrat text-blackish-green rounded-sm overflow-y-auto p-4 flex flex-col gap-y-3`}
+      } absolute w-full bg-white shadow-light left-0 right-0 z-20 font-montserrat rounded-sm overflow-y-auto p-4 flex flex-col gap-y-3`}
     >
       {airports.length === 0 ? (
         <li className="font-semibold text-lg text-red-500">

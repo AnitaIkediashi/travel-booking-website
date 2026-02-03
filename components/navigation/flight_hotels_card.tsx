@@ -44,7 +44,7 @@ export const FlightHotelCard = () => {
                     </h4>
                     <p className="text-white text-center">{Item.content}</p>
                   </div>
-                  <Button className="w-[141px] h-12 flex items-center justify-center rounded gap-1 text-blackish-green bg-mint-green-100 capitalize text-sm font-medium hover:bg-blackish-green-20" label={Item.cta} href={Item.href} icon={<PaperPlaneIcon />} iconClassName="text-sm" />
+                  <Button className="w-[141px] h-12 flex items-center justify-center rounded gap-1  bg-mint-green-100 capitalize text-sm font-medium hover:bg-blackish-green-20" label={Item.cta} href={Item.href} icon={<PaperPlaneIcon />} iconClassName="text-sm" />
                 </div>
               </div>
             </div>

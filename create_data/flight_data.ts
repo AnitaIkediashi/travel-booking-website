@@ -8,7 +8,7 @@ console.log("🚀 SCRIPT INITIALIZED");
 /**
  * Record utility type is used to define an object type with specific key-value pairs.
  * written in Record<Keys, Type>
- * 
+ *
  * The flights creation is based on mimicked real world flights and their configurations.
  * The flights are based on
  * 1. Pricing
@@ -47,15 +47,6 @@ function populateFakeAirports() {
       country: country,
     };
   });
-}
-
-function populateFakeFlightData() {
-  const durationMin = faker.number.int({ min: 60, max: 300 });
-  const durationMax = durationMin + faker.number.int({ min: 30, max: 180 });
-  return {
-    duration_min: durationMin,
-    duration_max: durationMax,
-  };
 }
 
 function populateFakeDepartureIntervals() {
@@ -399,15 +390,13 @@ async function clearDatabase() {
 }
 
 async function clearStaleData() {
-  // 1. Create a "cutoff" time (30 minutes in the past)
   const now = new Date();
   const bufferTime = new Date(now.getTime() - 30 * 60 * 1000);
   const MAX_FLIGHTS = 50;
 
   console.info("🧹 Maintenance started...");
 
-  // --- PART 1: DELETE STALE DATA ---
-
+  // --- PART 1: DELETE TRULY STALE DATA (In the past) ---
   const staleDelete = await prisma.data.deleteMany({
     where: {
       flight_offers: {
@@ -415,7 +404,7 @@ async function clearStaleData() {
           segments: {
             some: {
               departure_time: {
-                lt: bufferTime.toISOString(), // Use bufferTime here - like adding 30 mins grace period
+                lt: bufferTime, // Use Date object directly
               },
             },
           },
@@ -425,22 +414,41 @@ async function clearStaleData() {
   });
 
   if (staleDelete.count > 0) {
-    console.info(
-      `✅ Successfully removed ${staleDelete.count} expired flights.`,
-    );
+    console.info(`✅ Removed ${staleDelete.count} expired flights.`);
   }
 
-  // --- PART 2: CHECK TOTAL CAPACITY ---
+  // --- PART 2: ROTATE FUTURE DATA IF FULL ---
   const currentCount = await prisma.data.count();
 
   if (currentCount >= MAX_FLIGHTS) {
     console.info(
-      `⚠️ Database has ${currentCount} future flights. Capacity reached.`,
+      `⚠️ Capacity reached (${currentCount}/${MAX_FLIGHTS}). Rotating data...`,
     );
-    return false; // Tells main() NOT to add more
+
+    // Find the IDs of the 10 flights departing soonest
+    // We sort by departure_time ASC to get the ones closest to 'now'
+    const flightsToRotate = await prisma.data.findMany({
+      take: 10,
+      orderBy: {
+        flight_offers: {
+          _count: "desc", // This is just a placeholder if you can't sort by nested departure_time
+        },
+      },
+      // Better way: If your schema allows, find flights with the earliest segment departure
+      select: { id: true },
+    });
+
+    await prisma.data.deleteMany({
+      where: { id: { in: flightsToRotate.map((f) => f.id) } },
+    });
+
+    console.info(
+      "♻️ Deleted 10 soonest flights to make room for new generation.",
+    );
+    return true; // Now returns true so main() can add new ones
   }
 
-  return true; // Tells main() "Yes, we have room for more flights"
+  return true;
 }
 
 async function main() {
@@ -457,6 +465,7 @@ async function main() {
     return;
   }
   const fakeAirports = populateFakeAirports();
+
   // await clearDatabase();
 
   console.info("🌱 Database has room. Generating new flight data...");
@@ -491,7 +500,7 @@ async function main() {
       }
 
       // 5. Prepare Flight Data - only one data is generated for each flight searched
-      
+
       const [depAirport, arrAirport] = faker.helpers.arrayElements(
         createdAirports,
         2,
@@ -515,7 +524,6 @@ async function main() {
       // create multiple flight schedules for the same route
       const schedulesToCreate = faker.number.int({ min: 3, max: 5 });
       for (let i = 0; i < schedulesToCreate; i++) {
-        const flightInputData = populateFakeFlightData();
         const fakeFlightNumber = populateFakeFlightNumber();
         // Define the 2-month window once
         const searchStart = new Date();
@@ -528,14 +536,18 @@ async function main() {
           masterTripType,
         );
 
+        const allDurations = flightSchedule.map((s) => s.total_time);
+        const duration_min = Math.min(...allDurations);
+        const duration_max = Math.max(...allDurations);
+
         const sharedTravelerData = populateFakeTravelerPrice();
 
         const currentFlightAirlines = populateFakeAirlines();
         // 6. Create Main Data Record with non-multiplying nested relations
         const createdData = await tx.data.create({
           data: {
-            duration_min: flightInputData.duration_min,
-            duration_max: flightInputData.duration_max,
+            duration_min,
+            duration_max,
             cabin_class: "Mixed", // this is optional now
             flight_offers: {
               create: cabinClasses.map((cabin) => {
@@ -644,7 +656,6 @@ async function main() {
         const carriersToCreate: CarrierDataProps[] = [];
         let totalStopsForData = 0;
 
-        
         for (const offer of createdData.flight_offers) {
           for (const [segIdx, segment] of offer.segments.entries()) {
             const segmentAirline =
@@ -758,9 +769,9 @@ async function main() {
           },
         });
 
-         const firstStop = await tx.stop.findFirst({
-           where: { stop_id: createdData.id },
-         });
+        const firstStop = await tx.stop.findFirst({
+          where: { stop_id: createdData.id },
+        });
 
         // Use the same consistent Airlines for the filter table
         await tx.airlines.createMany({

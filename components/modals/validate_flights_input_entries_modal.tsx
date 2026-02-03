@@ -21,7 +21,7 @@ export const ValidateFlightsInputEntriesModal = ({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-light p-8 w-[500px] text-blackish-green relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+        className={`bg-white rounded-2xl shadow-light p-8 w-[500px] relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
           showValidateModal
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-20"
