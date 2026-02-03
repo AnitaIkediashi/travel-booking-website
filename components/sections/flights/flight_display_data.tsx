@@ -50,19 +50,19 @@ export const FlightDisplayData = ({
       <BoxShadow className="px-6 py-4 flex items-center justify-center shadow-light relative">
         <div className="w-full md:h-[45px] flex gap-6 md:flex-row flex-col md:items-center">
           <div
-            className={`relative flex-1 min-w-[150px] h-full pr-6 border-r border-r-mint-green-70 flex flex-col gap-y-2 cursor-pointer ${sortBy === "cheapest" ? "after:content-[''] after:absolute after:-bottom-4 after:w-[calc(100%-18px)] after:h-1 after:bg-mint-green-100 after:left-0" : ""}`}
+            className={`relative flex-1 min-w-[150px] h-full md:pr-6 pb-6 md:pb-0 md:border-r border-b md:border-b-0 border-b-mint-green-70 md:border-r-mint-green-70 flex flex-col gap-y-2 cursor-pointer ${sortBy === "cheapest" ? "after:content-[''] after:absolute md:after:-bottom-4 md:after:w-[calc(100%-18px)] md:after:h-1 after:bg-mint-green-100 md:after:left-0 after:-right-[26px] after:w-1 after:h-[calc(100%-18px)]" : ""}`}
             onClick={() => handleSortByChange("cheapest")}
           >
             <SortByPrice title="cheapest" price={cheapest} />
           </div>
           <div
-            className={`relative flex-1 min-w-[150px] h-full pr-6 border-r border-r-mint-green-70 flex flex-col gap-y-2 cursor-pointer ${sortBy === "best" ? "after:content-[''] after:absolute after:-bottom-4 after:w-[calc(100%-18px)] after:h-1 after:bg-mint-green-100 after:left-0" : ""}`}
+            className={`relative flex-1 min-w-[150px] h-full md:pr-6 pb-6 md:pb-0 md:border-r border-b md:border-b-0 border-b-mint-green-70 md:border-r-mint-green-70 flex flex-col gap-y-2 cursor-pointer ${sortBy === "best" ? "after:content-[''] after:absolute md:after:-bottom-4 md:after:w-[calc(100%-18px)] md:after:h-1 after:bg-mint-green-100 md:after:left-0 after:-right-[26px] after:w-1 after:h-[calc(100%-18px)]" : ""}`}
             onClick={() => handleSortByChange("best")}
           >
             <SortByPrice title="best" price={best} />
           </div>
           <div
-            className={`relative flex-1 min-w-[150px] h-full flex flex-col gap-y-2 cursor-pointer ${sortBy === "quickest" ? "after:content-[''] after:absolute after:-bottom-4 after:w-[calc(100%-18px)] after:h-1 after:bg-mint-green-100 after:left-0" : ""}`}
+            className={`relative flex-1 min-w-[150px] h-full pb-6 md:pb-0 flex flex-col gap-y-2 cursor-pointer ${sortBy === "quickest" ? "after:content-[''] after:absolute md:after:-bottom-4 md:after:w-[calc(100%-18px)] md:after:h-1 after:bg-mint-green-100 md:after:left-0 after:-right-[26px] after:w-1 after:h-[calc(100%-18px)]" : ""}`}
             onClick={() => handleSortByChange("quickest")}
           >
             <SortByPrice title="quickest" price={quickest} />
