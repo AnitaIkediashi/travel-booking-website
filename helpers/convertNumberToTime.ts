@@ -59,3 +59,12 @@ export const getDuration = (departure: string | undefined, arrival: string | und
 
   return `${hours}h ${minutes}m`;
 };
+
+export const getDate =(date: string | undefined) => {
+  if(!date) return ""
+  const tempDate = new Date(date)
+  const year = tempDate.getFullYear()
+  const month = tempDate.getMonth()
+  const day = tempDate.getDate()
+  return `${year}-${month}-${day}`
+}

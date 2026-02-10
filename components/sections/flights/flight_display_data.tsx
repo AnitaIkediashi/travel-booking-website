@@ -45,6 +45,8 @@ export const FlightDisplayData = ({
     );
   }
 
+  // console.log(filteredSortedData)
+
   return (
     <div className="font-montserrat">
       <BoxShadow className="px-6 py-4 flex items-center justify-center shadow-light relative">
