@@ -16,6 +16,19 @@ export const SegmentData = ({ offers }: segmentDataProps) => {
   const departCode = offers.segments?.[0].departure_airport_code
   const arrivalCode = offers.segments?.[offers.segments.length - 1].arrival_airport_code;
 
+  const firstArrivalCode = offers.segments?.[0].arrival_airport_code;
+
+  let reassignedArrivalCode: string | undefined = ''
+
+  const lastDepartCode =
+    offers.segments?.[offers.segments.length - 1].departure_airport_code;
+
+  if(firstArrivalCode === lastDepartCode) {
+    reassignedArrivalCode = firstArrivalCode
+  } else {
+    reassignedArrivalCode = arrivalCode
+  }
+
   const token = offers.token
 
   const tripType = offers.trip_type
@@ -30,7 +43,7 @@ export const SegmentData = ({ offers }: segmentDataProps) => {
   );
     
 
-  const segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${departCode}-${arrivalCode}/${departDate}/${arrivalDate}/${tripType}?token=${token}&id=${flightId}`
+  const segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${departCode}-${reassignedArrivalCode}/${departDate}/${arrivalDate}/${tripType}?token=${token}&id=${flightId}`
 
   return (
     <div className="w-full flex flex-row justify-between items-center md:items-start gap-4 md:gap-0 font-montserrat">

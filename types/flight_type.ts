@@ -152,8 +152,8 @@ type SegmentProp = {
   segment_id?: string;
   departure_airport_code?: string;
   arrival_airport_code?: string;
-  departure_time?: string;
-  arrival_time?: string;
+  departure_time?: Date;
+  arrival_time?: Date;
   total_time?: number;
   legs?: Leg[];
 };
@@ -163,9 +163,9 @@ type Leg = {
   leg_id?: number;
   departure_airport_code?: string;
   arrival_airport_code?: string;
-  departure_time?: string;
-  arrival_time?: string;
-  cabin_class?: string;
+  departure_time?: Date;
+  arrival_time?: Date;
+  cabin_class?: string | null;
   total_time?: number;
   carriers?: Carrier[];
   flight_info?: FlightInfo | null;
@@ -183,7 +183,7 @@ type FlightInfo = {
   id?: number;
   flight_info_id?: number;
   flight_number?: string;
-  carrier_info?: CarrierInfo;
+  carrier_info?: CarrierInfo | null;
 };
 
 type CarrierInfo = {

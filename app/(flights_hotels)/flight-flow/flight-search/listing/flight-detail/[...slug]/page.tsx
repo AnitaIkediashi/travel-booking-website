@@ -1,7 +1,8 @@
+import { FlightDetailWrapper } from "@/components/sections/flights/flight_detail_wrapper"
 
 const FlightDetailPage = () => {
   return (
-    <div>FlightDetailPage</div>
+    <FlightDetailWrapper />
   )
 }
 

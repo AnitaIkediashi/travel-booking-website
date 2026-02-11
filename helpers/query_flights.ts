@@ -137,19 +137,6 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
                 total: true,
               },
             },
-            seat_availability: true,
-            traveler_price: {
-              include: {
-                price_breakdown: {
-                  include: {
-                    base_fare: true,
-                    discount: true,
-                    tax: true,
-                    total: true,
-                  },
-                },
-              },
-            },
             segments: {
               orderBy: { departure_time: "asc" },
               include: {
@@ -168,19 +155,9 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
             },
           },
         },
-        flight_times: {
-          include: {
-            arrival: true,
-            depart: true,
-          },
-        },
         stops: true,
-        min_price: true,
-        short_layover_connection: true,
         airlines: true,
         duration: true,
-        departure_intervals: true,
-        baggage: true,
       },
     });
     // console.log("data response: ", JSON.stringify(dataResponse, null, 2));

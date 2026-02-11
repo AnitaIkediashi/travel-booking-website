@@ -27,7 +27,7 @@ export const formatDuration = (min: number) => {
   return `${h}h${m}m`;
 };
 
-export const formatDateTime = (dateString: string | undefined) => {
+export const formatDateTime = (dateString: Date | undefined) => {
   if(!dateString) return ""
   const date = new Date(dateString);
 
@@ -42,7 +42,7 @@ export const formatDateTime = (dateString: string | undefined) => {
   return formattedTime;
 };
 
-export const getDuration = (departure: string | undefined, arrival: string | undefined) => {
+export const getDuration = (departure: Date | undefined, arrival: Date | undefined) => {
   if (!departure || !arrival) return "";
   const start = new Date(departure);
   const end = new Date(arrival);
@@ -60,7 +60,7 @@ export const getDuration = (departure: string | undefined, arrival: string | und
   return `${hours}h ${minutes}m`;
 };
 
-export const getDate =(date: string | undefined) => {
+export const getDate =(date: Date | undefined) => {
   if(!date) return ""
   const tempDate = new Date(date)
   const year = tempDate.getFullYear()
