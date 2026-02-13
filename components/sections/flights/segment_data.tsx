@@ -29,11 +29,7 @@ export const SegmentData = ({ offers }: segmentDataProps) => {
     reassignedArrivalCode = arrivalCode
   }
 
-  const token = offers.token
-
   const tripType = offers.trip_type
-
-  const flightId = offers.id
 
   const departDate = getDate(offers.segments?.[0].departure_time);
 
@@ -41,9 +37,11 @@ export const SegmentData = ({ offers }: segmentDataProps) => {
   const arrivalDate = getDate(
     offers.segments?.[offers.segments.length - 1].arrival_time,
   );
+
+  const cabin = offers.branded_fareinfo?.cabin_class
     
 
-  const segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${departCode}-${reassignedArrivalCode}/${departDate}/${arrivalDate}/${tripType}?token=${token}&id=${flightId}`
+  const segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}`;
 
   return (
     <div className="w-full flex flex-row justify-between items-center md:items-start gap-4 md:gap-0 font-montserrat">

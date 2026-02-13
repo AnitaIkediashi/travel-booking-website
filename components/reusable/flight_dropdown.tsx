@@ -2,29 +2,35 @@ import { Button } from "./button";
 import { CustomRadioTag } from "./custom_radio_tag";
 
 type FlightDropdownProps = {
-    adultCount: number;
-    childrenCount: number;
-    cabinType: string;
-    onAdultIncrement: () => void;
-    onAdultDecrement: () => void;
-    onChildrenIncrement: () => void;
-    onChildrenDecrement: () => void;
-    onCabinClassChange: (value: string) => void;
-    showDropDown?: boolean;
-    onClose?: () => void;
-}
+  adultCount: number;
+  child: number;
+  infant: number;
+  cabinType: string;
+  onAdultIncrement: () => void;
+  onAdultDecrement: () => void;
+  onChildIncrement: () => void;
+  onChildDecrement: () => void;
+  onInfantIncrement: () => void;
+  onInfantDecrement: () => void;
+  onCabinClassChange: (value: string) => void;
+  showDropDown?: boolean;
+  onClose?: () => void;
+};
 
 export const FlightDropdown = ({
   adultCount,
-  childrenCount,
+  child,
+  infant,
   cabinType,
   onAdultIncrement,
   onAdultDecrement,
-  onChildrenIncrement,
-  onChildrenDecrement,
+  onChildIncrement,
+  onChildDecrement,
+  onInfantIncrement,
+  onInfantDecrement,
   onCabinClassChange,
   showDropDown,
-  onClose
+  onClose,
 }: FlightDropdownProps) => {
   return (
     <div
@@ -39,7 +45,7 @@ export const FlightDropdown = ({
         <div className="flex flex-col">
           <span className="capitalize font-medium">adult</span>
           <span className="capitalize font-medium text-blackish-green/60">
-            12+ years
+            18+ years
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
@@ -60,9 +66,9 @@ export const FlightDropdown = ({
       </div>
       <div className="flex mb-3 items-center justify-between">
         <div className="flex flex-col">
-          <span className="capitalize font-medium">children</span>
+          <span className="capitalize font-medium">child</span>
           <span className="capitalize font-medium text-blackish-green/60">
-            0 - 11 years
+            5 - 17 years
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
@@ -70,14 +76,37 @@ export const FlightDropdown = ({
             type="button"
             label="+"
             className="md:w-[30px] md:h-[30px] w-7 h-7 rounded-lg grid place-items-center border border-blackish-green/40 font-medium text-lg"
-            onClick={onChildrenIncrement}
+            onClick={onChildIncrement}
           />
-          <span>{childrenCount}</span>
+          <span>{child}</span>
           <Button
             type="button"
             label="-"
             className="md:w-[30px] md:h-[30px] w-7 h-7 rounded-lg grid place-items-center border border-blackish-green/40 font-medium text-lg"
-            onClick={onChildrenDecrement}
+            onClick={onChildDecrement}
+          />
+        </div>
+      </div>
+      <div className="flex mb-3 items-center justify-between">
+        <div className="flex flex-col">
+          <span className="capitalize font-medium">infant</span>
+          <span className="capitalize font-medium text-blackish-green/60">
+            0 - 5 years
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            type="button"
+            label="+"
+            className="md:w-[30px] md:h-[30px] w-7 h-7 rounded-lg grid place-items-center border border-blackish-green/40 font-medium text-lg"
+            onClick={onInfantIncrement}
+          />
+          <span>{infant}</span>
+          <Button
+            type="button"
+            label="-"
+            className="md:w-[30px] md:h-[30px] w-7 h-7 rounded-lg grid place-items-center border border-blackish-green/40 font-medium text-lg"
+            onClick={onInfantDecrement}
           />
         </div>
       </div>
@@ -126,4 +155,4 @@ export const FlightDropdown = ({
       />
     </div>
   );
-}
+};

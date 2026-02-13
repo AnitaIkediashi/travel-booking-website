@@ -9,7 +9,7 @@ import { Button } from "./button";
 import { PaperPlaneIcon } from "../icons/paperPlane";
 import { ArrowDownIcon } from "../icons/arrow_down";
 import { useDebouncedCallback } from "@/utils/debounceCallback";
-import { AirportProps, SearchParamsProps } from "@/types/flight_type";
+import { AirportProps, FlightSearchParamsProps } from "@/types/flight_type";
 import { FlightSuggestions } from "../dropdowns/flight_suggestions";
 import { ValidateFlightsInputEntriesModal } from "../modals/validate_flights_input_entries_modal";
 import { useRouter } from "next/navigation";
@@ -40,11 +40,12 @@ export type InitialState = {
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
   adultCount: number;
-  childrenCount: number;
+  child: number;
+  infant: number;
   cabinClass: string;
 };
 
-export const SearchFlights = ({from}: SearchParamsProps) => {
+export const SearchFlights = ({from}: FlightSearchParamsProps) => {
   const [swapInput, setSwapInput] = useState(false);
   const [initialValues, setInitialValues] = useState<InitialState>({
     fromValue: from || "",
@@ -54,7 +55,8 @@ export const SearchFlights = ({from}: SearchParamsProps) => {
     startDate: null,
     endDate: null,
     adultCount: 1,
-    childrenCount: 0,
+    child: 0,
+    infant: 0,
     cabinClass: "Economy",
   });
 
@@ -184,20 +186,38 @@ export const SearchFlights = ({from}: SearchParamsProps) => {
     });
   };
 
-  const handleChildrenIncrement = () => {
+  const handleChildIncrement = () => {
     setInitialValues((prevValues) => {
       return {
         ...prevValues,
-        childrenCount: prevValues.childrenCount + 1,
+        child: prevValues.child + 1,
       };
     });
   };
 
-  const handleChildrenDecrement = () => {
+  const handleChildDecrement = () => {
     setInitialValues((prevValues) => {
       return {
         ...prevValues,
-        childrenCount: Math.max(prevValues.childrenCount - 1, 0),
+        child: Math.max(prevValues.child - 1, 0),
+      };
+    });
+  };
+
+  const handleInfantIncrement = () => {
+    setInitialValues((prevValues) => {
+      return {
+        ...prevValues,
+        infant: prevValues.infant + 1,
+      };
+    });
+  };
+
+  const handleInfantDecrement = () => {
+    setInitialValues((prevValues) => {
+      return {
+        ...prevValues,
+        infant: Math.max(prevValues.infant - 1, 0),
       };
     });
   };
@@ -240,7 +260,7 @@ export const SearchFlights = ({from}: SearchParamsProps) => {
   ];
 
   const totalPassengers =
-    initialValues.adultCount + initialValues.childrenCount;
+    initialValues.adultCount + initialValues.child + initialValues.infant;
 
   function validateEntries() {
     // check for from and to entries if empty
@@ -273,9 +293,11 @@ export const SearchFlights = ({from}: SearchParamsProps) => {
       setShowValidateModal(false);
       startTransition(() => {
         if(initialValues.trip === "one-way") {
-          router.push(`/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
+          router.push(`/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`);
         } else {
-          router.push(`/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format('YYYY-MM-DD')}&return=${initialValues.endDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&cabin=${initialValues.cabinClass}`);
+          router.push(
+            `/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format("YYYY-MM-DD")}&return=${initialValues.endDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,
+          );
         }
       });
     } else {
@@ -375,11 +397,14 @@ export const SearchFlights = ({from}: SearchParamsProps) => {
             </fieldset>
             <FlightDropdown
               adultCount={initialValues.adultCount}
-              childrenCount={initialValues.childrenCount}
+              child={initialValues.child}
+              infant={initialValues.infant}
               onAdultIncrement={handleAdultIncrement}
               onAdultDecrement={handleAdultDecrement}
-              onChildrenIncrement={handleChildrenIncrement}
-              onChildrenDecrement={handleChildrenDecrement}
+              onChildIncrement={handleChildIncrement}
+              onChildDecrement={handleChildDecrement}
+              onInfantIncrement={handleInfantIncrement}
+              onInfantDecrement={handleInfantDecrement}
               cabinType={initialValues.cabinClass}
               onCabinClassChange={handleCabinClassChange}
               showDropDown={showDropDown}

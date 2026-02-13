@@ -43,7 +43,8 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
   const returnParam = searchParams.get("return");
   const returnDate = returnParam ? dayjs(returnParam) : null;
   const adults = +(searchParams.get("adults") ?? 0); //convert to number
-  const children = +(searchParams.get("children") ?? 0);
+  const child = +(searchParams.get("child") ?? 0);
+  const infant = +(searchParams.get("infant") ?? 0);
   const cabin = searchParams.get("cabin");
 
   const queryParams = {
@@ -53,7 +54,8 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
     depart,
     return: returnDate,
     adults,
-    children,
+    child,
+    infant,
     cabin,
   };
 

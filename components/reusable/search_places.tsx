@@ -5,10 +5,10 @@ import { FlightIcon } from "../icons/flight";
 import { BedIcon } from "../icons/bed";
 import { SearchFlights } from "./search_flights";
 import { SearchStays } from "./search_stays";
-import { SearchParamsProps } from "@/types/flight_type";
+import { FlightSearchParamsProps } from "@/types/flight_type";
 
 
-export const SearchPlaces = ({from}: SearchParamsProps) => {
+export const SearchPlaces = ({ from }: FlightSearchParamsProps) => {
   const [activeTab, setActiveTab] = useState("flights");
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -42,7 +42,11 @@ export const SearchPlaces = ({from}: SearchParamsProps) => {
           </div>
         </div>
         <div className="w-full mt-12">
-          {activeTab === "flights" ? <SearchFlights from={from} /> : <SearchStays />}
+          {activeTab === "flights" ? (
+            <SearchFlights from={from} />
+          ) : (
+            <SearchStays />
+          )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@
 
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { SearchParamsProps } from "@/types/flight_type";
+import { FlightSearchParamsProps } from "@/types/flight_type";
 
 const getDateRangeStrings = (dateString: string | undefined) => {
   if (!dateString) return undefined;
@@ -27,7 +27,7 @@ const getDateRangeStrings = (dateString: string | undefined) => {
   };
 };
 
-export const queryFlightData = async (queryParams: SearchParamsProps) => {
+export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   try {
     const {
       from,
@@ -124,11 +124,11 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
             },
           },
           include: {
-            branded_fareinfo: {
-              include: {
-                features: true,
-              },
-            },
+            // branded_fareinfo: {
+            //   include: {
+            //     features: true,
+            //   },
+            // },
             price_breakdown: {
               include: {
                 base_fare: true,
@@ -164,26 +164,8 @@ export const queryFlightData = async (queryParams: SearchParamsProps) => {
     return dataResponse;
   } catch (error) {
     console.error("Error querying flight data: ", error);
+    return []
   }
 };
 
-// queryFlightData({
-//   depart: "2026-02-26",
-//   return: "2026-02-27",
-//   cabin: 'Business',
-//   from: 'BSB',
-//   to: 'POM',
-//   adults: 1,
-//   children: 0,
-//   trip: 'round-trip'
-// });
 
-// queryFlightData({
-//   depart: "2026-02-14",
-//   cabin: 'Premium',
-//   from: 'ATL',
-//   to: 'CJU',
-//   adults: 1,
-//   children: 0,
-//   trip: 'one-way'
-// });

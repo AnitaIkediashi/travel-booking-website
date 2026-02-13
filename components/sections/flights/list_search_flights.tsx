@@ -26,7 +26,8 @@ type QueryParamsProps = {
   depart: dayjs.Dayjs | null;
   return: dayjs.Dayjs | null;
   adults: number | null;
-  children: number | null;
+  child: number | null;
+  infant: number | null;
   cabin: string | null;
 };
 
@@ -39,7 +40,8 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
     startDate: queryParams?.depart || null,
     endDate: queryParams?.return !== undefined ? queryParams?.return : null,
     adultCount: queryParams?.adults || 1,
-    childrenCount: queryParams?.children || 0,
+    child: queryParams?.child || 0,
+    infant: queryParams?.infant || 0,
     cabinClass: queryParams?.cabin || "Economy",
   });
   const router = useRouter();
@@ -164,20 +166,38 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
     });
   };
 
-  const handleChildrenIncrement = () => {
+  const handleChildIncrement = () => {
     setInitialValues((prevValues) => {
       return {
         ...prevValues,
-        childrenCount: prevValues.childrenCount + 1,
+        child: prevValues.child + 1,
       };
     });
   };
 
-  const handleChildrenDecrement = () => {
+  const handleChildDecrement = () => {
     setInitialValues((prevValues) => {
       return {
         ...prevValues,
-        childrenCount: Math.max(prevValues.childrenCount - 1, 0),
+        child: Math.max(prevValues.child - 1, 0),
+      };
+    });
+  };
+
+  const handleInfantIncrement = () => {
+    setInitialValues((prevValues) => {
+      return {
+        ...prevValues,
+        infant: prevValues.infant + 1,
+      };
+    });
+  };
+
+  const handleInfantDecrement = () => {
+    setInitialValues((prevValues) => {
+      return {
+        ...prevValues,
+        infant: Math.max(prevValues.infant - 1, 0),
       };
     });
   };
@@ -223,7 +243,7 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
   ];
 
   const totalPassengers =
-    initialValues.adultCount + initialValues.childrenCount;
+    initialValues.adultCount + initialValues.child + initialValues.infant;
 
   function validateEntries() {
     // check for from and to entries if empty
@@ -272,7 +292,8 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
       params.set("to", initialValues.toValue);
       params.set("trip", initialValues.trip);
       params.set("adults", initialValues.adultCount.toString());
-      params.set("children", initialValues.childrenCount.toString());
+      params.set("child", initialValues.child.toString());
+      params.set("infant", initialValues.infant.toString());
       params.set("cabin", initialValues.cabinClass);
       const departDate =
         initialValues.trip === "one-way"
@@ -384,11 +405,14 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
           </fieldset>
           <FlightDropdown
             adultCount={initialValues.adultCount}
-            childrenCount={initialValues.childrenCount}
+            child={initialValues.child}
+            infant={initialValues.infant}
             onAdultIncrement={handleAdultIncrement}
             onAdultDecrement={handleAdultDecrement}
-            onChildrenIncrement={handleChildrenIncrement}
-            onChildrenDecrement={handleChildrenDecrement}
+            onChildIncrement={handleChildIncrement}
+            onChildDecrement={handleChildDecrement}
+            onInfantIncrement={handleInfantIncrement}
+            onInfantDecrement={handleInfantDecrement}
             cabinType={initialValues.cabinClass}
             onCabinClassChange={handleCabinClassChange}
             showDropDown={showDropDown}

@@ -28,18 +28,19 @@ export type ReviewContentProps = {
   image: string;
 };
 
-export type searchParams = {
-  searchParams: SearchParamsProps;
+export type FlightSearchParams = {
+  searchParams: FlightSearchParamsProps;
 };
 
-export type SearchParamsProps = {
+export type FlightSearchParamsProps = {
   from?: string;
   to?: string;
   trip?: string;
   depart?: string;
   return?: string;
   adults?: number;
-  children?: number;
+  child?: number;
+  infant?: number;
   cabin?: string;
 };
 
