@@ -36,6 +36,9 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       return: returnDate, // had to rename because return is a reserved keyword
       trip,
       cabin,
+      adults,
+      child,
+      infant,
     } = queryParams;
 
     const departRange = getDateRangeStrings(depart);
@@ -124,11 +127,27 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             },
           },
           include: {
-            // branded_fareinfo: {
-            //   include: {
-            //     features: true,
-            //   },
-            // },
+            branded_fareinfo: {
+              include: {
+                features: true,
+              },
+            },
+            seat_availability: true,
+            traveler_price: {
+              omit: {
+                traveler_reference: true,
+              },
+              include: {
+                price_breakdown: {
+                  include: {
+                    base_fare: true,
+                    discount: true,
+                    tax: true,
+                    total: true,
+                  },
+                },
+              },
+            },
             price_breakdown: {
               include: {
                 base_fare: true,
@@ -158,14 +177,78 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         stops: true,
         airlines: true,
         duration: true,
+        baggage: true,
       },
     });
-    // console.log("data response: ", JSON.stringify(dataResponse, null, 2));
-    return dataResponse;
+
+    //convert values to numbers
+    const adultCount = Number(adults ?? 0);
+    const childCount = Number(child ?? 0);
+    const infantCount = Number(infant ?? 0);
+    const finalData = dataResponse.map((item) => {
+      const travelerBreakdown = item.flight_offers[0].traveler_price;
+      return travelerBreakdown.map((price) => {
+        const type = price.traveler_type;
+        // Determine the multiplier once per traveler type
+        const count =
+          type === "INFANT"
+            ? infantCount
+            : type === "CHILD"
+              ? childCount
+              : adultCount;
+
+        let baseAmount = price.price_breakdown?.base_fare?.amount ?? 0;
+        let discountAmount = price.price_breakdown?.discount?.amount ?? 0;
+        let taxAmount = price.price_breakdown?.tax?.amount ?? 0;
+        let totalAmount = price.price_breakdown?.total?.amount ?? 0
+
+        baseAmount = count * baseAmount;
+
+        discountAmount = count * discountAmount;
+
+        taxAmount = count * taxAmount;
+
+        totalAmount = count * totalAmount
+        return {
+          ...price, // Keep original top-level properties (like traveler_type)
+          price_breakdown: {
+            ...price.price_breakdown, // Keep other properties (like currency)
+            base_fare: {
+              ...price.price_breakdown?.base_fare,
+              amount: baseAmount, // Overwrite with calculated value
+            },
+            discount: {
+              ...price.price_breakdown?.discount,
+              amount: discountAmount,
+            },
+            tax: {
+              ...price.price_breakdown?.tax,
+              amount: taxAmount,
+            },
+            total: {
+              ...price.price_breakdown?.total,
+              amount: totalAmount,
+            },
+          },
+        };
+      });
+    });
+    // console.log("final response: ", JSON.stringify(finalData, null, 2));
+    return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);
-    return []
+    return [];
   }
 };
 
-
+// queryFlightData({
+//   from: "MUC",
+//   to: "MSP",
+//   trip: "round-trip",
+//   adults: 1,
+//   child: 0,
+//   infant: 0,
+//   cabin: "Economy",
+//   depart: "2026-03-27",
+//   return: "2026-04-12",
+// });
