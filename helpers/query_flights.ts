@@ -54,7 +54,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             },
             branded_fareinfo: {
               cabin_class: {
-                contains: cabin,
+                equals: cabin,
                 mode: "insensitive",
               },
             },
@@ -117,7 +117,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
           where: {
             trip_type: { contains: trip },
             branded_fareinfo: {
-              cabin_class: { contains: cabin, mode: "insensitive" },
+              cabin_class: { equals: cabin, mode: "insensitive" },
             },
             segments: {
               some:
@@ -187,7 +187,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     const infantCount = Number(infant ?? 0);
     const finalData = dataResponse.map((item) => {
       const travelerBreakdown = item.flight_offers[0].traveler_price;
-      return travelerBreakdown.map((price) => {
+      travelerBreakdown.map((price) => {
         const type = price.traveler_type;
         // Determine the multiplier once per traveler type
         const count =
@@ -200,7 +200,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         let baseAmount = price.price_breakdown?.base_fare?.amount ?? 0;
         let discountAmount = price.price_breakdown?.discount?.amount ?? 0;
         let taxAmount = price.price_breakdown?.tax?.amount ?? 0;
-        let totalAmount = price.price_breakdown?.total?.amount ?? 0
+        let totalAmount = price.price_breakdown?.total?.amount ?? 0;
 
         baseAmount = count * baseAmount;
 
@@ -208,7 +208,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
 
         taxAmount = count * taxAmount;
 
-        totalAmount = count * totalAmount
+        totalAmount = count * totalAmount;
         return {
           ...price, // Keep original top-level properties (like traveler_type)
           price_breakdown: {
@@ -232,6 +232,16 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
           },
         };
       });
+      return {
+        ...item,
+        flight_offers: [
+          {
+            ...item.flight_offers[0],
+            traveler_price: travelerBreakdown, // Overwrite with our new calculations
+          },
+          ...item.flight_offers.slice(1), // Keep other flight offers if they exist
+        ],
+      }; 
     });
     // console.log("final response: ", JSON.stringify(finalData, null, 2));
     return finalData;
@@ -241,14 +251,29 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   }
 };
 
+export const queryFlightToken = async (
+  queryParams: FlightSearchParamsProps,
+) => {
+  try {
+    const flightData = await queryFlightData(queryParams);
+    const filteredFlights = flightData[0].flight_offers.find(
+      (offers) => offers.token === queryParams.token,
+    );
+    // console.log("filteredFlights: ", JSON.stringify(filteredFlights, null, 2));
+    return filteredFlights
+  } catch (error) {
+    console.error('no such token available: ', error)
+    return []
+  }
+};
+
 // queryFlightData({
-//   from: "MUC",
-//   to: "MSP",
-//   trip: "round-trip",
+//   from: "CKG",
+//   to: "FCO",
+//   trip: "one-way",
 //   adults: 1,
 //   child: 0,
 //   infant: 0,
 //   cabin: "Economy",
-//   depart: "2026-03-27",
-//   return: "2026-04-12",
+//   depart: "2026-02-25"
 // });

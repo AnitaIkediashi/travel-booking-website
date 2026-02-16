@@ -13,6 +13,9 @@ type FlightDisplayDataProps = {
   quickest: number | undefined;
   filteredSortedData: FlightDataProps[];
   isPendingFilter: boolean;
+  adultCount: number;
+  childCount: number;
+  infantCount: number;
 };
 
 export const FlightDisplayData = ({
@@ -23,6 +26,9 @@ export const FlightDisplayData = ({
   quickest,
   filteredSortedData,
   isPendingFilter,
+  adultCount,
+  infantCount,
+  childCount,
 }: FlightDisplayDataProps) => {
   const totalFlightOffered = filteredSortedData
     .map((data) => data.flight_offers?.length ?? 0)
@@ -85,7 +91,12 @@ export const FlightDisplayData = ({
                     key={index}
                     className={`w-full rounded-xl shadow-light py-6 md:py-0 px-4 ${isPendingFilter ? "opacity-40" : "opacity-100"}`}
                   >
-                    <SegmentData offers={offer} />
+                    <SegmentData
+                      offers={offer}
+                      adultCount={adultCount}
+                      childCount={childCount}
+                      infantCount={infantCount}
+                    />
                   </BoxShadow>
                 );
               })}

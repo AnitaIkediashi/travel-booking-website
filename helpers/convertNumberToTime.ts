@@ -64,7 +64,7 @@ export const getDate =(date: Date | undefined) => {
   if(!date) return ""
   const tempDate = new Date(date)
   const year = tempDate.getFullYear()
-  const month = tempDate.getMonth()
-  const day = tempDate.getDate()
+  const month = String(tempDate.getMonth() + 1).padStart(2, '0');
+  const day = String(tempDate.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`
 }

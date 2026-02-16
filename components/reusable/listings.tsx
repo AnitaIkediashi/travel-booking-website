@@ -62,6 +62,10 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
   const isFlight = pathname.startsWith("/flight-flow/flight-search/listing");
   const isHotel = pathname.startsWith("/hotel-flow/hotel-search/listing");
 
+  const adultCount = queryParams.adults
+  const childCount = queryParams.child
+  const infantCount = queryParams.infant
+
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
@@ -79,6 +83,9 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
           <FlightDataFilters
             isPending={isPending}
             data={data as unknown as FlightDataProps[]} // Type assertion - Narrowed to FlightDataProps type
+            adultCount={adultCount}
+            childCount={childCount}
+            infantCount={infantCount}
           />
         ) : (
           <HotelDataFilters />

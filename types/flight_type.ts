@@ -29,7 +29,7 @@ export type ReviewContentProps = {
 };
 
 export type FlightSearchParams = {
-  searchParams: FlightSearchParamsProps;
+  searchParams: Promise<FlightSearchParamsProps>;
 };
 
 export type FlightSearchParamsProps = {
@@ -42,7 +42,9 @@ export type FlightSearchParamsProps = {
   child?: number;
   infant?: number;
   cabin?: string;
+  token?: string
 };
+
 
 export type FlightDataProps = {
   id: string;

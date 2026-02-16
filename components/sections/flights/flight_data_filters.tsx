@@ -16,6 +16,9 @@ import { Filters } from "./filters";
 type FlightFilterProps = {
   isPending: boolean;
   data: FlightDataProps[] | undefined;
+  adultCount: number;
+  childCount: number;
+  infantCount: number;
 };
 
 const tripLabels = {
@@ -25,7 +28,13 @@ const tripLabels = {
 
 type TripKey = keyof typeof tripLabels;
 
-export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
+export const FlightDataFilters = ({
+  isPending,
+  data,
+  adultCount,
+  infantCount,
+  childCount,
+}: FlightFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [timeRange, setTimeRange] = useState<[number, number] | null>(null);
   const [openPriceFilter, setOpenPriceFilter] = useState(false);
@@ -223,7 +232,7 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
   // 3. when data exists
   // Step A: Map and filter out undefined/null in one go
 
-  // console.log(data)
+  console.log(data)
 
   const allOffers = data[0].flight_offers ?? [];
 
@@ -425,6 +434,9 @@ export const FlightDataFilters = ({ isPending, data }: FlightFilterProps) => {
         quickest={quickestOffer.price_breakdown?.total?.amount}
         filteredSortedData={filteredSortedData}
         isPendingFilter={isPendingFilter}
+        adultCount={adultCount}
+        childCount={childCount}
+        infantCount={infantCount}
       />
     </section>
   );

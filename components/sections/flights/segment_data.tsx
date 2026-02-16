@@ -7,41 +7,58 @@ import Image from "next/image";
 
 type segmentDataProps = {
   offers: FlightOffer;
+  adultCount: number;
+  childCount: number;
+  infantCount: number;
 };
 
 
 
-export const SegmentData = ({ offers }: segmentDataProps) => {
+export const SegmentData = ({
+  offers,
+  adultCount,
+  infantCount,
+  childCount,
+}: segmentDataProps) => {
   if (!offers) return [];
-  const departCode = offers.segments?.[0].departure_airport_code
-  const arrivalCode = offers.segments?.[offers.segments.length - 1].arrival_airport_code;
+  const hasMultipleSegments = (offers?.segments?.length ?? 0) > 1;
+  const departCode = offers.segments?.[0].departure_airport_code;
+  const arrivalCode =
+    offers.segments?.[offers.segments.length - 1].arrival_airport_code;
 
   const firstArrivalCode = offers.segments?.[0].arrival_airport_code;
 
-  let reassignedArrivalCode: string | undefined = ''
+  let reassignedArrivalCode: string | undefined = "";
 
   const lastDepartCode =
     offers.segments?.[offers.segments.length - 1].departure_airport_code;
 
-  if(firstArrivalCode === lastDepartCode) {
-    reassignedArrivalCode = firstArrivalCode
+  if (firstArrivalCode === lastDepartCode) {
+    reassignedArrivalCode = firstArrivalCode;
   } else {
-    reassignedArrivalCode = arrivalCode
+    reassignedArrivalCode = arrivalCode;
   }
 
-  const tripType = offers.trip_type
+  const tripType = offers.trip_type;
 
   const departDate = getDate(offers.segments?.[0].departure_time);
-
 
   const arrivalDate = getDate(
     offers.segments?.[offers.segments.length - 1].arrival_time,
   );
 
-  const cabin = offers.branded_fareinfo?.cabin_class
-    
+  const cabin = offers.branded_fareinfo?.cabin_class;
 
-  const segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}`;
+  const flightKey = offers.flight_key
+
+  let segmentDetailUrl = ''
+
+  if(hasMultipleSegments) {
+    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}/?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
+  }  else {
+    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}/?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
+  }
+
 
   return (
     <div className="w-full flex flex-row justify-between items-center md:items-start gap-4 md:gap-0 font-montserrat">
