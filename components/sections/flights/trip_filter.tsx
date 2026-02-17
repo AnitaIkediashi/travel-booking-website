@@ -3,8 +3,8 @@ import { Checkbox } from "antd";
 
 type TripFilterProps = {
   trips: {
-    value: "one-way" | "round-trip";
-    label: string;
+    value: string | undefined;
+    label: string | undefined;
   }[];
   openFilter: boolean;
   onClose: () => void;

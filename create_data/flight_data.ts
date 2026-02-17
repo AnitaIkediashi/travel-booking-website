@@ -19,7 +19,7 @@ console.log("🚀 SCRIPT INITIALIZED");
  * 6. flight schedules
  * 7. Segments and legs - which depends on the outbound and inbound airports
  * 8. Airlines operating the flights
- * 
+ *
  * The flight day creates like 4 - 5 offers of different flight times for each cabin classes
  */
 
@@ -211,15 +211,6 @@ function populateFakeLegsData(
   return legs;
 }
 
-function populateFakeFlightNumber() {
-  return {
-    flight_number: faker.airline.flightNumber({
-      addLeadingZeros: true,
-      length: 2,
-    }),
-  };
-}
-
 function populateFakeTravelerPrice() {
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
     const travelerReference = faker.number.int({ min: 1, max: 5 });
@@ -330,27 +321,27 @@ async function main() {
   if (!isHealthyAndHasRoom) return;
 
   const fakeAirports = populateFakeAirports();
-  console.info("🌱 Starting deep-seed of multi-schedule flight data...");
+  console.info("🚀 Launching full-schema seed process...");
 
   await prisma.$transaction(
     async (tx) => {
-      // 1. SETUP AIRPORTS
+      // 1. AIRPORTS SETUP
       const createdAirports = [];
       for (const airport of fakeAirports) {
         const created = await tx.airport.upsert({
           where: { airport_code: airport.code },
           update: {
             airport_name: airport.name,
-            image_url: airport.imageUrl,
             city: airport.city,
             country: airport.country,
+            image_url: airport.imageUrl,
           },
           create: {
             airport_code: airport.code,
             airport_name: airport.name,
-            image_url: airport.imageUrl,
             city: airport.city,
             country: airport.country,
+            image_url: airport.imageUrl,
           },
         });
         createdAirports.push(created);
@@ -371,12 +362,12 @@ async function main() {
         "Business",
         "First Class",
       ];
+      const currentFlightAirlines = populateFakeAirlines();
 
-      // 2. CREATE THE MAIN DATA RECORD
-      // We create the parent first so we can link everything to it
+      // 2. CREATE THE PARENT SEARCH RESULT (DATA)
       const createdData = await tx.data.create({
         data: {
-          duration_min: 0, // Will update or calculate based on offers
+          duration_min: 0,
           duration_max: 0,
           cabin_class: "Mixed",
         },
@@ -384,50 +375,54 @@ async function main() {
 
       let globalMinDuration = 9999;
       let globalMaxDuration = 0;
-      const currentFlightAirlines = populateFakeAirlines();
-      const flightNumberBase = populateFakeFlightNumber().flight_number;
+      const durationStats: { min: number; max: number }[] = [];
+      let absoluteCheapestPrice = 999999;
 
-      // 3. LOOP: CREATE 4 TO 5 DIFFERENT TIME SLOTS (THE "PLANES")
+      let shortLayoverCount = 0;
+
+      // 3. GENERATE 4-5 UNIQUE FLIGHT TIMES (SCHEDULES)
       const numSchedules = faker.number.int({ min: 4, max: 5 });
 
       for (let i = 0; i < numSchedules; i++) {
-        // Create a unique time for this specific flight schedule
-        // Flight 1 at 6am, Flight 2 at 10am, etc.
         const searchStart = new Date();
         searchStart.setHours(
-          6 + i * 4,
+          6 + i * 3,
           faker.helpers.arrayElement([0, 30]),
           0,
           0,
         );
         const searchEnd = new Date(searchStart);
-        searchEnd.setMonth(searchStart.getMonth() + 2);
+        searchEnd.setMonth(searchStart.getMonth() + 1);
 
         const flightSchedule = populateFakeSegments(
           searchStart,
           searchEnd,
           masterTripType,
         );
+        const totalTravelTime = flightSchedule.reduce(
+          (sum, seg) => sum + seg.total_time,
+          0,
+        );
 
-        const outboundDuration = flightSchedule[0].total_time;
-        if (outboundDuration < globalMinDuration)
-          globalMinDuration = outboundDuration;
-        if (outboundDuration > globalMaxDuration)
-          globalMaxDuration = outboundDuration;
+        durationStats.push({ min: totalTravelTime, max: totalTravelTime + 20 });
+        if (totalTravelTime < globalMinDuration)
+          globalMinDuration = totalTravelTime;
+        if (totalTravelTime > globalMaxDuration)
+          globalMaxDuration = totalTravelTime;
 
-        // 4. LOOP: CREATE ALL CABIN CLASSES FOR THIS SPECIFIC TIME
+        // 4. FOR EACH TIME SLOT, CREATE 4 CABIN CLASSES
         for (const cabin of cabinClasses) {
           const config = CABIN_CONFIGS[cabin];
           const sharedTravelerData = populateFakeTravelerPrice();
 
-          // Price Multiplier based on Time: Mid-day flights (10am-4pm) are 20% more expensive
-          const depHour = searchStart.getHours();
-          const timeMultiplier = depHour >= 10 && depHour <= 16 ? 1.2 : 0.9;
+          const timeMult =
+            searchStart.getHours() >= 10 && searchStart.getHours() <= 17
+              ? 1.25
+              : 0.9;
           const routeBaseAmount =
-            faker.number.int({ min: 150, max: 350 }) *
+            faker.number.int({ min: 200, max: 450 }) *
             config.multiplier *
-            timeMultiplier *
-            (masterTripType === "round-trip" ? 1.8 : 1.0);
+            timeMult;
 
           const offer = await tx.flightOffers.create({
             data: {
@@ -446,16 +441,15 @@ async function main() {
                   features: {
                     create: [
                       {
-                        feature_name: "CHECKED_BAGGAGE",
-                        category: "BAGGAGE",
-                        availability:
-                          config.baggage > 0 ? "INCLUDED" : "NOT_INCLUDED",
-                      },
-                      {
-                        feature_name: "WI-FI",
+                        feature_name: "WIFI",
                         category: "AMENITIES",
                         availability:
                           cabin === "Business" ? "INCLUDED" : "OPTIONAL",
+                      },
+                      {
+                        feature_name: "MEAL",
+                        category: "DINING",
+                        availability: "INCLUDED",
                       },
                     ],
                   },
@@ -464,16 +458,15 @@ async function main() {
               segments: {
                 create: flightSchedule.map((segment, idx) => {
                   const isReturn = idx === 1;
-                  const segDep = isReturn
+                  const sDep = isReturn
                     ? arrAirport.airport_code
                     : depAirport.airport_code;
-                  const segArr = isReturn
+                  const sArr = isReturn
                     ? depAirport.airport_code
                     : arrAirport.airport_code;
-
                   return {
-                    departure_airports: { connect: { airport_code: segDep } },
-                    arrival_airports: { connect: { airport_code: segArr } },
+                    departure_airport_code: sDep,
+                    arrival_airport_code: sArr,
                     departure_time: segment.departure_time_iso,
                     arrival_time: segment.arrival_time_iso,
                     total_time: segment.total_time,
@@ -482,16 +475,12 @@ async function main() {
                         segment.departure_time,
                         segment.arrival_time,
                         cabin,
-                        segDep,
-                        segArr,
+                        sDep,
+                        sArr,
                         allAvailableCodes,
                       ).map((leg) => ({
-                        departure_airport: {
-                          connect: { airport_code: leg.departure_code },
-                        },
-                        arrival_airport: {
-                          connect: { airport_code: leg.arrival_code },
-                        },
+                        departure_airport_code: leg.departure_code,
+                        arrival_airport_code: leg.arrival_code,
                         departure_time: leg.departure_time,
                         arrival_time: leg.arrival_time,
                         cabin_class: leg.cabin_class,
@@ -514,33 +503,25 @@ async function main() {
             },
           });
 
-          // 5. HANDLE PRICING BREAKDOWN (Calculated per Traveler)
-          let offerTotalAmount = 0;
-          let offerTotalBase = 0;
-          let offerTotalTax = 0;
-
+          // 5. PRICE BREAKDOWN
+          let offerTotal = 0;
           for (const tp of offer.traveler_price) {
             const typeMult =
               tp.traveler_type === "CHILD"
-                ? 0.75
+                ? 0.8
                 : tp.traveler_type === "INFANT"
-                  ? 0.1
+                  ? 0.15
                   : 1.0;
-            const finalBase = Math.floor(routeBaseAmount * typeMult);
-            const finalTax = Math.floor(finalBase * 0.15);
-            const finalTotal = finalBase + finalTax;
-
-            offerTotalBase += finalBase;
-            offerTotalTax += finalTax;
-            offerTotalAmount += finalTotal;
+            const base = Math.floor(routeBaseAmount * typeMult);
+            const tax = Math.floor(base * 0.15);
+            const total = base + tax;
+            offerTotal += total;
 
             const tpPB = await tx.priceBreakdown.create({
               data: {
-                total: { create: { currency_code: "USD", amount: finalTotal } },
-                base_fare: {
-                  create: { currency_code: "USD", amount: finalBase },
-                },
-                tax: { create: { currency_code: "USD", amount: finalTax } },
+                total: { create: { currency_code: "USD", amount: total } },
+                base_fare: { create: { currency_code: "USD", amount: base } },
+                tax: { create: { currency_code: "USD", amount: tax } },
                 discount: { create: { currency_code: "USD", amount: 0 } },
               },
             });
@@ -550,16 +531,21 @@ async function main() {
             });
           }
 
-          // Finalize Offer Price
           const offerPB = await tx.priceBreakdown.create({
             data: {
-              total: {
-                create: { currency_code: "USD", amount: offerTotalAmount },
-              },
+              total: { create: { currency_code: "USD", amount: offerTotal } },
               base_fare: {
-                create: { currency_code: "USD", amount: offerTotalBase },
+                create: {
+                  currency_code: "USD",
+                  amount: Math.floor(offerTotal * 0.85),
+                },
               },
-              tax: { create: { currency_code: "USD", amount: offerTotalTax } },
+              tax: {
+                create: {
+                  currency_code: "USD",
+                  amount: Math.floor(offerTotal * 0.15),
+                },
+              },
               discount: { create: { currency_code: "USD", amount: 0 } },
             },
           });
@@ -568,11 +554,32 @@ async function main() {
             data: { price_id: offerPB.id },
           });
 
-          // 6. CARRIERS & STOPS (The metadata)
+          if (offerTotal < absoluteCheapestPrice)
+            absoluteCheapestPrice = offerTotal;
+
+          // 6. CARRIERS & REALISTIC FLIGHT NUMBERS
           for (const segment of offer.segments) {
             for (const leg of segment.legs) {
               const airline =
                 currentFlightAirlines[i % currentFlightAirlines.length];
+              
+              const digits = faker.airline.flightNumber({ length: 3 });
+
+              const currentLegArrival = new Date(
+                leg.arrival_time,
+              ).getTime();
+              const nextLegDeparture = new Date(
+                leg.departure_time,
+              ).getTime();
+
+              const layoverMinutes =
+                (nextLegDeparture - currentLegArrival) / (1000 * 60);
+
+              // If layover is less than 60 minutes, we count it as a "Short Layover"
+              if (layoverMinutes > 0 && layoverMinutes < 60) {
+                shortLayoverCount++;
+              }
+              
               await tx.carriers.create({
                 data: {
                   carrier_id: leg.id,
@@ -581,16 +588,11 @@ async function main() {
                   code: airline.iata_code,
                 },
               });
-              const fInfo = await tx.flightInfo.create({
+
+              await tx.flightInfo.create({
                 data: {
                   flight_info_id: leg.id,
-                  flight_number: flightNumberBase,
-                },
-              });
-              await tx.carrierInfo.create({
-                data: {
-                  operating_carrier: airline.name,
-                  carrier_info_id: fInfo.id,
+                  flight_number: `${airline.iata_code}${digits}`,
                 },
               });
             }
@@ -598,7 +600,7 @@ async function main() {
         }
       }
 
-      // 7. FINALIZE PARENT METADATA
+      // 7. FINALIZING SCHEMA METADATA
       await tx.data.update({
         where: { id: createdData.id },
         data: {
@@ -607,19 +609,63 @@ async function main() {
         },
       });
 
-      // Add Stop count info for filters
-      await tx.stop.create({
+      await tx.shortLayoverConnection.create({
         data: {
-          no_of_stops: faker.number.int({ min: 0, max: 1 }),
-          count: 1,
-          stop_id: createdData.id,
+          layover_id: createdData.id,
+          count: shortLayoverCount,
         },
       });
+
+      await tx.minPrice.create({
+        data: {
+          min_price_data_id: createdData.id,
+          amount: absoluteCheapestPrice,
+          currency_code: "USD",
+        },
+      });
+
+      await tx.duration.createMany({
+        data: durationStats.map((d) => ({ ...d, duration_id: createdData.id })),
+      });
+
+      await tx.departureInterval.create({
+        data: { interval_id: createdData.id, start: "06:00", end: "23:00" },
+      });
+
+      const flightTimes = await tx.flightTimes.create({
+        data: { flight_times_id: createdData.id },
+      });
+      await tx.depart.create({
+        data: { depart_id: flightTimes.id, start: "06:00", end: "23:00" },
+      });
+      await tx.arrival.create({
+        data: { arrival_id: flightTimes.id, start: "08:00", end: "02:00" },
+      });
+
+      await tx.baggage.create({
+        data: {
+          baggage_id: createdData.id,
+          type: "CHECKED",
+          included: true,
+          weight: 23,
+        },
+      });
+      await tx.stop.create({
+        data: { stop_id: createdData.id, no_of_stops: 0, count: 1 },
+      });
+
+      for (const air of currentFlightAirlines) {
+        await tx.airlines.create({
+          data: { airline_id: createdData.id, ...air },
+        });
+      }
     },
-    { timeout: 90000 },
+    { timeout: 120000 },
   );
 
-  console.info("✅ Multi-schedule seeding completed successfully.");
+  console.info(
+    "🎉 Seed complete! Your database is now production-ready for testing.",
+  );
 }
 
 // main()

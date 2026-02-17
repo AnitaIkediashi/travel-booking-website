@@ -77,60 +77,79 @@ export const FlightDataFilters = ({
    * its particularly useful when dealing with large datasets or complex filtering and sorting logic.
    */
 
+  const allOffers = useMemo(
+    () => data?.flatMap((flight) => flight.flight_offers ?? []) ?? [],
+    [data],
+  );
+
+  const airlines = useMemo(() => {
+    const unique = new Map();
+    data?.forEach((flight) => {
+      flight.airlines?.forEach((a) => {
+        if (a.iata_code) unique.set(a.iata_code, a.name);
+      });
+    });
+    return Array.from(unique.entries()).map(([code, name]) => ({ name, code }));
+  }, [data]);
+
+  const tripFilter = useMemo(() => {
+    const types = Array.from(new Set(allOffers.map((o) => o.trip_type)));
+    return types.map((type) => ({
+      value: type,
+      label: tripLabels[type as TripKey] || type,
+    }));
+  }, [allOffers]);
+
   const filteredSortedData = useMemo(() => {
     if (!data) return [];
 
-    // 1. First, Filter the data
-    const results = data.filter((flight) => {
-      const offers = flight.flight_offers ?? [];
+    return data.map((flight) => {
+      // Filter the offers WITHIN this flight
+      const validOffers = (flight.flight_offers ?? []).filter((offer) => {
+        // A. Price Range check
+        const price = offer.price_breakdown?.total?.amount ?? 0;
+        if (priceRange && (price < priceRange[0] || price > priceRange[1]))
+          return false;
 
-      // Price Filter Check - boolean check
-      const matchesPrice = priceRange
-        ? offers.some(
-            (o) =>
-              (o.price_breakdown?.total?.amount ?? 0) >= priceRange[0] &&
-              (o.price_breakdown?.total?.amount ?? 0) <= priceRange[1],
-          )
-        : true;
+        // B. Trip Type check
+        if (
+          selectedTrips.length > 0 &&
+          !selectedTrips.includes(offer.trip_type ?? '')
+        )
+          return false;
 
-      // Time Filter Check - boolean check
-      const matchesTime = timeRange
-        ? offers.some((o) => {
-            // Check if EVERY segment in this offer fits the range
-            // (e.g. Outbound must be < max AND Return must be < max)
-            return (
-              o.segments?.every((segment) => {
-                const segmentTime = segment.total_time ?? 0;
-                return (
-                  segmentTime >= timeRange[0] && segmentTime <= timeRange[1]
-                );
-              }) ?? false
-            );
-          })
-        : true;
-
-      // airlines Filter Check
-      const matchesAirlines =
-        selectedAirlines.length > 0
-          ? data[0].airlines?.some((s) =>
-              selectedAirlines.includes(s.iata_code ?? ""),
+        // C. Airline check
+        // We check if the airline in this offer is one of the selected ones
+        const offerAirlines =
+          offer.segments
+            ?.flatMap(
+              (s) =>
+                s.legs?.flatMap((l) => l.carriers?.map((c) => c.code) ?? []) ??
+                [],
             )
-          : true;
-      // console.log("matchesAirlines", matchesAirlines);
+            // This filter cleans out 'undefined' and tells TS they are now definitely strings
+            .filter((code): code is string => !!code) ?? [];
 
-      // trip filter check
-      const matchesTrips =
-        selectedTrips.length > 0
-          ? offers.some((o) =>
-              selectedTrips.includes((o.trip_type as TripKey) ?? ""),
-            )
-          : true;
+        if (
+          selectedAirlines.length > 0 &&
+          !offerAirlines.some((code) => selectedAirlines.includes(code))
+        )
+          return false;
 
-      // console.log("matchesTrips", matchesTrips);
+        // D. Duration check
+        const totalDuration =
+          offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ?? 0;
+        if (
+          timeRange &&
+          (totalDuration < timeRange[0] || totalDuration > timeRange[1])
+        )
+          return false;
 
-      return matchesPrice && matchesTime && matchesAirlines && matchesTrips;
-    });
+        return true;
+      });
 
+      return { ...flight, flight_offers: validOffers };
+    })
     /**
      *
      * By using Infinity, you are saying: "I don't know the price of this flight,
@@ -139,7 +158,8 @@ export const FlightDataFilters = ({
      */
 
     // 2. Then, Sort the filtered results
-    return results.sort((a, b) => {
+    .filter((flight) => flight.flight_offers.length > 0)
+    .sort((a, b) => {
       // Helper to get the minimum price/time from a flight's offers
       const getMinPrice = (f: FlightDataProps) =>
         Math.min(
@@ -232,9 +252,7 @@ export const FlightDataFilters = ({
   // 3. when data exists
   // Step A: Map and filter out undefined/null in one go
 
-  console.log(data)
-
-  const allOffers = data[0].flight_offers ?? [];
+  // console.log(data)
 
   // sort by cheapest price
   const cheapestOffer = [...allOffers].sort((a, b) => {
@@ -283,28 +301,19 @@ export const FlightDataFilters = ({
       ?.map((offer) => offer.price_breakdown?.total?.amount)
       .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. It is a **type predicate** and has the form **parameterName is Type**
 
-  const minDuration = data[0].duration_min ?? 0;
-  const maxDuration = data[0].duration_max ?? 1440;
+  const allDurations = allOffers.map(offer => offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ?? 0)
 
-  const airlines = data[0].airlines?.map((airline) => {
-    const name = airline?.name;
-    const code = airline?.iata_code;
-    return { name, code };
-  });
+  const minDuration = allDurations.length > 0 ? Math.min(...allDurations) : 0;
+  const maxDuration =
+    allDurations.length > 0 ? Math.max(...allDurations) : 1440;
 
-  const tripFilter =
-    data[0].flight_offers
-      ?.map((offer) => offer.trip_type)
-      .filter(
-        (trip): trip is TripKey => trip !== undefined && trip in tripLabels,
-      ) ?? [];
 
   const uniqueTripTypesWithLabels = Array.from(new Set(tripFilter));
 
   const assignLabelsToTripTypes = uniqueTripTypesWithLabels.map((trip) => {
     const newData = {
-      value: trip,
-      label: tripLabels[trip],
+      value: trip.value,
+      label: trip.label,
     };
     return newData;
   });
