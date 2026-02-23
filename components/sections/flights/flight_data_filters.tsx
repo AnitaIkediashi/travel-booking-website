@@ -73,7 +73,7 @@ export const FlightDataFilters = ({
 
   /**
    *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
-   * It optimizes performance by recalculating filteredSortedData only when its dependencies change.
+   * It optimizes performance by recalculating filteredSortedData, allOffers, airlines, tripFilter only when its dependencies change.
    * its particularly useful when dealing with large datasets or complex filtering and sorting logic.
    */
 
@@ -89,6 +89,8 @@ export const FlightDataFilters = ({
         if (a.iata_code) unique.set(a.iata_code, a.name);
       });
     });
+    
+
     return Array.from(unique.entries()).map(([code, name]) => ({ name, code }));
   }, [data]);
 
@@ -108,7 +110,9 @@ export const FlightDataFilters = ({
       const validOffers = (flight.flight_offers ?? []).filter((offer) => {
         // A. Price Range check
         const price = offer.price_breakdown?.total?.amount ?? 0;
+        console.log('price: ', price)
         if (priceRange && (price < priceRange[0] || price > priceRange[1]))
+          
           return false;
 
         // B. Trip Type check

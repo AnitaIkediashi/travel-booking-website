@@ -106,6 +106,7 @@ function populateFakeSegments(
   ];
 
   // 2. If it's a round-trip, add the return segment
+  
   if (tripType === "round-trip") {
     const stayDays = faker.number.int({ min: 1, max: 40 });
 
@@ -115,6 +116,12 @@ function populateFakeSegments(
     );
 
     // NORMALIZE: Force the return flight to 12:00 PM UTC as well
+    /**
+     * The primary "essence" of that 12:00 PM normalization is to create a safety buffer
+     * that prevents your mock data from generating a return flight that departs before the outbound flight arrives.
+     * Because you are using stayDays (an integer) and faker (random hours), 
+     * you run into a mathematical risk if you don't normalize.
+     */
     const returnDeparture = new Date(
       Date.UTC(
         rawReturnDate.getUTCFullYear(),
@@ -151,7 +158,8 @@ function populateFakeLegsData(
   destinationCode: string,
   validAirportCodes: string[],
 ) {
-  // 1. First, find potential transit hubs
+  // 1. First, find potential transit hubs 
+  // this depends if the flights needs like a mid airport to first land to - like a layover
   const possibleHubs = validAirportCodes.filter(
     (code) => code !== originCode && code !== destinationCode,
   );
@@ -213,14 +221,14 @@ function populateFakeLegsData(
 
 function populateFakeTravelerPrice() {
   return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-    const travelerReference = faker.number.int({ min: 1, max: 5 });
+    const travelerReference = faker.number.int({ min: 1, max: 5 }); // this ain't important
     const travelerType = faker.helpers.arrayElement([
       "adult",
       "child",
       "infant",
     ]);
     return {
-      traveler_reference: travelerReference.toString(),
+      traveler_reference: travelerReference.toString(), 
       traveler_type: travelerType.toUpperCase(),
     };
   });
@@ -256,8 +264,8 @@ async function clearDatabase() {
 
 async function clearStaleData() {
   const now = new Date();
-  const bufferTime = new Date(now.getTime() - 30 * 60 * 1000);
-  const MAX_FLIGHTS = 50;
+  const bufferTime = new Date(now.getTime() - 30 * 60 * 1000); //30 mins ago
+  const MAX_FLIGHTS = 100;
 
   console.info("🧹 Maintenance started...");
 
@@ -290,13 +298,14 @@ async function clearStaleData() {
       `⚠️ Capacity reached (${currentCount}/${MAX_FLIGHTS}). Rotating data...`,
     );
 
-    // Find the IDs of the 10 flights departing soonest
+    // Find the IDs of the 30 flights departing soonest
     // We sort by departure_time ASC to get the ones closest to 'now'
+    // _count is used to return a count of relation
     const flightsToRotate = await prisma.data.findMany({
-      take: 10,
+      take: 30,
       orderBy: {
         flight_offers: {
-          _count: "desc", // This is just a placeholder if you can't sort by nested departure_time
+          _count: "desc", // This is just a placeholder if you can't sort by nested departure_time - count of flight_offers
         },
       },
       // Better way: If your schema allows, find flights with the earliest segment departure
@@ -308,7 +317,7 @@ async function clearStaleData() {
     });
 
     console.info(
-      "♻️ Deleted 10 soonest flights to make room for new generation.",
+      "♻️ Deleted 30 soonest flights to make room for new generation.",
     );
     return true; // Now returns true so main() can add new ones
   }
@@ -381,7 +390,7 @@ async function main() {
       let shortLayoverCount = 0;
 
       // 3. GENERATE 4-5 UNIQUE FLIGHT TIMES (SCHEDULES)
-      const numSchedules = faker.number.int({ min: 4, max: 5 });
+      const numSchedules = faker.number.int({ min: 10, max: 15 });
 
       for (let i = 0; i < numSchedules; i++) {
         const searchStart = new Date();
