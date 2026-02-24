@@ -26,7 +26,11 @@ const tripLabels = {
   "round-trip": "Round Trip",
 };
 
-type TripKey = keyof typeof tripLabels;
+/**
+ * The keyof operator takes an object type and produces a string or numeric literal union of its keys
+ * typeof refers to the type of the value has
+ */
+type TripKey = keyof typeof tripLabels; 
 
 export const FlightDataFilters = ({
   isPending,
@@ -48,8 +52,8 @@ export const FlightDataFilters = ({
         ?.map((a) => a.iata_code)
         .filter(Boolean) as string[]) || []
     );
-  }); // track which airlines are selected
-  const [showFilters, setShowFilters] = useState(false);
+  }); // track which airlines are selected as an array
+  const [showFilters, setShowFilters] = useState(false); // on small screens
 
   /**
    *  Implemented Lazy Initializer pattern for selectedAirlines and selectedTrips state variables.
@@ -75,6 +79,9 @@ export const FlightDataFilters = ({
    *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
    * It optimizes performance by recalculating filteredSortedData, allOffers, airlines, tripFilter only when its dependencies change.
    * its particularly useful when dealing with large datasets or complex filtering and sorting logic.
+   * flatMap method - It transforms each element into a new collection 
+   * and then merges all those collections into one single, continuous structure
+   * - its like using map method and then flatten the array by one level
    */
 
   const allOffers = useMemo(
@@ -89,7 +96,6 @@ export const FlightDataFilters = ({
         if (a.iata_code) unique.set(a.iata_code, a.name);
       });
     });
-    
 
     return Array.from(unique.entries()).map(([code, name]) => ({ name, code }));
   }, [data]);
@@ -105,116 +111,127 @@ export const FlightDataFilters = ({
   const filteredSortedData = useMemo(() => {
     if (!data) return [];
 
-    return data.map((flight) => {
-      // Filter the offers WITHIN this flight
-      const validOffers = (flight.flight_offers ?? []).filter((offer) => {
-        // A. Price Range check
-        const price = offer.price_breakdown?.total?.amount ?? 0;
-        console.log('price: ', price)
-        if (priceRange && (price < priceRange[0] || price > priceRange[1]))
-          
-          return false;
+    return (
+      data
+        .map((flight) => {
+          // Filter the offers WITHIN this flight
+          const validOffers = (flight.flight_offers ?? []).filter((offer) => {
 
-        // B. Trip Type check
-        if (
-          selectedTrips.length > 0 &&
-          !selectedTrips.includes(offer.trip_type ?? '')
-        )
-          return false;
+            // A. Price Range check
+            const price = offer.price_breakdown?.total?.amount ?? 0;
+            // console.log("price: ", price);
+            if (priceRange && (price < priceRange[0] || price > priceRange[1]))
+              return false;
 
-        // C. Airline check
-        // We check if the airline in this offer is one of the selected ones
-        const offerAirlines =
-          offer.segments
-            ?.flatMap(
-              (s) =>
-                s.legs?.flatMap((l) => l.carriers?.map((c) => c.code) ?? []) ??
-                [],
+            // B. Trip Type check
+            if (
+              selectedTrips.length > 0 &&
+              !selectedTrips.includes(offer.trip_type ?? "")
             )
-            // This filter cleans out 'undefined' and tells TS they are now definitely strings
-            .filter((code): code is string => !!code) ?? [];
+              return false;
 
-        if (
-          selectedAirlines.length > 0 &&
-          !offerAirlines.some((code) => selectedAirlines.includes(code))
-        )
-          return false;
+            // C. Airline check
+            // We check if the airline in this offer is one of the selected ones
+            const offerAirlines =
+              offer.segments
+                ?.flatMap(
+                  (s) =>
+                    s.legs?.flatMap(
+                      (l) => l.carriers?.map((c) => c.code) ?? [],
+                    ) ?? [],
+                )
+                // This filter cleans out 'undefined' and tells TS they are now definitely strings
+                .filter((code): code is string => !!code) ?? [];
 
-        // D. Duration check
-        const totalDuration =
-          offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ?? 0;
-        if (
-          timeRange &&
-          (totalDuration < timeRange[0] || totalDuration > timeRange[1])
-        )
-          return false;
+            if (
+              selectedAirlines.length > 0 &&
+              !offerAirlines.some((code) => selectedAirlines.includes(code))
+            )
+              return false;
 
-        return true;
-      });
+            // D. Duration check
+            const totalDuration =
+              offer.segments?.reduce(
+                (sum, s) => sum + (s.total_time ?? 0),
+                0,
+              ) ?? 0;
+            // console.log("duration: ", totalDuration);
 
-      return { ...flight, flight_offers: validOffers };
-    })
-    /**
-     *
-     * By using Infinity, you are saying: "I don't know the price of this flight,
-     * so assume it is the most expensive thing in the universe."
-     * This pushes it to the bottom of the list where it won't bother the user.
-     */
+            if (
+              timeRange &&
+              (totalDuration < timeRange[0] || totalDuration > timeRange[1])
+            )
+              return false;
 
-    // 2. Then, Sort the filtered results
-    .filter((flight) => flight.flight_offers.length > 0)
-    .sort((a, b) => {
-      // Helper to get the minimum price/time from a flight's offers
-      const getMinPrice = (f: FlightDataProps) =>
-        Math.min(
-          ...(f.flight_offers?.map(
-            (o) => o.price_breakdown?.total?.amount ?? Infinity,
-          ) ?? [Infinity]),
-        );
+            return true;
+          });
 
-      const getMinTime = (f: FlightDataProps) =>
-        Math.min(
-          ...(f.flight_offers?.map((o) => {
-            // 1. Sum up all segments (Outbound + Inbound/Layovers) for this specific offer
-            const totalOfferTime = o.segments?.reduce(
-              (acc, segment) => acc + (segment.total_time ?? 0),
-              0,
+          return { ...flight, flight_offers: validOffers };
+        })
+        /**
+         *
+         * By using Infinity, you are saying: "I don't know the price of this flight,
+         * so assume it is the most expensive thing in the universe."
+         * This pushes it to the bottom of the list where it won't bother the user.
+         */
+
+        // 2. Then, Sort the filtered results
+        .filter((flight) => flight.flight_offers.length > 0)
+        .sort((a, b) => {
+          // Helper to get the minimum price/time from a flight's offers
+          const getMinPrice = (f: FlightDataProps) =>
+            Math.min(
+              ...(f.flight_offers?.map(
+                (o) => o.price_breakdown?.total?.amount ?? Infinity,
+              ) ?? [Infinity]),
             );
 
-            // 2. Return that total, or Infinity if no segments exist (to push it to the bottom)
-            return totalOfferTime || Infinity;
-          }) ?? [Infinity]),
-        );
+          const getMinTime = (f: FlightDataProps) =>
+            Math.min(
+              ...(f.flight_offers?.map((o) => {
+                // 1. Sum up all segments (Outbound + Inbound/Layovers) for this specific offer
+                const totalOfferTime = o.segments?.reduce(
+                  (acc, segment) => acc + (segment.total_time ?? 0),
+                  0,
+                );
 
-      if (sortBy === "cheapest") {
-        return getMinPrice(a) - getMinPrice(b);
-      }
+                // 2. Return that total, or Infinity if no segments exist (to push it to the bottom)
+                return totalOfferTime || Infinity;
+              }) ?? [Infinity]),
+            );
 
-      if (sortBy === "quickest") {
-        return getMinTime(a) - getMinTime(b);
-      }
+          if (sortBy === "cheapest") {
+            return getMinPrice(a) - getMinPrice(b);
+          }
 
-      if (sortBy === "best") {
-        // Logic: Min(Price + Duration) for each flight
-        const getBestScore = (f: FlightDataProps) =>
-          Math.min(
-            ...(f.flight_offers?.map((o) => {
-              const totalPrice = o.price_breakdown?.total?.amount ?? 0;
+          if (sortBy === "quickest") {
+            return getMinTime(a) - getMinTime(b);
+          }
 
-              // Sum all segments for the total duration
-              const totalDuration =
-                o.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ??
-                0;
+          if (sortBy === "best") {
+            // Logic: Min(Price + Duration) for each flight
+            const getBestScore = (f: FlightDataProps) =>
+              Math.min(
+                ...(f.flight_offers?.map((o) => {
+                  const totalPrice = o.price_breakdown?.total?.amount ?? 0;
 
-              // Logic: Price + Duration (Lower score is better)
-              return totalPrice + totalDuration;
-            }) ?? [Infinity]),
-          );
-        return getBestScore(a) - getBestScore(b);
-      }
+                  // Sum all segments for the total duration
+                  const totalDuration =
+                    o.segments?.reduce(
+                      (sum, s) => sum + (s.total_time ?? 0),
+                      0,
+                    ) ?? 0;
 
-      return 0;
-    });
+                  // Logic: Price + Duration (Lower score is better)
+                  return totalPrice + totalDuration;
+                }) ?? [Infinity]),
+              );
+            return getBestScore(a) - getBestScore(b);
+          }
+
+          return 0;
+        })
+    );
   }, [priceRange, timeRange, sortBy, selectedAirlines, selectedTrips, data]);
 
   const handleOpenPriceFilter = () => {
@@ -304,13 +321,17 @@ export const FlightDataFilters = ({
     allOffers
       ?.map((offer) => offer.price_breakdown?.total?.amount)
       .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. It is a **type predicate** and has the form **parameterName is Type**
+  
+      // console.log("prices two: ", prices);
 
-  const allDurations = allOffers.map(offer => offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ?? 0)
+  const allDurations = allOffers.map(
+    (offer) =>
+      offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ?? 0,
+  );
 
   const minDuration = allDurations.length > 0 ? Math.min(...allDurations) : 0;
   const maxDuration =
     allDurations.length > 0 ? Math.max(...allDurations) : 1440;
-
 
   const uniqueTripTypesWithLabels = Array.from(new Set(tripFilter));
 
