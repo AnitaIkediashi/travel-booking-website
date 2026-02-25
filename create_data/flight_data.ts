@@ -330,82 +330,84 @@ async function main() {
   if (!isHealthyAndHasRoom) return;
 
   const fakeAirports = populateFakeAirports();
-  console.info("🚀 Launching full-schema seed process...");
+  const currentFlightAirlines = populateFakeAirlines();
+  const cabinClasses = [
+    "Economy",
+    "Premium Economy",
+    "Business",
+    "First Class",
+  ];
 
-  await prisma.$transaction(
-    async (tx) => {
-      // 1. AIRPORTS SETUP
-      const createdAirports = [];
-      for (const airport of fakeAirports) {
-        const created = await tx.airport.upsert({
-          where: { airport_code: airport.code },
-          update: {
-            airport_name: airport.name,
-            city: airport.city,
-            country: airport.country,
-            image_url: airport.imageUrl,
-          },
-          create: {
-            airport_code: airport.code,
-            airport_name: airport.name,
-            city: airport.city,
-            country: airport.country,
-            image_url: airport.imageUrl,
+  console.info("🚀 Launching multi-day seed process...");
+
+  // 1. AIRPORTS SETUP (Outside transaction to avoid locking)
+  const createdAirports = [];
+  for (const airport of fakeAirports) {
+    const created = await prisma.airport.upsert({
+      where: { airport_code: airport.code },
+      update: {
+        airport_name: airport.name,
+        city: airport.city,
+        country: airport.country,
+        image_url: airport.imageUrl,
+      },
+      create: {
+        airport_code: airport.code,
+        airport_name: airport.name,
+        city: airport.city,
+        country: airport.country,
+        image_url: airport.imageUrl,
+      },
+    });
+    createdAirports.push(created);
+  }
+
+  const [depAirport, arrAirport] = faker.helpers.arrayElements(
+    createdAirports,
+    2,
+  );
+  const allAvailableCodes = createdAirports.map((a) => a.airport_code);
+  const masterTripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
+
+  const totalDays = 90;
+  const startDate = new Date();
+
+  // 2. DAILY BATCHING
+  for (let day = 0; day < totalDays; day++) {
+    const flightDate = new Date(startDate);
+    flightDate.setDate(startDate.getDate() + day);
+
+    console.info(
+      `📅 Processing Day ${day + 1}/${totalDays}: ${flightDate.toDateString()}`,
+    );
+
+    await prisma.$transaction(
+      async (tx) => {
+        // Create the Parent Data record for this specific day/route
+        const createdData = await tx.data.create({
+          data: {
+            duration_min: 0,
+            duration_max: 0,
+            cabin_class: "Mixed",
           },
         });
-        createdAirports.push(created);
-      }
 
-      const [depAirport, arrAirport] = faker.helpers.arrayElements(
-        createdAirports,
-        2,
-      );
-      const allAvailableCodes = createdAirports.map((a) => a.airport_code);
-      const masterTripType = faker.helpers.arrayElement([
-        "one-way",
-        "round-trip",
-      ]);
-      const cabinClasses = [
-        "Economy",
-        "Premium Economy",
-        "Business",
-        "First Class",
-      ];
-      const currentFlightAirlines = populateFakeAirlines();
+        let globalMinDuration = 9999;
+        let globalMaxDuration = 0;
+        let absoluteCheapestPrice = 999999;
+        let shortLayoverCount = 0;
+        const durationStats = [];
 
-      // 2. CREATE THE PARENT SEARCH RESULT (DATA)
-      const createdData = await tx.data.create({
-        data: {
-          duration_min: 0,
-          duration_max: 0,
-          cabin_class: "Mixed",
-        },
-      });
+        const numSchedules = faker.number.int({ min: 10, max: 15 });
 
-      let globalMinDuration = 9999;
-      let globalMaxDuration = 0;
-      const durationStats: { min: number; max: number }[] = [];
-      let absoluteCheapestPrice = 999999;
-
-      let shortLayoverCount = 0;
-
-      const totalDays = 90; // 2 months of data
-      const startDate = new Date();
-      const numSchedules = faker.number.int({ min: 5, max: 10 });
-
-      for (let day = 0; day < totalDays; day++) {
-        // 1. Create a reference for "Today + day"
-        const flightDate = new Date(startDate);
-        flightDate.setDate(startDate.getDate() + day);
-        // 3. GENERATE 4-5 UNIQUE FLIGHT TIMES (SCHEDULES)
         for (let i = 0; i < numSchedules; i++) {
-          const startMinutes = 360;
-          // Add a gap of 60-90 minutes for every flight 'i'
+          const startMinutes = 360; // 6:00 AM
           const totalMinutes =
             startMinutes + i * faker.number.int({ min: 60, max: 90 });
+
           const searchStart = new Date(flightDate);
           searchStart.setHours(0, totalMinutes, 0, 0);
-          
+
           const searchEnd = new Date(searchStart);
           searchEnd.setHours(
             searchStart.getHours() + faker.number.int({ min: 1, max: 6 }),
@@ -430,7 +432,7 @@ async function main() {
           if (totalTravelTime > globalMaxDuration)
             globalMaxDuration = totalTravelTime;
 
-          // 4. FOR EACH TIME SLOT, CREATE 4 CABIN CLASSES
+          // 3. CABIN GENERATION
           for (const cabin of cabinClasses) {
             const config = CABIN_CONFIGS[cabin];
             const sharedTravelerData = populateFakeTravelerPrice();
@@ -439,8 +441,6 @@ async function main() {
               searchStart.getHours() >= 10 && searchStart.getHours() <= 17
                 ? 1.25
                 : 0.9;
-            
-            
             const routeBaseAmount =
               faker.number.int({ min: 200, max: 450 }) *
               config.multiplier *
@@ -525,7 +525,7 @@ async function main() {
               },
             });
 
-            // 5. PRICE BREAKDOWN
+            // 4. PRICE BREAKDOWN
             let offerTotal = 0;
             for (const tp of offer.traveler_price) {
               const typeMult =
@@ -579,12 +579,11 @@ async function main() {
             if (offerTotal < absoluteCheapestPrice)
               absoluteCheapestPrice = offerTotal;
 
-            // 6. CARRIERS & REALISTIC FLIGHT NUMBERS
+            // 5. CARRIER & FLIGHT INFO
             for (const segment of offer.segments) {
               for (const leg of segment.legs) {
                 const airline =
                   currentFlightAirlines[i % currentFlightAirlines.length];
-
                 const digits = faker.airline.flightNumber({ length: 3 });
 
                 const currentLegArrival = new Date(leg.arrival_time).getTime();
@@ -606,7 +605,6 @@ async function main() {
                     code: airline.iata_code,
                   },
                 });
-
                 await tx.flightInfo.create({
                   data: {
                     flight_info_id: leg.id,
@@ -617,74 +615,77 @@ async function main() {
             }
           }
         }
-      }
 
-      // 7. FINALIZING SCHEMA METADATA
-      await tx.data.update({
-        where: { id: createdData.id },
-        data: {
-          duration_min: globalMinDuration,
-          duration_max: globalMaxDuration,
-        },
-      });
-
-      await tx.shortLayoverConnection.create({
-        data: {
-          layover_id: createdData.id,
-          count: shortLayoverCount,
-        },
-      });
-
-      await tx.minPrice.create({
-        data: {
-          min_price_data_id: createdData.id,
-          amount: absoluteCheapestPrice,
-          currency_code: "USD",
-        },
-      });
-
-      await tx.duration.createMany({
-        data: durationStats.map((d) => ({ ...d, duration_id: createdData.id })),
-      });
-
-      await tx.departureInterval.create({
-        data: { interval_id: createdData.id, start: "06:00", end: "23:00" },
-      });
-
-      const flightTimes = await tx.flightTimes.create({
-        data: { flight_times_id: createdData.id },
-      });
-      await tx.depart.create({
-        data: { depart_id: flightTimes.id, start: "06:00", end: "23:00" },
-      });
-      await tx.arrival.create({
-        data: { arrival_id: flightTimes.id, start: "08:00", end: "02:00" },
-      });
-
-      await tx.baggage.create({
-        data: {
-          baggage_id: createdData.id,
-          type: "CHECKED",
-          included: true,
-          weight: 23,
-        },
-      });
-      await tx.stop.create({
-        data: { stop_id: createdData.id, no_of_stops: 0, count: 1 },
-      });
-
-      for (const air of currentFlightAirlines) {
-        await tx.airlines.create({
-          data: { airline_id: createdData.id, ...air },
+        // 6. FINALIZING METADATA FOR THE DAY
+        await tx.data.update({
+          where: { id: createdData.id },
+          data: {
+            duration_min: globalMinDuration,
+            duration_max: globalMaxDuration,
+          },
         });
-      }
-    },
-    { timeout: 120000 },
-  );
 
-  console.info(
-    "🎉 Seed complete! Your database is now production-ready for testing.",
-  );
+        await tx.shortLayoverConnection.create({
+          data: {
+            layover_id: createdData.id,
+            count: shortLayoverCount,
+          },
+        });
+
+        await tx.minPrice.create({
+          data: {
+            min_price_data_id: createdData.id,
+            amount: absoluteCheapestPrice,
+            currency_code: "USD",
+          },
+        });
+
+        await tx.duration.createMany({
+          data: durationStats.map((d) => ({
+            ...d,
+            duration_id: createdData.id,
+          })),
+        });
+
+        // (Repeat other metadata creations like baggage, airlines, etc. here inside tx)
+        await tx.baggage.create({
+          data: {
+            baggage_id: createdData.id,
+            type: "CHECKED",
+            included: true,
+            weight: 23,
+          },
+        });
+
+        await tx.departureInterval.create({
+          data: { interval_id: createdData.id, start: "06:00", end: "23:00" },
+        });
+
+        const flightTimes = await tx.flightTimes.create({
+          data: { flight_times_id: createdData.id },
+        });
+        await tx.depart.create({
+          data: { depart_id: flightTimes.id, start: "06:00", end: "23:00" },
+        });
+        await tx.arrival.create({
+          data: { arrival_id: flightTimes.id, start: "08:00", end: "02:00" },
+        });
+
+        await tx.stop.create({
+          data: { stop_id: createdData.id, no_of_stops: 0, count: 1 },
+        });
+
+        for (const air of currentFlightAirlines) {
+          await tx.airlines.create({
+            data: { airline_id: createdData.id, ...air },
+          });
+        }
+      },
+      { timeout: 60000 },
+    ); // Each day gets 1 minute, which is more than enough.
+  }
+
+  console.info("🎉 Multi-day seed complete! Database is populated.");
 }
 
 // main()
