@@ -30,6 +30,7 @@ model Airport {
 
 model Data {
   id                       String                  @id @default(uuid()) // PK
+  createdAt                DateTime                @default(now())
   departure_intervals      DepartureInterval[] // 1:M relation
   duration_min             Int
   duration_max             Int
@@ -154,7 +155,7 @@ model Segment {
   arrival_airport_code   String //FK
   departure_airports     Airport      @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code]) // the need for unique relation names arises because a single Airport is related to Segment twice (same goes for Legs model) -- Disambiguating relations
   arrival_airports       Airport      @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
-  departure_time         DateTime 
+  departure_time         DateTime
   arrival_time           DateTime
   total_time             Int
   legs                   Legs[]

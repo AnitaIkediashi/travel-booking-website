@@ -20,7 +20,7 @@ console.log("🚀 SCRIPT INITIALIZED");
  * 7. Segments and legs - which depends on the outbound and inbound airports
  * 8. Airlines operating the flights
  *
- * The flight day creates like 4 - 5 offers of different flight times for each cabin classes
+ * The flight day creates like 10 - 15 offers of different flight times for each cabin classes
  */
 
 //helper function to calculate price multipliers and baggage allowance based on cabin class
@@ -121,6 +121,7 @@ function populateFakeSegments(
      * that prevents your mock data from generating a return flight that departs before the outbound flight arrives.
      * Because you are using stayDays (an integer) and faker (random hours),
      * you run into a mathematical risk if you don't normalize.
+     * Date getTime() returns number in milliseconds.
      */
     const returnDeparture = new Date(
       Date.UTC(
@@ -171,7 +172,8 @@ function populateFakeLegsData(
     possibleHubs.length > 0 ? faker.number.int({ min: 1, max: 2 }) : 1;
 
   const legs = [];
-  const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime();
+  // time difference between segment start and end
+  const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime(); // milliseconds -ms
 
   // 3. Use the single numLegs variable to drive the branching logic
   if (numLegs === 1) {
@@ -187,8 +189,9 @@ function populateFakeLegsData(
     // This block ONLY runs if numLegs is 2 AND possibleHubs exists
     const transitAirport = faker.helpers.arrayElement(possibleHubs);
 
-    const layoverMs = faker.number.int({ min: 60, max: 150 }) * 60 * 1000;
+    const layoverMs = faker.number.int({ min: 60, max: 150 }) * 60 * 1000; // milliseconds
     const flyingMs = totalSegmentMs - layoverMs;
+    // think of the total flight time as 100% - we need to split it between the two legs, thats where the 45% and 55% comes in - we want the second leg to be slightly longer on average to mimic real world patterns
     const firstLegMs = flyingMs * 0.45;
     const secondLegMs = flyingMs * 0.55;
 
@@ -298,17 +301,12 @@ async function clearStaleData() {
       `⚠️ Capacity reached (${currentCount}/${MAX_FLIGHTS}). Rotating data...`,
     );
 
-    // Find the IDs of the 30 flights departing soonest
-    // We sort by departure_time ASC to get the ones closest to 'now'
-    // _count is used to return a count of relation
+    // Find the IDs of the 200 flights based on the oldest flights created
     const flightsToRotate = await prisma.data.findMany({
       take: 200,
       orderBy: {
-        flight_offers: {
-          _count: "desc", // This is just a placeholder if you can't sort by nested departure_time - count of flight_offers
-        },
+        createdAt: "asc", // "asc" puts the oldest timestamps at the top
       },
-      // Better way: If your schema allows, find flights with the earliest segment departure
       select: { id: true },
     });
 
@@ -317,7 +315,7 @@ async function clearStaleData() {
     });
 
     console.info(
-      "♻️ Deleted 30 soonest flights to make room for new generation.",
+      "♻️ Deleted 200 soonest flights to make room for new generation.",
     );
     return true; // Now returns true so main() can add new ones
   }
@@ -369,16 +367,56 @@ async function main() {
   const allAvailableCodes = createdAirports.map((a) => a.airport_code);
   const masterTripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
 
-  const totalDays = 90;
-  const startDate = new Date();
+  console.info("🚀 Analyzing current flight coverage...");
 
-  // 2. DAILY BATCHING
-  for (let day = 0; day < totalDays; day++) {
-    const flightDate = new Date(startDate);
-    flightDate.setDate(startDate.getDate() + day);
+  // 1. Find the most distant flight in the future
+  // We check the 'segments' because that's where the actual dates live
+  const latestSegment = await prisma.segment.findFirst({
+    orderBy: { departure_time: "desc" },
+    select: { departure_time: true },
+  });
+
+  const today = new Date();
+  const ninetyDaysFromNow = new Date();
+  ninetyDaysFromNow.setDate(today.getDate() + 90);
+
+  let startDate = new Date();
+
+  if (latestSegment) {
+    const lastDate = new Date(latestSegment.departure_time);
+    console.info(`📅 Latest flight in DB is on: ${lastDate.toDateString()}`);
+
+    // If our latest flight is already 90 days out, we are done!
+    if (lastDate >= ninetyDaysFromNow) {
+      console.info("✅ 90-day window is already full. No new data needed.");
+      return;
+    }
+
+    // Otherwise, start generating from the day AFTER the last flight
+    startDate = new Date(lastDate);
+    startDate.setDate(lastDate.getDate() + 1);
+  }
+
+  // 2. Calculate exactly how many days are missing to hit the 90-day target
+  const diffTime = ninetyDaysFromNow.getTime() - startDate.getTime();
+  const daysToGenerate = Math.max(
+    0,
+    Math.ceil(diffTime / (1000 * 60 * 60 * 24)),
+  );
+
+  if (daysToGenerate === 0) return;
+
+  console.info(
+    `🛠️ Generating ${daysToGenerate} missing day(s) to restore window...`,
+  );
+
+  // 3. DAILY BATCHING
+  for (let day = 0; day < daysToGenerate; day++) {
+    const flightDate = new Date(startDate.getTime());
+    flightDate.setDate(flightDate.getDate() + day);
 
     console.info(
-      `📅 Processing Day ${day + 1}/${totalDays}: ${flightDate.toDateString()}`,
+      `📅 Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()}`,
     );
 
     await prisma.$transaction(
