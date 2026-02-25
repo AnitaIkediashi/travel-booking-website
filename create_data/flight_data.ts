@@ -265,7 +265,7 @@ async function clearDatabase() {
 async function clearStaleData() {
   const now = new Date();
   const bufferTime = new Date(now.getTime() - 30 * 60 * 1000); //30 mins ago
-  const MAX_FLIGHTS = 100;
+  const MAX_FLIGHTS = 1500;
 
   console.info("🧹 Maintenance started...");
 
@@ -302,7 +302,7 @@ async function clearStaleData() {
     // We sort by departure_time ASC to get the ones closest to 'now'
     // _count is used to return a count of relation
     const flightsToRotate = await prisma.data.findMany({
-      take: 30,
+      take: 200,
       orderBy: {
         flight_offers: {
           _count: "desc", // This is just a placeholder if you can't sort by nested departure_time - count of flight_offers
@@ -687,17 +687,6 @@ async function main() {
 
   console.info("🎉 Multi-day seed complete! Database is populated.");
 }
-
-// main()
-//   .then(async () => {
-//     console.info("creation successfully");
-//     await prisma.$disconnect();
-//   })
-//   .catch(async (e) => {
-//     console.error("An error occurred during creation: ", e);
-//     await prisma.$disconnect();
-//     process.exit(1);
-//   });
 
 //automate flight data creation every day at every 1 hour
 async function runFlightDataCreateAutomation() {

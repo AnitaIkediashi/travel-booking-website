@@ -54,9 +54,9 @@ export const SegmentData = ({
   let segmentDetailUrl = ''
 
   if(hasMultipleSegments) {
-    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}/?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
+    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
   }  else {
-    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}/?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
+    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
   }
 
 

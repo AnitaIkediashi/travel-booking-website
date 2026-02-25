@@ -54,7 +54,12 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             },
             branded_fareinfo: {
               cabin_class: {
-                contains: cabin,
+                equals:
+                  cabin === "Premium"
+                    ? "Premium Economy"
+                    : cabin === "First"
+                      ? "First Class"
+                      : cabin,
                 mode: "insensitive",
               },
             },
@@ -117,7 +122,10 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
           where: {
             trip_type: { contains: trip },
             branded_fareinfo: {
-              cabin_class: { contains: cabin, mode: "insensitive" },
+              cabin_class: { 
+                equals: cabin === 'Premium' ? 'Premium Economy' : cabin === 'First' ? 'First Class' : cabin, 
+                mode: "insensitive" 
+              },
             },
             segments: {
               some:
