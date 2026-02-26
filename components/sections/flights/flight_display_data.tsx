@@ -1,9 +1,14 @@
+'use client'
+
 import { BoxShadow } from "@/components/reusable/box_shadow";
 import { PageCount } from "@/components/reusable/page_count";
 import { SortByPrice } from "@/components/reusable/sort_by_price";
 import { FlightDataProps } from "@/types/flight_type";
 import { SegmentData } from "./segment_data";
 import Image from "next/image";
+import { Button } from "@/components/reusable/button";
+import { useState, useTransition } from "react";
+import { AnimatedDots } from "@/components/loaders/animated_dots";
 
 type FlightDisplayDataProps = {
   sortBy: string;
@@ -30,9 +35,21 @@ export const FlightDisplayData = ({
   infantCount,
   childCount,
 }: FlightDisplayDataProps) => {
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [isPending, startTransition] = useTransition();
+
   const totalFlightOffered = filteredSortedData
     .map((data) => data.flight_offers?.length ?? 0)
     .reduce((a, b) => a + b, 0);
+
+  const displaySlicedData = filteredSortedData.slice(0, visibleCount);
+  
+
+  const handleShowMore = () => {
+    startTransition(() => {
+      setVisibleCount((prevCount) => prevCount + 10);
+    });
+  }
 
   if (filteredSortedData?.length === 0 || !filteredSortedData) {
     return (
@@ -50,8 +67,6 @@ export const FlightDisplayData = ({
       </div>
     );
   }
-
-  // console.log(filteredSortedData)
 
   return (
     <div className="font-montserrat">
@@ -79,10 +94,10 @@ export const FlightDisplayData = ({
       </BoxShadow>
       <div className="mt-6 flex flex-col gap-y-6">
         <PageCount
-          currentCount={totalFlightOffered}
+          currentCount={displaySlicedData.length}
           totalCount={totalFlightOffered}
         />
-        {filteredSortedData.map((data) => {
+        {displaySlicedData.map((data) => {
           return (
             <div key={data.id} className="flex flex-col gap-y-8 w-full">
               {data.flight_offers?.map((offer, index) => {
@@ -103,6 +118,7 @@ export const FlightDisplayData = ({
             </div>
           );
         })}
+        <Button type="button" icon={isPending ? <AnimatedDots /> : undefined} label={isPending ? '' : "Show more results"} className="w-full h-12 bg-blackish-green text-white text-sm font-semibold rounded" onClick={handleShowMore} />
       </div>
     </div>
   );

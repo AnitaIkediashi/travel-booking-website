@@ -46,14 +46,6 @@ export const FlightDataFilters = ({
   const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
   const [openTripFilter, setOpenTripFilter] = useState(false);
   const [sortBy, setSortBy] = useState("best");
-  const [selectedAirlines, setSelectedAirlines] = useState<string[]>(() => {
-    return (
-      (data?.[0]?.airlines
-        ?.map((a) => a.iata_code)
-        .filter(Boolean) as string[]) || []
-    );
-  }); // track which airlines are selected as an array
-  const [showFilters, setShowFilters] = useState(false); // on small screens
 
   /**
    *  Implemented Lazy Initializer pattern for selectedAirlines and selectedTrips state variables.
@@ -61,10 +53,13 @@ export const FlightDataFilters = ({
    * improving performance by avoiding unnecessary recalculations on subsequent renders.
    * Note: the Boolean type assertion is used to filter out any undefined values from the mapped array.
    */
-
-  const handleShowFilters = () => {
-    setShowFilters(!showFilters);
-  };
+  const [selectedAirlines, setSelectedAirlines] = useState<string[]>(() => {
+    return (
+      (data?.[0]?.airlines
+        ?.map((a) => a.iata_code)
+        .filter(Boolean) as string[]) || []
+    );
+  }); // track which airlines are selected as an array
 
   const [selectedTrips, setSelectedTrips] = useState<string[]>(() => {
     if (!data || data.length === 0) return [];
@@ -73,13 +68,20 @@ export const FlightDataFilters = ({
     ) as string[];
   }); // same with trips selected
 
+  const [showFilters, setShowFilters] = useState(false); // on small screens
+
+  const handleShowFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
   const [isPendingFilter, startTransition] = useTransition();
 
   /**
    *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
    * It optimizes performance by recalculating filteredSortedData, allOffers, airlines, tripFilter only when its dependencies change.
    * its particularly useful when dealing with large datasets or complex filtering and sorting logic.
-   * flatMap method - It transforms each element into a new collection 
+   * 
+   * flatMap method - It transforms each element into a new collection
    * and then merges all those collections into one single, continuous structure
    * - its like using map method and then flatten the array by one level
    */
@@ -90,10 +92,10 @@ export const FlightDataFilters = ({
   );
 
   const airlines = useMemo(() => {
-    const unique = new Map();
+    const unique = new Map(); // A Map is a collection of key-value pairs
     data?.forEach((flight) => {
       flight.airlines?.forEach((a) => {
-        if (a.iata_code) unique.set(a.iata_code, a.name);
+        if (a.iata_code) unique.set(a.iata_code, a.name); // add or update
       });
     });
 
@@ -102,6 +104,7 @@ export const FlightDataFilters = ({
 
   const tripFilter = useMemo(() => {
     const types = Array.from(new Set(allOffers.map((o) => o.trip_type)));
+    
     return types.map((type) => ({
       value: type,
       label: tripLabels[type as TripKey] || type,
@@ -116,10 +119,8 @@ export const FlightDataFilters = ({
         .map((flight) => {
           // Filter the offers WITHIN this flight
           const validOffers = (flight.flight_offers ?? []).filter((offer) => {
-
             // A. Price Range check
             const price = offer.price_breakdown?.total?.amount ?? 0;
-            // console.log("price: ", price);
             if (priceRange && (price < priceRange[0] || price > priceRange[1]))
               return false;
 
@@ -155,7 +156,6 @@ export const FlightDataFilters = ({
                 (sum, s) => sum + (s.total_time ?? 0),
                 0,
               ) ?? 0;
-            // console.log("duration: ", totalDuration);
 
             if (
               timeRange &&
@@ -270,10 +270,9 @@ export const FlightDataFilters = ({
       </div>
     );
   }
+
   // 3. when data exists
   // Step A: Map and filter out undefined/null in one go
-
-  // console.log(data)
 
   // sort by cheapest price
   const cheapestOffer = [...allOffers].sort((a, b) => {
@@ -320,9 +319,7 @@ export const FlightDataFilters = ({
   const prices =
     allOffers
       ?.map((offer) => offer.price_breakdown?.total?.amount)
-      .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. It is a **type predicate** and has the form **parameterName is Type**
-  
-      // console.log("prices two: ", prices);
+      .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. 
 
   const allDurations = allOffers.map(
     (offer) =>

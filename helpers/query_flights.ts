@@ -19,8 +19,6 @@ const getDateRangeStrings = (dateString: string | undefined) => {
   const end = new Date(dateString);
   end.setUTCHours(23, 59, 59, 999);
 
-  // console.log(`start: ${start.toISOString()} end: ${end.toISOString()}`);
-
   return {
     gte: start.toISOString(),
     lt: end.toISOString(),
@@ -246,7 +244,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         flight_offers: updatedFlightOffers,
       };
     });
-    // console.log("final response: ", JSON.stringify(finalData, null, 2));
     return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);
@@ -262,7 +259,6 @@ export const queryFlightToken = async (
     const filteredFlights = flightData[0].flight_offers.find(
       (offers) => offers.token === queryParams.token,
     );
-    // console.log("filteredFlights: ", JSON.stringify(filteredFlights, null, 2));
     return filteredFlights
   } catch (error) {
     console.error('no such token available: ', error)
@@ -270,13 +266,3 @@ export const queryFlightToken = async (
   }
 };
 
-// queryFlightData({
-//   from: "CKG",
-//   to: "FCO",
-//   trip: "one-way",
-//   adults: 1,
-//   child: 0,
-//   infant: 0,
-//   cabin: "Economy",
-//   depart: "2026-02-25"
-// });
