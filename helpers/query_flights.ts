@@ -50,7 +50,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         flight_offers: {
           some: {
             trip_type: {
-              contains: trip,
+              equals: trip,
             },
             branded_fareinfo: {
               cabin_class: {
@@ -120,7 +120,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       include: {
         flight_offers: {
           where: {
-            trip_type: { contains: trip },
+            trip_type: { equals: trip },
             branded_fareinfo: {
               cabin_class: { 
                 equals: cabin === 'Premium' ? 'Premium Economy' : cabin === 'First' ? 'First Class' : cabin, 
@@ -194,62 +194,57 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     const childCount = Number(child ?? 0);
     const infantCount = Number(infant ?? 0);
     const finalData = dataResponse.map((item) => {
-      const travelerBreakdown = item.flight_offers[0].traveler_price;
-      travelerBreakdown.map((price) => {
-        const type = price.traveler_type;
-        // Determine the multiplier once per traveler type
-        const count =
-          type === "INFANT"
-            ? infantCount
-            : type === "CHILD"
-              ? childCount
-              : adultCount;
+      // 1. Loop through EVERY flight offer (not just [0])
+      const updatedFlightOffers = item.flight_offers.map((offer) => {
+        // 2. Calculate prices for each traveler type within this specific offer
+        const updatedTravelerPrices = offer.traveler_price.map((price) => {
+          const type = price.traveler_type;
 
-        let baseAmount = price.price_breakdown?.base_fare?.amount ?? 0;
-        let discountAmount = price.price_breakdown?.discount?.amount ?? 0;
-        let taxAmount = price.price_breakdown?.tax?.amount ?? 0;
-        let totalAmount = price.price_breakdown?.total?.amount ?? 0;
+          // Determine the count based on user search input
+          const count =
+            type === "INFANT"
+              ? infantCount
+              : type === "CHILD"
+                ? childCount
+                : adultCount;
 
-        baseAmount = count * baseAmount;
+          // Extract original amounts
+          const base = price.price_breakdown?.base_fare?.amount ?? 0;
+          const tax = price.price_breakdown?.tax?.amount ?? 0;
+          const disc = price.price_breakdown?.discount?.amount ?? 0;
+          const total = price.price_breakdown?.total?.amount ?? 0;
 
-        discountAmount = count * discountAmount;
+          // Return the traveler price object with multiplied totals
+          return {
+            ...price,
+            price_breakdown: {
+              ...price.price_breakdown,
+              base_fare: {
+                ...price.price_breakdown?.base_fare,
+                amount: base * count,
+              },
+              tax: { ...price.price_breakdown?.tax, amount: tax * count },
+              discount: {
+                ...price.price_breakdown?.discount,
+                amount: disc * count,
+              },
+              total: { ...price.price_breakdown?.total, amount: total * count },
+            },
+          };
+        });
 
-        taxAmount = count * taxAmount;
-
-        totalAmount = count * totalAmount;
+        // 3. Return the offer with its specific recalculated prices
         return {
-          ...price, // Keep original top-level properties (like traveler_type)
-          price_breakdown: {
-            ...price.price_breakdown, // Keep other properties (like currency)
-            base_fare: {
-              ...price.price_breakdown?.base_fare,
-              amount: baseAmount, // Overwrite with calculated value
-            },
-            discount: {
-              ...price.price_breakdown?.discount,
-              amount: discountAmount,
-            },
-            tax: {
-              ...price.price_breakdown?.tax,
-              amount: taxAmount,
-            },
-            total: {
-              ...price.price_breakdown?.total,
-              amount: totalAmount,
-            },
-          },
+          ...offer,
+          traveler_price: updatedTravelerPrices,
         };
       });
+
+      // 4. Return the full data item with all flight offers updated
       return {
         ...item,
-        flight_offers: [
-          {
-            ...item.flight_offers[0],
-            traveler_price: travelerBreakdown, // Overwrite with our new calculations
-          },
-          ...item.flight_offers.slice(1), // Keep other flight offers if they exist
-        ],
-      }; 
+        flight_offers: updatedFlightOffers,
+      };
     });
     // console.log("final response: ", JSON.stringify(finalData, null, 2));
     return finalData;
