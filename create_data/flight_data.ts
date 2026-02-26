@@ -266,61 +266,66 @@ async function clearDatabase() {
 }
 
 async function clearStaleData() {
-  const now = new Date();
-  const bufferTime = new Date(now.getTime() - 30 * 60 * 1000); //30 mins ago
-  const MAX_FLIGHTS = 1500;
+  try {
+    const now = new Date();
+    const bufferTime = new Date(now.getTime() - 30 * 60 * 1000); //30 mins ago
+    const MAX_FLIGHTS = 1500;
 
-  console.info("🧹 Maintenance started...");
+    console.info("🧹 Maintenance started...");
 
-  // --- PART 1: DELETE TRULY STALE DATA (In the past) ---
-  const staleDelete = await prisma.data.deleteMany({
-    where: {
-      flight_offers: {
-        some: {
-          segments: {
-            some: {
-              departure_time: {
-                lt: bufferTime, // Use Date object directly
+    // --- PART 1: DELETE TRULY STALE DATA (In the past) ---
+    const staleDelete = await prisma.data.deleteMany({
+      where: {
+        flight_offers: {
+          some: {
+            segments: {
+              some: {
+                departure_time: {
+                  lt: bufferTime, // Use Date object directly
+                },
               },
             },
           },
         },
       },
-    },
-  });
-
-  if (staleDelete.count > 0) {
-    console.info(`✅ Removed ${staleDelete.count} expired flights.`);
-  }
-
-  // --- PART 2: ROTATE FUTURE DATA IF FULL ---
-  const currentCount = await prisma.data.count();
-
-  if (currentCount >= MAX_FLIGHTS) {
-    console.info(
-      `⚠️ Capacity reached (${currentCount}/${MAX_FLIGHTS}). Rotating data...`,
-    );
-
-    // Find the IDs of the 200 flights based on the oldest flights created
-    const flightsToRotate = await prisma.data.findMany({
-      take: 200,
-      orderBy: {
-        createdAt: "asc", // "asc" puts the oldest timestamps at the top
-      },
-      select: { id: true },
     });
 
-    await prisma.data.deleteMany({
-      where: { id: { in: flightsToRotate.map((f) => f.id) } },
-    });
+    if (staleDelete.count > 0) {
+      console.info(`✅ Removed ${staleDelete.count} expired flights.`);
+    }
 
-    console.info(
-      "♻️ Deleted 200 soonest flights to make room for new generation.",
-    );
-    return true; // Now returns true so main() can add new ones
+    // --- PART 2: ROTATE FUTURE DATA IF FULL ---
+    const currentCount = await prisma.data.count();
+
+    if (currentCount >= MAX_FLIGHTS) {
+      console.info(
+        `⚠️ Capacity reached (${currentCount}/${MAX_FLIGHTS}). Rotating data...`,
+      );
+
+      // Find the IDs of the 200 flights based on the oldest flights created
+      const flightsToRotate = await prisma.data.findMany({
+        take: 500,
+        orderBy: {
+          createdAt: "asc", // "asc" puts the oldest timestamps at the top
+        },
+        select: { id: true },
+      });
+
+      await prisma.data.deleteMany({
+        where: { id: { in: flightsToRotate.map((f) => f.id) } },
+      });
+
+      console.info(
+        "♻️ Deleted 200 soonest flights to make room for new generation.",
+      );
+      return true; // Now returns true so main() can add new ones
+    }
+
+    return true;
+  } catch (error) {
+    console.error("❌ Error during stale data cleanup:", error);
+    return false; // Return false to signal main() to skip generation
   }
-
-  return true;
 }
 
 async function main() {
@@ -371,6 +376,7 @@ async function main() {
 
   // 1. Find the most distant flight in the future
   // We check the 'segments' because that's where the actual dates live
+  // concept of these is to avoid any duplicate flights and only generate what we need to fill the 90-day window
   const latestSegment = await prisma.segment.findFirst({
     orderBy: { departure_time: "desc" },
     select: { departure_time: true },
@@ -398,6 +404,11 @@ async function main() {
   }
 
   // 2. Calculate exactly how many days are missing to hit the 90-day target
+  /**
+   * 1,000 (milliseconds in a second) x 60 (seconds in a minute) x 60 (minutes in an hour) x 24$ (hours in a day)
+   * the Math.max(0, ...) is a safety check to ensure we don't end up with a negative number if something goes wrong with the date calculations. If the latest flight is somehow in the future beyond 90 days, this will prevent the script from trying to generate a negative number of days.
+   * The Math.ceil() is used to round up to the nearest whole day, ensuring that we cover the entire range up to 90 days even if the time difference isn't a perfect number of days.
+   */
   const diffTime = ninetyDaysFromNow.getTime() - startDate.getTime();
   const daysToGenerate = Math.max(
     0,
@@ -426,7 +437,7 @@ async function main() {
           data: {
             duration_min: 0,
             duration_max: 0,
-            cabin_class: "Mixed",
+            cabin_class: "Mixed", // this does not matter, we will have individual cabins at the offer level
           },
         });
 
@@ -572,6 +583,7 @@ async function main() {
                   : tp.traveler_type === "INFANT"
                     ? 0.15
                     : 1.0;
+              
               const base = Math.floor(routeBaseAmount * typeMult);
               const tax = Math.floor(base * 0.15);
               const total = base + tax;
@@ -752,13 +764,19 @@ console.info(
 
 /**
  * 0 * * * * ---> Schedule flight data creation automation to run every hour.
+ * The "Traffic Jam" Problem
+Without this lock, if your 4:00 PM task takes 65 minutes to finish, the 5:00 PM task will start while the first one is still writing to the database.
+
+This causes:
+
+Database Deadlocks: Two processes trying to update the same row at once.
+
+CPU Spikes: Your laptop struggling to run two heavy seeding processes simultaneously.
+
+Data Corruption: Potentially creating duplicate records because the second run doesn't realize the first run hasn't finished yet.
  */
 
-// cron.schedule("0 * * * *", () => {
-//   runFlightDataCreateAutomation();
-// });
-
-let isRunning = false; // adding a lock to prevent overlapping runs
+let isRunning = false; // that is why adding a lock to prevent overlapping runs
 
 cron.schedule("0 * * * *", async () => {
   if (isRunning) {
