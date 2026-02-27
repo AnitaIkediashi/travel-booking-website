@@ -117,12 +117,20 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       where: { AND: conditions },
       include: {
         flight_offers: {
+          omit: {
+            price_id: true,
+          },
           where: {
             trip_type: { equals: trip },
             branded_fareinfo: {
-              cabin_class: { 
-                equals: cabin === 'Premium' ? 'Premium Economy' : cabin === 'First' ? 'First Class' : cabin, 
-                mode: "insensitive" 
+              cabin_class: {
+                equals:
+                  cabin === "Premium"
+                    ? "Premium Economy"
+                    : cabin === "First"
+                      ? "First Class"
+                      : cabin,
+                mode: "insensitive",
               },
             },
             segments: {
@@ -134,42 +142,121 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
           },
           include: {
             branded_fareinfo: {
+              omit: {
+                id: true,
+                branded_fareinfo_id: true,
+              },
               include: {
-                features: true,
+                features: {
+                  omit: {
+                    id: true,
+                    feature_id: true,
+                  },
+                },
               },
             },
-            seat_availability: true,
+            seat_availability: {
+              omit: {
+                id: true,
+                seat_availability_id: true,
+              },
+            },
             traveler_price: {
               omit: {
                 traveler_reference: true,
+                id: true,
+                traveler_price_id: true,
               },
               include: {
                 price_breakdown: {
+                  omit: {
+                    id: true,
+                  },
                   include: {
-                    base_fare: true,
-                    discount: true,
-                    tax: true,
-                    total: true,
+                    base_fare: {
+                      omit: {
+                        id: true,
+                        base_price_id: true,
+                      },
+                    },
+                    discount: {
+                      omit: {
+                        id: true,
+                        discount_id: true,
+                      },
+                    },
+                    tax: {
+                      omit: {
+                        id: true,
+                        tax_id: true,
+                      },
+                    },
+                    total: {
+                      omit: {
+                        id: true,
+                        total_price_id: true,
+                      },
+                    },
                   },
                 },
               },
             },
             price_breakdown: {
+              omit: {
+                id: true,
+              },
               include: {
-                base_fare: true,
-                discount: true,
-                tax: true,
-                total: true,
+                base_fare: {
+                  omit: {
+                    id: true,
+                    base_price_id: true,
+                  },
+                },
+                discount: {
+                  omit: {
+                    id: true,
+                    discount_id: true,
+                  },
+                },
+                tax: {
+                  omit: {
+                    id: true,
+                    tax_id: true,
+                  },
+                },
+                total: {
+                  omit: {
+                    id: true,
+                    total_price_id: true,
+                  },
+                },
               },
             },
             segments: {
+              omit: {
+                id: true,
+                segment_id: true,
+              },
               orderBy: { departure_time: "asc" },
               include: {
                 legs: {
+                  omit: {
+                    id: true,
+                    leg_id: true,
+                  },
                   orderBy: { departure_time: "asc" },
                   include: {
-                    carriers: true,
+                    carriers: {
+                      omit: {
+                        id: true,
+                        carrier_id: true,
+                      },
+                    },
                     flight_info: {
+                      omit: {
+                        id: true,
+                        flight_info_id: true,
+                      },
                       include: {
                         carrier_info: true,
                       },
@@ -256,13 +343,30 @@ export const queryFlightToken = async (
 ) => {
   try {
     const flightData = await queryFlightData(queryParams);
-    const filteredFlights = flightData[0].flight_offers.find(
-      (offers) => offers.token === queryParams.token,
+    const filteredFlights = flightData.flatMap((data) =>
+      data.flight_offers.filter((offer) => offer.token === queryParams.token),
     );
-    return filteredFlights
+    return filteredFlights;
   } catch (error) {
-    console.error('no such token available: ', error)
-    return []
+    console.error("no such token available: ", error);
+    return [];
   }
 };
 
+export const fetchCountryName = async (airportCode: string | undefined) => {
+  try {
+    if(airportCode === '' || !airportCode) return null;
+
+    const airport = await prisma.airport.findUnique({
+      where: { airport_code: airportCode },
+      select: { city: true, country: true},
+    });
+    return {
+      city: airport?.city ?? null,
+      country: airport?.country ?? null,
+    }
+  } catch (error) {
+    console.error("Error fetching country name: ", error);
+    return null;
+  }
+}

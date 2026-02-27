@@ -259,3 +259,16 @@ type Feature = {
   category?: string;
   availability?: string;
 };
+
+export type NewFlightOffer = {
+  id: string;
+  flight_offer_id: string;
+  token: string;
+  trip_type: string;
+  flight_key: string;
+  segments: SegmentProp[];
+  branded_fareinfo: BrandedFareInfo | null;
+  seat_availability: SeatAvailability | null;
+  traveler_price: TravelerPrice[];
+  price_breakdown: PriceBreakdown | null;
+};

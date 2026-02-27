@@ -59,7 +59,7 @@ export const FlightDisplayData = ({
       } else {
         setShowScrollToTop(false);
       }
-
+      
       // Update the ref to the current position for the next event
       lastScrollY.current = currentScrollPos;
     };
@@ -67,6 +67,7 @@ export const FlightDisplayData = ({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isLoadMoreTriggered]);
+
 
   const totalFlightOffered = filteredSortedData
     .map((data) => data.flight_offers?.length ?? 0)
