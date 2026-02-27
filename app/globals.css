@@ -97,20 +97,15 @@ body {
 }
 
 .animated_dots {
-  width: 20px;
-  aspect-ratio: 2;
-  --_g: no-repeat radial-gradient(circle closest-side,var(--neutrals-70) 90%,var(--neutrals-70));
-  background: 
-    var(--_g) 0%   50%,
-    var(--_g) 50%  50%,
-    var(--_g) 100% 50%;
-  background-size: calc(100%/3) 50%;
-  animation: dots 1s infinite linear;
+   width: 15px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: l5 1s infinite linear alternate;
 }
 
-@keyframes dots {
-    20%{background-position:0%   0%, 50%  50%,100%  50%}
-    40%{background-position:0% 100%, 50%   0%,100%  50%}
-    60%{background-position:0%  50%, 50% 100%,100%   0%}
-    80%{background-position:0%  50%, 50%  50%,100% 100%}
+@keyframes l5 {
+    0%  {box-shadow: 20px 0 var(--blackish-green-20), -20px 0 var(--neutrals-70);background: var(--blackish-green-20) }
+    33% {box-shadow: 20px 0 var(--blackish-green-20), -20px 0 var(--neutrals-70);background: var(--neutrals-70)}
+    66% {box-shadow: 20px 0 var(--neutrals-70),-20px 0 var(--neutrals-70); background: var(--neutrals-70)}
+    100%{box-shadow: 20px 0 var(--neutrals-70),-20px 0 var(--blackish-green-20); background: var(--blackish-green-20) }
 }

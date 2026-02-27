@@ -54,18 +54,16 @@ export const FlightDataFilters = ({
    * Note: the Boolean type assertion is used to filter out any undefined values from the mapped array.
    */
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>(() => {
+    if(!data || data.length === 0) return [];
     return (
-      (data?.[0]?.airlines
-        ?.map((a) => a.iata_code)
-        .filter(Boolean) as string[]) || []
+      data.flatMap((flight) => flight.airlines?.map((a) => a.iata_code).filter(Boolean) as string[] ?? []) // Loop through all flights and their airlines, extract iata codes, filter out falsy values, and flatten the result into a single array
     );
   }); // track which airlines are selected as an array
 
   const [selectedTrips, setSelectedTrips] = useState<string[]>(() => {
     if (!data || data.length === 0) return [];
-    return Array.from(
-      new Set(data[0].flight_offers?.map((o) => o.trip_type).filter(Boolean)),
-    ) as string[];
+  
+    return Array.from(new Set(data.flatMap((flight) => flight.flight_offers?.map((o) => o.trip_type).filter(Boolean) as string[] ?? []))) as string[];
   }); // same with trips selected
 
   const [showFilters, setShowFilters] = useState(false); // on small screens

@@ -7,7 +7,7 @@ import { FlightDataProps } from "@/types/flight_type";
 import { SegmentData } from "./segment_data";
 import Image from "next/image";
 import { Button } from "@/components/reusable/button";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatedDots } from "@/components/loaders/animated_dots";
 
 type FlightDisplayDataProps = {
@@ -36,22 +36,71 @@ export const FlightDisplayData = ({
   childCount,
 }: FlightDisplayDataProps) => {
   const [visibleCount, setVisibleCount] = useState(10);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [isLoadMoreTriggered, setIsLoadMoreTriggered] = useState(false); //Boolean flag indicating if "Load More" has been triggered.
   const [isPending, startTransition] = useTransition();
+
+  // 1. Use a Ref to store the previous position.
+  // This avoids the 'disappearing' bug caused by state-sync lag.
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Only run if Load More was clicked
+      if (!isLoadMoreTriggered) return;
+
+      const currentScrollPos = window.scrollY;
+
+      // Show button if:
+      // - User is more than 400px down
+      // - AND they are scrolling UP (current is less than last)
+      if (currentScrollPos > 400 && currentScrollPos < lastScrollY.current) {
+        setShowScrollToTop(true);
+      } else {
+        setShowScrollToTop(false);
+      }
+
+      // Update the ref to the current position for the next event
+      lastScrollY.current = currentScrollPos;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLoadMoreTriggered]);
 
   const totalFlightOffered = filteredSortedData
     .map((data) => data.flight_offers?.length ?? 0)
     .reduce((a, b) => a + b, 0);
 
-  const displaySlicedData = filteredSortedData.slice(0, visibleCount);
-  
+  const displaySlicedData = filteredSortedData
+    .flatMap((data) => data.flight_offers ?? [])
+    .slice(0, visibleCount);
 
   const handleShowMore = () => {
     startTransition(() => {
-      setVisibleCount((prevCount) => prevCount + 10);
+      if (visibleCount <= totalFlightOffered) {
+        setIsLoadMoreTriggered(true);
+        setVisibleCount((prevCount) => prevCount + 10);
+      }
+      setShowScrollToTop(true);
     });
-  }
+  };
 
-  if (filteredSortedData?.length === 0 || !filteredSortedData) {
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+    setShowScrollToTop(false); // Hide the button after clicking the scroll-to-top
+  };
+
+  if (
+    filteredSortedData?.length === 0 ||
+    !filteredSortedData ||
+    filteredSortedData.every(
+      (data) => !data.flight_offers || data.flight_offers.length === 0,
+    )
+  ) {
     return (
       <div className="w-full flex items-center justify-center flex-col gap-3">
         <Image
@@ -97,29 +146,40 @@ export const FlightDisplayData = ({
           currentCount={displaySlicedData.length}
           totalCount={totalFlightOffered}
         />
-        {displaySlicedData.map((data) => {
+        {displaySlicedData.map((offer, index) => {
           return (
-            <div key={data.id} className="flex flex-col gap-y-8 w-full">
-              {data.flight_offers?.map((offer, index) => {
-                return (
-                  <BoxShadow
-                    key={index}
-                    className={`w-full rounded-xl shadow-light py-6 md:py-0 px-4 ${isPendingFilter ? "opacity-40" : "opacity-100"}`}
-                  >
-                    <SegmentData
-                      offers={offer}
-                      adultCount={adultCount}
-                      childCount={childCount}
-                      infantCount={infantCount}
-                    />
-                  </BoxShadow>
-                );
-              })}
+            <div key={index} className="flex flex-col gap-y-8 w-full">
+              <BoxShadow
+                className={`w-full rounded-xl shadow-light py-6 md:py-0 px-4 ${isPendingFilter ? "opacity-40" : "opacity-100"}`}
+              >
+                <SegmentData
+                  offers={offer}
+                  adultCount={adultCount}
+                  childCount={childCount}
+                  infantCount={infantCount}
+                />
+              </BoxShadow>
             </div>
           );
         })}
-        <Button type="button" icon={isPending ? <AnimatedDots /> : undefined} label={isPending ? '' : "Show more results"} className="w-full h-12 bg-blackish-green text-white text-sm font-semibold rounded" onClick={handleShowMore} />
+        <Button
+          type="button"
+          icon={isPending ? <AnimatedDots /> : undefined}
+          label={isPending ? "" : "Show more results"}
+          className={`w-full h-12 bg-blackish-green text-white text-sm font-semibold rounded flex items-center justify-center ${visibleCount >= totalFlightOffered ? "hidden" : ""}`}
+          onClick={handleShowMore}
+        />
+        <Button
+          type="button"
+          label="Scroll to top"
+          className={`bg-blackish-green text-white px-5 py-3 rounded font-medium shadow-2xl fixed left-0 right-0 z-50 w-[140px] mx-auto transition-all duration-500 ease-in-out hover:bg-blackish-green-20/80 ${
+            showScrollToTop
+              ? "bottom-10 opacity-100 translate-y-0"
+              : "-bottom-20 opacity-0 translate-y-10 pointer-events-none"
+          }`}
+          onClick={scrollToTop}
+        />
       </div>
     </div>
   );
-};
+};;
