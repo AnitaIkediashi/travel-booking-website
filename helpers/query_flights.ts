@@ -318,6 +318,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
           };
         });
 
+
         // 3. Return the offer with its specific recalculated prices
         return {
           ...offer,
@@ -346,6 +347,7 @@ export const queryFlightToken = async (
     const filteredFlights = flightData.flatMap((data) =>
       data.flight_offers.filter((offer) => offer.token === queryParams.token),
     );
+    
     return filteredFlights;
   } catch (error) {
     console.error("no such token available: ", error);

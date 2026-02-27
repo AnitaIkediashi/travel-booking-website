@@ -12,6 +12,7 @@
   --blackish-green-20: #79747e;
   --box-shadow-light: 0px 4px 16px 0px rgba(17, 34, 17, 0.05);
   --box-shadow-medium: 2px 4px 16px rgba(17, 34, 17, 0.1);
+  --box-shadow-lg: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
 /* referencing other colors using the inline keyword */
@@ -27,6 +28,7 @@
   --color-neutrals-70: var(--neutrals-70);
   --shadow-light: var(--box-shadow-light);
   --shadow-medium: var(--box-shadow-medium);
+  --shadow-large: var(--box-shadow-lg);
 }
 
 body {
