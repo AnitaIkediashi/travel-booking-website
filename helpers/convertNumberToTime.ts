@@ -68,3 +68,9 @@ export const getDate =(date: Date | undefined) => {
   const day = String(tempDate.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`
 }
+
+export const formateToReadableDate = (date: Date | undefined) => {
+  if(!date) return ""
+  const tempDate = new Date(date)
+  return tempDate.toDateString().slice(0, 10)
+ }
