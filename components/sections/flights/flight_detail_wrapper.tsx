@@ -4,12 +4,13 @@ import { BoxShadow } from "@/components/reusable/box_shadow";
 import { Button } from "@/components/reusable/button";
 import { formatDateTime, formateToReadableDate, getDuration } from "@/helpers/convertNumberToTime";
 import { fetchCountryName } from "@/helpers/query_flights";
-import { NewFlightOffer } from "@/types/flight_type";
+import { FlightSearchParamsProps, NewFlightOffer } from "@/types/flight_type";
 import Image from "next/image";
 
 type FlightDetailWrapperProps = {
   offers: NewFlightOffer[] | undefined;
   totalTravelers: number;
+  searchProps: FlightSearchParamsProps;
 };
 
 export const FlightDetailWrapper = async ({
@@ -35,8 +36,9 @@ export const FlightDetailWrapper = async ({
 
   const featureSrc = offers[0].branded_fareinfo?.features?.flatMap((feature, index) => feature.feature_name === 'WIFI' && feature.availability === 'INCLUDED' ? <WifiIcon key={index} /> : feature.feature_name === 'MEAL' && feature.availability === 'INCLUDED' ? <MealIcon key={index} /> : []);
 
+  //localhost:3000/flight-flow/flight-search/listing/flight-detail/33cf1f60-e84e-4471-83a3-e6320883df13
 
-  return (
+  http: return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10">
@@ -127,7 +129,6 @@ export const FlightDetailWrapper = async ({
                 if (!firstLeg || !carrier) return null;
 
                 const flightNumber = firstLeg?.flight_info?.flight_number;
-                
 
                 return (
                   <div
@@ -185,9 +186,7 @@ export const FlightDetailWrapper = async ({
                       <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                         {flightNumber}
                       </small>
-                      <div className="mt-1.5">
-                        {featureSrc}
-                      </div>
+                      <div className="mt-1.5">{featureSrc}</div>
                     </div>
                   </div>
                 );

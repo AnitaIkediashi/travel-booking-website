@@ -281,11 +281,12 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     const finalData = dataResponse.map((item) => {
       // 1. Loop through EVERY flight offer (not just [0])
       const updatedFlightOffers = item.flight_offers.map((offer) => {
-        // 2. Calculate prices for each traveler type within this specific offer
+        let offerWideTotal = 0;
+        let offerWideBase = 0;
+        let offerWideTax = 0;
+
         const updatedTravelerPrices = offer.traveler_price.map((price) => {
           const type = price.traveler_type;
-
-          // Determine the count based on user search input
           const count =
             type === "INFANT"
               ? infantCount
@@ -293,36 +294,39 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
                 ? childCount
                 : adultCount;
 
-          // Extract original amounts
-          const base = price.price_breakdown?.base_fare?.amount ?? 0;
-          const tax = price.price_breakdown?.tax?.amount ?? 0;
-          const disc = price.price_breakdown?.discount?.amount ?? 0;
-          const total = price.price_breakdown?.total?.amount ?? 0;
+          const base = (price.price_breakdown?.base_fare?.amount ?? 0) * count;
+          const tax = (price.price_breakdown?.tax?.amount ?? 0) * count;
+          const total = (price.price_breakdown?.total?.amount ?? 0) * count;
 
-          // Return the traveler price object with multiplied totals
+          // Accumulate the global offer total
+          offerWideBase += base;
+          offerWideTax += tax;
+          offerWideTotal += total;
+
           return {
             ...price,
             price_breakdown: {
               ...price.price_breakdown,
-              base_fare: {
-                ...price.price_breakdown?.base_fare,
-                amount: base * count,
-              },
-              tax: { ...price.price_breakdown?.tax, amount: tax * count },
-              discount: {
-                ...price.price_breakdown?.discount,
-                amount: disc * count,
-              },
-              total: { ...price.price_breakdown?.total, amount: total * count },
+              base_fare: { ...price.price_breakdown?.base_fare, amount: base },
+              tax: { ...price.price_breakdown?.tax, amount: tax },
+              total: { ...price.price_breakdown?.total, amount: total },
             },
           };
         });
 
-
-        // 3. Return the offer with its specific recalculated prices
         return {
           ...offer,
           traveler_price: updatedTravelerPrices,
+          // OVERWRITE the main price_breakdown with the calculated sum
+          price_breakdown: {
+            ...offer.price_breakdown,
+            base_fare: {
+              ...offer.price_breakdown?.base_fare,
+              amount: offerWideBase,
+            },
+            tax: { ...offer.price_breakdown?.tax, amount: offerWideTax },
+            total: { ...offer.price_breakdown?.total, amount: offerWideTotal },
+          },
         };
       });
 
@@ -347,7 +351,7 @@ export const queryFlightToken = async (
     const filteredFlights = flightData.flatMap((data) =>
       data.flight_offers.filter((offer) => offer.token === queryParams.token),
     );
-    
+
     return filteredFlights;
   } catch (error) {
     console.error("no such token available: ", error);
@@ -357,18 +361,18 @@ export const queryFlightToken = async (
 
 export const fetchCountryName = async (airportCode: string | undefined) => {
   try {
-    if(airportCode === '' || !airportCode) return null;
+    if (airportCode === "" || !airportCode) return null;
 
     const airport = await prisma.airport.findUnique({
       where: { airport_code: airportCode },
-      select: { city: true, country: true},
+      select: { city: true, country: true },
     });
     return {
       city: airport?.city ?? null,
       country: airport?.country ?? null,
-    }
+    };
   } catch (error) {
     console.error("Error fetching country name: ", error);
     return null;
   }
-}
+};

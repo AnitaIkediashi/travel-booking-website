@@ -11,7 +11,7 @@ const FlightDetailPage = async ({searchParams}: FlightSearchParams) => {
   const data = await queryFlightToken(searchProps)
   
   return (
-    <FlightDetailWrapper offers={data} totalTravelers={totalTravelers} />
+    <FlightDetailWrapper offers={data} totalTravelers={totalTravelers} searchProps={searchProps} />
   )
 }
 

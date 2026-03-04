@@ -29,9 +29,9 @@ const CABIN_CONFIGS: Record<
   { multiplier: number; baggage: number; seats: number }
 > = {
   Economy: { multiplier: 1.0, baggage: 1, seats: 20 },
-  "Premium Economy": { multiplier: 1.6, baggage: 2, seats: 12 },
-  Business: { multiplier: 3.8, baggage: 3, seats: 8 },
-  "First Class": { multiplier: 7.0, baggage: 3, seats: 4 },
+  "Premium Economy": { multiplier: 1.4, baggage: 2, seats: 12 },
+  Business: { multiplier: 2.2, baggage: 3, seats: 8 },
+  "First Class": { multiplier: 3.5, baggage: 3, seats: 4 },
 };
 
 function populateFakeAirports() {
@@ -223,18 +223,11 @@ function populateFakeLegsData(
 }
 
 function populateFakeTravelerPrice() {
-  return Array.from({ length: faker.number.int({ min: 1, max: 2 }) }, () => {
-    const travelerReference = faker.number.int({ min: 1, max: 5 }); // this ain't important
-    const travelerType = faker.helpers.arrayElement([
-      "adult",
-      "child",
-      "infant",
-    ]);
-    return {
-      traveler_reference: travelerReference.toString(),
-      traveler_type: travelerType.toUpperCase(),
-    };
-  });
+  return [
+    { traveler_reference: "1", traveler_type: "ADULT" },
+    { traveler_reference: "2", traveler_type: "CHILD" },
+    { traveler_reference: "3", traveler_type: "INFANT" },
+  ];
 }
 
 /**
@@ -488,10 +481,10 @@ async function main() {
 
             const timeMult =
               searchStart.getHours() >= 10 && searchStart.getHours() <= 17
-                ? 1.25
-                : 0.9;
+                ? 1.1
+                : 0.5;
             const routeBaseAmount =
-              faker.number.int({ min: 200, max: 450 }) *
+              faker.number.int({ min: 100, max: 300 }) *
               config.multiplier *
               timeMult;
 
@@ -575,20 +568,32 @@ async function main() {
             });
 
             // 4. PRICE BREAKDOWN
-            let offerTotal = 0;
+            let mainAdultTotal = 0;
+            let mainAdultBase = 0;
+            let mainAdultTax = 0;
+
             for (const tp of offer.traveler_price) {
+              // Determine multiplier based on type
               const typeMult =
                 tp.traveler_type === "CHILD"
                   ? 0.8
                   : tp.traveler_type === "INFANT"
                     ? 0.15
                     : 1.0;
-              
+
+              // Calculate Unit Prices
               const base = Math.floor(routeBaseAmount * typeMult);
               const tax = Math.floor(base * 0.15);
               const total = base + tax;
-              offerTotal += total;
 
+              // Capture the Adult price to use as the default Offer Total
+              if (tp.traveler_type === "ADULT") {
+                mainAdultTotal = total;
+                mainAdultBase = base;
+                mainAdultTax = tax;
+              }
+
+              // Create individual breakdown for this specific traveler type
               const tpPB = await tx.priceBreakdown.create({
                 data: {
                   total: { create: { currency_code: "USD", amount: total } },
@@ -597,37 +602,45 @@ async function main() {
                   discount: { create: { currency_code: "USD", amount: 0 } },
                 },
               });
+
+              // Link the breakdown to the traveler
               await tx.travelerPrice.update({
                 where: { id: tp.id },
                 data: { price_id: tpPB.id },
               });
             }
 
+            // Create the main Price Breakdown for the Flight Offer (Defaulting to 1 Adult price)
             const offerPB = await tx.priceBreakdown.create({
               data: {
-                total: { create: { currency_code: "USD", amount: offerTotal } },
+                total: {
+                  create: { currency_code: "USD", amount: mainAdultTotal },
+                },
                 base_fare: {
                   create: {
                     currency_code: "USD",
-                    amount: Math.floor(offerTotal * 0.85),
+                    amount: mainAdultBase,
                   },
                 },
                 tax: {
                   create: {
                     currency_code: "USD",
-                    amount: Math.floor(offerTotal * 0.15),
+                    amount: mainAdultTax,
                   },
                 },
                 discount: { create: { currency_code: "USD", amount: 0 } },
               },
             });
+
+            // Link the main breakdown to the Flight Offer
             await tx.flightOffers.update({
               where: { id: offer.id },
               data: { price_id: offerPB.id },
             });
 
-            if (offerTotal < absoluteCheapestPrice)
-              absoluteCheapestPrice = offerTotal;
+            // Track the cheapest price based on a single Adult fare
+            if (mainAdultTotal < absoluteCheapestPrice)
+              absoluteCheapestPrice = mainAdultTotal;
 
             // 5. CARRIER & FLIGHT INFO
             for (const segment of offer.segments) {
