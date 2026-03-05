@@ -1,5 +1,6 @@
 import { MealIcon } from "@/components/icons/meal";
 import { WifiIcon } from "@/components/icons/wifi";
+import { AddCard } from "@/components/reusable/add_card";
 import { BoxShadow } from "@/components/reusable/box_shadow";
 import {
   formatDateTime,
@@ -129,12 +130,15 @@ export const BookingWrapper = async ({
                         <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                           {flightNumber}
                         </small>
-                        <div className="mt-1.5">{featureSrc}</div>
+                        <div className="mt-1.5 flex gap-1.5">{featureSrc}</div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+            </BoxShadow>
+            <BoxShadow className="shadow-large p-6">
+              <AddCard />
             </BoxShadow>
           </div>
           <div className="xl:w-[40%] lg:w-[45%] w-full lg:order-2 order-1">

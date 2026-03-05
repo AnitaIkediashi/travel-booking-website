@@ -197,7 +197,7 @@ export const FlightDetailWrapper = async ({
                       <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                         {flightNumber}
                       </small>
-                      <div className="mt-1.5">{featureSrc}</div>
+                      <div className="mt-1.5 flex gap-1.5">{featureSrc}</div>
                     </div>
                   </div>
                 );
