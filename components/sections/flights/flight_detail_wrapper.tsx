@@ -16,6 +16,7 @@ type FlightDetailWrapperProps = {
 export const FlightDetailWrapper = async ({
   offers,
   totalTravelers,
+  searchProps
 }: FlightDetailWrapperProps) => {
   if (!offers || offers.length === 0) return;
   const departAirportCode = offers[0].segments[0].departure_airport_code;
@@ -36,9 +37,18 @@ export const FlightDetailWrapper = async ({
 
   const featureSrc = offers[0].branded_fareinfo?.features?.flatMap((feature, index) => feature.feature_name === 'WIFI' && feature.availability === 'INCLUDED' ? <WifiIcon key={index} /> : feature.feature_name === 'MEAL' && feature.availability === 'INCLUDED' ? <MealIcon key={index} /> : []);
 
-  //localhost:3000/flight-flow/flight-search/listing/flight-detail/33cf1f60-e84e-4471-83a3-e6320883df13
+  const {from, to, depart, return: returnDate, trip, cabin: cabinType, adults, child, infant, token} = searchProps
 
-  http: return (
+
+  let bookingUrl = ''
+
+  if(trip === 'round-trip') {
+    bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&return=${returnDate}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
+  } else {
+    bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
+  }
+
+  return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10">
@@ -74,6 +84,7 @@ export const FlightDetailWrapper = async ({
               type="button"
               label="Book now"
               className="w-[150px] h-12 rounded bg-mint-green-100 text-sm font-semibold flex items-center justify-center hover:bg-blackish-green hover:text-white"
+              href={bookingUrl}
             />
           </div>
         </div>
