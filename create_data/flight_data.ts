@@ -90,7 +90,7 @@ function populateFakeSegments(
     ),
   );
 
-  const outboundDuration = faker.number.int({ min: 90, max: 720 });
+  const outboundDuration = faker.number.int({ min: 90, max: 720 }); //ms
   const arrivalTime = new Date(
     departureTime.getTime() + outboundDuration * 60 * 1000,
   );
@@ -108,7 +108,7 @@ function populateFakeSegments(
   // 2. If it's a round-trip, add the return segment
 
   if (tripType === "round-trip") {
-    const stayDays = faker.number.int({ min: 1, max: 40 });
+    const stayDays = faker.number.int({ min: 1, max: 40 }); //days
 
     // Calculate Return Departure based on the Outbound Arrival
     const rawReturnDate = new Date(
@@ -191,6 +191,7 @@ function populateFakeLegsData(
 
     const layoverMs = faker.number.int({ min: 60, max: 150 }) * 60 * 1000; // milliseconds
     const flyingMs = totalSegmentMs - layoverMs;
+
     // think of the total flight time as 100% - we need to split it between the two legs, thats where the 45% and 55% comes in - we want the second leg to be slightly longer on average to mimic real world patterns
     const firstLegMs = flyingMs * 0.45;
     const secondLegMs = flyingMs * 0.55;
@@ -398,7 +399,7 @@ async function main() {
 
   // 2. Calculate exactly how many days are missing to hit the 90-day target
   /**
-   * 1,000 (milliseconds in a second) x 60 (seconds in a minute) x 60 (minutes in an hour) x 24$ (hours in a day)
+   * 1,000 (milliseconds in a second) x 60 (seconds in a minute) x 60 (minutes in an hour) x 24 (hours in a day)
    * the Math.max(0, ...) is a safety check to ensure we don't end up with a negative number if something goes wrong with the date calculations. If the latest flight is somehow in the future beyond 90 days, this will prevent the script from trying to generate a negative number of days.
    * The Math.ceil() is used to round up to the nearest whole day, ensuring that we cover the entire range up to 90 days even if the time difference isn't a perfect number of days.
    */
