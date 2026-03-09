@@ -26,19 +26,26 @@ const getDateRangeStrings = (dateString: string | undefined) => {
 };
 
 export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
-  try {
-    const {
-      from,
-      to,
-      depart,
-      return: returnDate, // had to rename because return is a reserved keyword
-      trip,
-      cabin,
-      adults,
-      child,
-      infant,
-    } = queryParams;
+  const {
+    from,
+    to,
+    depart,
+    return: returnDate, // had to rename because return is a reserved keyword
+    trip,
+    cabin,
+    adults,
+    child,
+    infant,
+  } = queryParams;
 
+  //convert values to numbers
+  const adultCount = Number(adults ?? 0);
+  const childCount = Number(child ?? 0);
+  const infantCount = Number(infant ?? 0);
+
+  // consider for trip type if one-way or round-trip, for the validation if queryParams is empty instead of returning all data.
+
+  try {
     const departRange = getDateRangeStrings(depart);
     const returnRange = getDateRangeStrings(returnDate);
 
@@ -274,10 +281,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       },
     });
 
-    //convert values to numbers
-    const adultCount = Number(adults ?? 0);
-    const childCount = Number(child ?? 0);
-    const infantCount = Number(infant ?? 0);
     const finalData = dataResponse.map((item) => {
       // 1. Loop through EVERY flight offer (not just [0])
       const updatedFlightOffers = item.flight_offers.map((offer) => {
@@ -341,14 +344,14 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     console.error("Error querying flight data: ", error);
     return [];
   }
-};
+};;
 
 export const queryFlightToken = async (
   queryParams: FlightSearchParamsProps,
 ) => {
   try {
     const flightData = await queryFlightData(queryParams);
-    const filteredFlights = flightData.flatMap((data) =>
+    const filteredFlights = flightData?.flatMap((data) =>
       data.flight_offers.filter((offer) => offer.token === queryParams.token),
     );
 
