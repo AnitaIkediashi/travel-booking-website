@@ -45,6 +45,12 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
 
   // consider for trip type if one-way or round-trip, for the validation if queryParams is empty instead of returning all data.
 
+  const isValidQuery = from && to && depart && trip && cabin && (trip === "one-way" || (trip === "round-trip" && returnDate)) && (adultCount > 0 || childCount > 0 || infantCount > 0);
+
+  if (!isValidQuery) {
+    return [];
+  }
+
   try {
     const departRange = getDateRangeStrings(depart);
     const returnRange = getDateRangeStrings(returnDate);

@@ -1,10 +1,10 @@
 import { PlacesToGo } from "@/components/sections/flights/places_to_go"
 import { RandomPlacesToBook } from "@/components/sections/flights/random_places_to_book"
 import { SearchHomeWrapper } from "@/components/sections/flights/search_home_wrapper"
-import { searchParams } from "@/types/flight_type"
+import { FlightSearchParams } from "@/types/flight_type"
 
 
-const FlightSearchPage = async ({ searchParams }: searchParams) => {
+const FlightSearchPage = async ({ searchParams }: FlightSearchParams) => {
   const {from} = await searchParams
 
   return (
