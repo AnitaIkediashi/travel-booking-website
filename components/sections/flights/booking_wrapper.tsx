@@ -1,7 +1,7 @@
 import { MealIcon } from "@/components/icons/meal";
 import { WifiIcon } from "@/components/icons/wifi";
-import { AddCard } from "@/components/reusable/add_card";
 import { BoxShadow } from "@/components/reusable/box_shadow";
+import { CardDetails } from "@/components/reusable/card_details";
 import {
   formatDateTime,
   formateToReadableDate,
@@ -47,7 +47,7 @@ export const BookingWrapper = async ({
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="w-full flex lg:flex-row flex-col gap-10">
-          <div className="xl:w-[60%] lg:w-[55%] w-full h-fit lg:order-1 order-2">
+          <div className="xl:w-[60%] lg:w-[55%] w-full h-fit lg:order-1 order-2 flex flex-col gap-y-10">
             <BoxShadow className="shadow-large p-6">
               <div className="flex flex-col gap-y-6 h-full justify-between">
                 {segments.map(async (segment, idx) => {
@@ -138,7 +138,7 @@ export const BookingWrapper = async ({
               </div>
             </BoxShadow>
             <BoxShadow className="shadow-large p-6">
-              <AddCard />
+              <CardDetails />
             </BoxShadow>
           </div>
           <div className="xl:w-[40%] lg:w-[45%] w-full lg:order-2 order-1">

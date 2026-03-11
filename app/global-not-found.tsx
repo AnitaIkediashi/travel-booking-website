@@ -26,9 +26,9 @@ export default function GlobalNotFound() {
     router.refresh();
   }
   return (
-    <html lang="en" className={`${montserrat.variable} antialiased min-h-screen`}>
-      <body className="">
-        <section className="w-full h-full flex flex-col gap-10 items-center justify-center pt-10">
+    <html lang="en" className={`${montserrat.variable} antialiased`}>
+      <body className="h-full flex items-center justify-center min-h-screen">
+        <section className="w-full h-full flex flex-col gap-10 items-center justify-center">
           <h1 className="font-bold text-4xl md:text-[64px] capitalize">
             oops!
           </h1>
