@@ -137,7 +137,7 @@ export const BookingWrapper = async ({
                 })}
               </div>
             </BoxShadow>
-            <BoxShadow className="shadow-large p-6">
+            <BoxShadow className="shadow-large p-4">
               <CardDetails />
             </BoxShadow>
           </div>
