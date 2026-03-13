@@ -43,12 +43,37 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   const childCount = Number(child ?? 0);
   const infantCount = Number(infant ?? 0);
 
+  if (!depart) return []; // to check it depart exists or not
+
+  const currentDate = new Date();
+
+  currentDate.setHours(0, 0, 0, 0);
+
+  const departDate = new Date(depart);
+
+  const isPastDate = departDate < currentDate;
   // consider for trip type if one-way or round-trip, for the validation if queryParams is empty instead of returning all data.
 
-  const isValidQuery = from && to && depart && trip && cabin && (trip === "one-way" || (trip === "round-trip" && returnDate)) && (adultCount > 0 || childCount > 0 || infantCount > 0);
+  const isValidQuery =
+    from &&
+    to &&
+    depart &&
+    trip &&
+    cabin &&
+    !isPastDate && 
+    (trip === "one-way" || (trip === "round-trip" && returnDate)) &&
+    (adultCount > 0 || childCount > 0 || infantCount > 0);
 
   if (!isValidQuery) {
     return [];
+  }
+
+  if (trip === "round-trip" && returnDate) {
+    const retDateObj = new Date(returnDate);
+    if (retDateObj < departDate) {
+      console.warn("\x1b[33m%s\x1b[0m", "Return date is before departure date");
+      return [];
+    }
   }
 
   try {
@@ -350,7 +375,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     console.error("Error querying flight data: ", error);
     return [];
   }
-};;
+};
 
 export const queryFlightToken = async (
   queryParams: FlightSearchParamsProps,

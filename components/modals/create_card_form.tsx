@@ -120,7 +120,7 @@ export const CreateCardForm = ({
             <Button
               type="submit"
               label="add card"
-              className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12"
+              className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded"
             />
             <p className="text-center text-xs opacity-75">
               By confirming your subscription, you allow Stripe to charge your
