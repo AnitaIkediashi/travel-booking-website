@@ -60,7 +60,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     depart &&
     trip &&
     cabin &&
-    !isPastDate && 
+    !isPastDate &&
     (trip === "one-way" || (trip === "round-trip" && returnDate)) &&
     (adultCount > 0 || childCount > 0 || infantCount > 0);
 
@@ -85,9 +85,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       {
         flight_offers: {
           some: {
-            trip_type: {
-              equals: trip,
-            },
             branded_fareinfo: {
               cabin_class: {
                 equals:
@@ -132,7 +129,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       conditions.push({
         flight_offers: {
           some: {
-            OR: [
+            AND: [
               { segments: { some: outboundFilter } },
               { segments: { some: inboundFilter } },
             ],
@@ -159,7 +156,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             price_id: true,
           },
           where: {
-            trip_type: { equals: trip },
             branded_fareinfo: {
               cabin_class: {
                 equals:
@@ -171,12 +167,19 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
                 mode: "insensitive",
               },
             },
-            segments: {
-              some:
-                trip === "round-trip"
-                  ? { OR: [outboundFilter, inboundFilter] }
-                  : outboundFilter,
-            },
+            // segments: {
+            //   some:
+            //     trip === "round-trip"
+            //       ? { OR: [outboundFilter, inboundFilter] }
+            //       : outboundFilter,
+            // },
+            AND:
+              trip === "round-trip"
+                ? [
+                    { segments: { some: outboundFilter } },
+                    { segments: { some: inboundFilter } },
+                  ]
+                : [{ segments: { some: outboundFilter } }],
           },
           include: {
             branded_fareinfo: {
@@ -370,6 +373,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         flight_offers: updatedFlightOffers,
       };
     });
+    console.log(JSON.stringify(finalData.slice(0, 2), null, 2));
     return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);

@@ -7,7 +7,6 @@ import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import Image from "next/image";
 import { TimeFilter } from "./time_filter";
 import { AirlinesFilter } from "./airlines_filter";
-import { TripFilter } from "./trip_filter";
 import { FlightDisplayData } from "./flight_display_data";
 import { Button } from "@/components/reusable/button";
 import { FilterIcon } from "@/components/icons/filter";
@@ -21,16 +20,10 @@ type FlightFilterProps = {
   infantCount: number;
 };
 
-const tripLabels = {
-  "one-way": "One Way",
-  "round-trip": "Round Trip",
-};
-
 /**
  * The keyof operator takes an object type and produces a string or numeric literal union of its keys
  * typeof refers to the type of the value has
  */
-type TripKey = keyof typeof tripLabels; 
 
 export const FlightDataFilters = ({
   isPending,
@@ -44,7 +37,6 @@ export const FlightDataFilters = ({
   const [openPriceFilter, setOpenPriceFilter] = useState(false);
   const [openTimeFilter, setOpenTimeFilter] = useState(false);
   const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
-  const [openTripFilter, setOpenTripFilter] = useState(false);
   const [sortBy, setSortBy] = useState("best");
 
   /**
@@ -59,12 +51,6 @@ export const FlightDataFilters = ({
       data.flatMap((flight) => flight.airlines?.map((a) => a.iata_code).filter(Boolean) as string[] ?? []) // Loop through all flights and their airlines, extract iata codes, filter out falsy values, and flatten the result into a single array
     );
   }); // track which airlines are selected as an array
-
-  const [selectedTrips, setSelectedTrips] = useState<string[]>(() => {
-    if (!data || data.length === 0) return [];
-  
-    return Array.from(new Set(data.flatMap((flight) => flight.flight_offers?.map((o) => o.trip_type).filter(Boolean) as string[] ?? []))) as string[];
-  }); // same with trips selected
 
   const [showFilters, setShowFilters] = useState(false); // on small screens
 
@@ -100,14 +86,6 @@ export const FlightDataFilters = ({
     return Array.from(unique.entries()).map(([code, name]) => ({ name, code }));
   }, [data]);
 
-  const tripFilter = useMemo(() => {
-    const types = Array.from(new Set(allOffers.map((o) => o.trip_type)));
-    
-    return types.map((type) => ({
-      value: type,
-      label: tripLabels[type as TripKey] || type,
-    }));
-  }, [allOffers]);
 
   const filteredSortedData = useMemo(() => {
     if (!data) return [];
@@ -120,13 +98,6 @@ export const FlightDataFilters = ({
             // A. Price Range check
             const price = offer.price_breakdown?.total?.amount ?? 0;
             if (priceRange && (price < priceRange[0] || price > priceRange[1]))
-              return false;
-
-            // B. Trip Type check
-            if (
-              selectedTrips.length > 0 &&
-              !selectedTrips.includes(offer.trip_type ?? "")
-            )
               return false;
 
             // C. Airline check
@@ -230,7 +201,7 @@ export const FlightDataFilters = ({
           return 0;
         })
     );
-  }, [priceRange, timeRange, sortBy, selectedAirlines, selectedTrips, data]);
+  }, [priceRange, timeRange, sortBy, selectedAirlines, data]);
 
   const handleOpenPriceFilter = () => {
     setOpenPriceFilter(!openPriceFilter);
@@ -242,10 +213,6 @@ export const FlightDataFilters = ({
 
   const handleOpenAirlinesFilter = () => {
     setOpenAirlinesFilter(!openAirlinesFilter);
-  };
-
-  const handleOpenTripFilter = () => {
-    setOpenTripFilter(!openTripFilter);
   };
 
   // 1. Loading state
@@ -328,15 +295,6 @@ export const FlightDataFilters = ({
   const maxDuration =
     allDurations.length > 0 ? Math.max(...allDurations) : 1440;
 
-  const uniqueTripTypesWithLabels = Array.from(new Set(tripFilter));
-
-  const assignLabelsToTripTypes = uniqueTripTypesWithLabels.map((trip) => {
-    const newData = {
-      value: trip.value,
-      label: trip.label,
-    };
-    return newData;
-  });
 
   // Step B: Ensure we don't pass an empty array to Math.min (which returns Infinity)
   const hasPrices = prices.length > 0;
@@ -364,12 +322,6 @@ export const FlightDataFilters = ({
   const handleAirlineChange = (codes: string[]) => {
     startTransition(() => {
       setSelectedAirlines(codes);
-    });
-  };
-
-  const handleTripChange = (types: string[]) => {
-    startTransition(() => {
-      setSelectedTrips(types);
     });
   };
 
@@ -408,13 +360,6 @@ export const FlightDataFilters = ({
           onChange={handleAirlineChange}
           selectedAirlines={selectedAirlines}
         />
-        <TripFilter
-          trips={assignLabelsToTripTypes}
-          openFilter={openTripFilter}
-          onClose={handleOpenTripFilter}
-          onChange={handleTripChange}
-          selectedTrips={selectedTrips}
-        />
       </aside>
       <Filters showFilters={showFilters} onClose={handleShowFilters}>
         <PriceFilter
@@ -439,13 +384,6 @@ export const FlightDataFilters = ({
           onClose={handleOpenAirlinesFilter}
           onChange={handleAirlineChange}
           selectedAirlines={selectedAirlines}
-        />
-        <TripFilter
-          trips={assignLabelsToTripTypes}
-          openFilter={openTripFilter}
-          onClose={handleOpenTripFilter}
-          onChange={handleTripChange}
-          selectedTrips={selectedTrips}
         />
       </Filters>
       <Button

@@ -29,6 +29,8 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
 
   const isPastDate = departDate < currentDate;
 
+  const isReturnDateValid = trip === 'round-trip' && returnDate && new Date(returnDate) < departDate
+
   const adultCount = +(adults ?? 0);
   const childCount = +(child ?? 0);
   const infantCount = +(infant ?? 0);
@@ -42,19 +44,13 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     cabin &&
     token && 
     !isPastDate &&
-    (trip === "one-way" || (trip === "round-trip" && returnDate)) &&
+    !isReturnDateValid &&
     (adultCount > 0 || childCount > 0 || infantCount > 0);
 
   if (!isValidQuery) {
     redirect("/flight-flow/flight-search/listing");
   }
 
-  if (trip === "round-trip" && returnDate) {
-    const retDateObj = new Date(returnDate);
-    if (retDateObj < departDate) {
-      redirect("/flight-flow/flight-search/listing");
-    }
-  }
   const data = await queryFlightToken(searchProps);
   return <BookingWrapper offers={data} totalTravelers={totalTravelers} />;
 };

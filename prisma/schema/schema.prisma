@@ -138,7 +138,6 @@ model FlightOffers {
   flight_offer_id   String // FK
   price_id          Int? // FK
   token             String
-  trip_type         String
   flight_key        String
   segments          Segment[]
   price_breakdown   PriceBreakdown?   @relation(fields: [price_id], references: [id])

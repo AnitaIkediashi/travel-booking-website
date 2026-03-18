@@ -21,6 +21,7 @@ export const SegmentData = ({
   childCount,
 }: segmentDataProps) => {
   if (!offers) return [];
+  
   const hasMultipleSegments = (offers?.segments?.length ?? 0) > 1;
   const departCode = offers.segments?.[0].departure_airport_code;
   const arrivalCode =
@@ -39,7 +40,7 @@ export const SegmentData = ({
     reassignedArrivalCode = arrivalCode;
   }
 
-  const tripType = offers.trip_type;
+  const tripType = '';
 
   const departDate = getDate(offers.segments?.[0].departure_time);
 

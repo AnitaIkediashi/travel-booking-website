@@ -65,90 +65,41 @@ function populateFakeAirlines() {
   });
 }
 
-function populateFakeSegments(
-  windowStart: Date,
-  windowEnd: Date,
-  tripType: string,
-) {
-  // 1. Generate a random date between start and end
-  const rawOutboundDate = faker.date.between({
-    from: windowStart,
-    to: windowEnd,
-  });
+/**
+ * Now accepts a 'targetDate' (from the loop) 
+ * instead of a range (windowStart/End).
+ */
+function populateFakeSegments(targetDate: Date) {
+  // Use the date passed from the loop
+  const baseDate = new Date(targetDate);
 
+  // Randomize ONLY the time (Hours and Minutes)
   const randomHour = faker.number.int({ min: 6, max: 22 });
   const randomMinute = faker.helpers.arrayElement([0, 15, 30, 45]);
 
   const departureTime = new Date(
     Date.UTC(
-      rawOutboundDate.getUTCFullYear(),
-      rawOutboundDate.getUTCMonth(),
-      rawOutboundDate.getUTCDate(),
+      baseDate.getUTCFullYear(),
+      baseDate.getUTCMonth(),
+      baseDate.getUTCDate(),
       randomHour,
       randomMinute,
       0,
     ),
   );
 
-  const outboundDuration = faker.number.int({ min: 90, max: 720 }); //ms
-  const arrivalTime = new Date(
-    departureTime.getTime() + outboundDuration * 60 * 1000,
-  );
+  const durationMinutes = faker.number.int({ min: 90, max: 720 });
+  const arrivalTime = new Date(departureTime.getTime() + durationMinutes * 60 * 1000);
 
-  const segments = [
+  return [
     {
-      total_time: outboundDuration,
+      total_time: durationMinutes,
       departure_time: departureTime,
       arrival_time: arrivalTime,
       departure_time_iso: departureTime.toISOString(),
       arrival_time_iso: arrivalTime.toISOString(),
     },
   ];
-
-  // 2. If it's a round-trip, add the return segment
-
-  if (tripType === "round-trip") {
-    const stayDays = faker.number.int({ min: 1, max: 40 }); //days
-
-    // Calculate Return Departure based on the Outbound Arrival
-    const rawReturnDate = new Date(
-      arrivalTime.getTime() + stayDays * 24 * 60 * 60 * 1000,
-    );
-
-    // NORMALIZE: Force the return flight to 12:00 PM UTC as well
-    /**
-     * The primary "essence" of that 12:00 PM normalization is to create a safety buffer
-     * that prevents your mock data from generating a return flight that departs before the outbound flight arrives.
-     * Because you are using stayDays (an integer) and faker (random hours),
-     * you run into a mathematical risk if you don't normalize.
-     * Date getTime() returns number in milliseconds.
-     */
-    const returnDeparture = new Date(
-      Date.UTC(
-        rawReturnDate.getUTCFullYear(),
-        rawReturnDate.getUTCMonth(),
-        rawReturnDate.getUTCDate(),
-        12,
-        0,
-        0,
-      ),
-    );
-
-    const returnDuration = faker.number.int({ min: 90, max: 720 });
-    const returnArrival = new Date(
-      returnDeparture.getTime() + returnDuration * 60 * 1000,
-    );
-
-    segments.push({
-      total_time: returnDuration,
-      departure_time: returnDeparture,
-      arrival_time: returnArrival,
-      departure_time_iso: returnDeparture.toISOString(),
-      arrival_time_iso: returnArrival.toISOString(),
-    });
-  }
-
-  return segments;
 }
 
 function populateFakeLegsData(
@@ -335,7 +286,7 @@ async function main() {
     "First Class",
   ];
 
-  console.info("🚀 Launching multi-day seed process...");
+  console.info("Launching multi-day seed process...");
 
   // 1. AIRPORTS SETUP (Outside transaction to avoid locking)
   const createdAirports = [];
@@ -364,9 +315,8 @@ async function main() {
     2,
   );
   const allAvailableCodes = createdAirports.map((a) => a.airport_code);
-  const masterTripType = faker.helpers.arrayElement(["one-way", "round-trip"]);
 
-  console.info("🚀 Analyzing current flight coverage...");
+  console.info("Analyzing current flight coverage...");
 
   // 1. Find the most distant flight in the future
   // We check the 'segments' because that's where the actual dates live
@@ -384,7 +334,7 @@ async function main() {
 
   if (latestSegment) {
     const lastDate = new Date(latestSegment.departure_time);
-    console.info(`📅 Latest flight in DB is on: ${lastDate.toDateString()}`);
+    console.info(`Latest flight in DB is on: ${lastDate.toDateString()}`);
 
     // If our latest flight is already 90 days out, we are done!
     if (lastDate >= ninetyDaysFromNow) {
@@ -412,7 +362,7 @@ async function main() {
   if (daysToGenerate === 0) return;
 
   console.info(
-    `🛠️ Generating ${daysToGenerate} missing day(s) to restore window...`,
+    `Generating ${daysToGenerate} missing day(s) to restore window...`,
   );
 
   // 3. DAILY BATCHING
@@ -421,7 +371,7 @@ async function main() {
     flightDate.setDate(flightDate.getDate() + day);
 
     console.info(
-      `📅 Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()}`,
+      `Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()}`,
     );
 
     await prisma.$transaction(
@@ -444,23 +394,11 @@ async function main() {
         const numSchedules = faker.number.int({ min: 10, max: 15 });
 
         for (let i = 0; i < numSchedules; i++) {
-          const startMinutes = 360; // 6:00 AM
-          const totalMinutes =
-            startMinutes + i * faker.number.int({ min: 60, max: 90 });
 
-          const searchStart = new Date(flightDate);
-          searchStart.setHours(0, totalMinutes, 0, 0);
+          const flightSchedule = populateFakeSegments(flightDate);
 
-          const searchEnd = new Date(searchStart);
-          searchEnd.setHours(
-            searchStart.getHours() + faker.number.int({ min: 1, max: 6 }),
-          );
+          const departureTime = flightSchedule[0].departure_time;
 
-          const flightSchedule = populateFakeSegments(
-            searchStart,
-            searchEnd,
-            masterTripType,
-          );
           const totalTravelTime = flightSchedule.reduce(
             (sum, seg) => sum + seg.total_time,
             0,
@@ -480,10 +418,10 @@ async function main() {
             const config = CABIN_CONFIGS[cabin];
             const sharedTravelerData = populateFakeTravelerPrice();
 
-            const timeMult =
-              searchStart.getHours() >= 10 && searchStart.getHours() <= 17
-                ? 1.1
-                : 0.5;
+            const depHour = departureTime.getUTCHours();
+            const isPeakTime = depHour >= 10 && depHour <= 17;
+            const timeMult = isPeakTime ? 1.1 : 0.8;
+            
             const routeBaseAmount =
               faker.number.int({ min: 100, max: 300 }) *
               config.multiplier *
@@ -493,7 +431,6 @@ async function main() {
               data: {
                 flight_offer_id: createdData.id,
                 token: faker.string.nanoid(60),
-                trip_type: masterTripType,
                 flight_key: faker.string.uuid(),
                 seat_availability: {
                   create: {

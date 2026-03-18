@@ -19,6 +19,7 @@ export const FlightDetailWrapper = async ({
   searchProps
 }: FlightDetailWrapperProps) => {
   if (!offers || offers.length === 0) return;
+
   const departAirportCode = offers[0].segments[0].departure_airport_code;
 
   const arrivalAirportCode = offers[0].segments[0].arrival_airport_code;
@@ -72,9 +73,9 @@ export const FlightDetailWrapper = async ({
                 </small>
               </div>
             </div>
-            <small className="text-sm text-blackish-green/50">
+            {/* <small className="text-sm text-blackish-green/50">
               {offers[0].trip_type === "round-trip" ? "Round trip" : "One way"}
-            </small>
+            </small> */}
           </div>
           <div className="flex flex-col gap-4">
             <p className="md:text-[32px] text-2xl font-bold text-salmon-100">
