@@ -18,6 +18,7 @@ type FlightFilterProps = {
   adultCount: number;
   childCount: number;
   infantCount: number;
+  trip: string | null;
 };
 
 /**
@@ -31,6 +32,7 @@ export const FlightDataFilters = ({
   adultCount,
   infantCount,
   childCount,
+  trip
 }: FlightFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [timeRange, setTimeRange] = useState<[number, number] | null>(null);
@@ -94,11 +96,14 @@ export const FlightDataFilters = ({
       data
         .map((flight) => {
           // Filter the offers WITHIN this flight
-          const validOffers = (flight.flight_offers ?? []).filter((offer) => {
+          const validOffers = (flight.flight_offers ?? [])
+          .filter((offer) => {
             // A. Price Range check
             const price = offer.price_breakdown?.total?.amount ?? 0;
             if (priceRange && (price < priceRange[0] || price > priceRange[1]))
               return false;
+
+    
 
             // C. Airline check
             // We check if the airline in this offer is one of the selected ones
@@ -133,8 +138,11 @@ export const FlightDataFilters = ({
               return false;
 
             return true;
-          });
-
+          })
+          .map((offer) => ({
+            ...offer,
+            trip_type: trip
+          }))
           return { ...flight, flight_offers: validOffers };
         })
         /**
@@ -201,7 +209,7 @@ export const FlightDataFilters = ({
           return 0;
         })
     );
-  }, [priceRange, timeRange, sortBy, selectedAirlines, data]);
+  }, [priceRange, timeRange, sortBy, selectedAirlines, data, trip]);
 
   const handleOpenPriceFilter = () => {
     setOpenPriceFilter(!openPriceFilter);

@@ -147,6 +147,7 @@ export type FlightOffer = {
   traveler_price?: TravelerPrice[];
   seat_availability?: SeatAvailability | null;
   branded_fareinfo?: BrandedFareInfo | null;
+  trip_type?: string | null;
 };
 
 type SegmentProp = {
@@ -263,6 +264,7 @@ export type NewFlightOffer = {
   id: string;
   flight_offer_id: string;
   token: string;
+  trip_type: string | null;
   flight_key: string;
   segments: SegmentProp[];
   branded_fareinfo: BrandedFareInfo | null;

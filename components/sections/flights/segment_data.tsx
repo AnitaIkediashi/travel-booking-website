@@ -21,6 +21,8 @@ export const SegmentData = ({
   childCount,
 }: segmentDataProps) => {
   if (!offers) return [];
+
+  // console.log(JSON.stringify(offers, null, 2))
   
   const hasMultipleSegments = (offers?.segments?.length ?? 0) > 1;
   const departCode = offers.segments?.[0].departure_airport_code;

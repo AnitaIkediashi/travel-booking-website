@@ -125,28 +125,35 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       departure_time: returnRange,
     };
 
-    if (trip === "round-trip") {
-      conditions.push({
-        flight_offers: {
-          some: {
+    // Use the AND/NONE logic to differentiate trip types
+    const tripTypeCondition: Prisma.FlightOffersWhereInput =
+      trip === "round-trip"
+        ? {
             AND: [
               { segments: { some: outboundFilter } },
               { segments: { some: inboundFilter } },
             ],
-          },
-        },
-      });
-    } else {
-      conditions.push({
-        flight_offers: {
-          some: {
-            segments: {
-              some: outboundFilter,
-            },
-          },
-        },
-      });
-    }
+          }
+        : {
+            AND: [
+              { segments: { some: outboundFilter } },
+              {
+                segments: {
+                  none: {
+                    departure_airport_code: { equals: to, mode: "insensitive" },
+                    arrival_airport_code: { equals: from, mode: "insensitive" },
+                  },
+                },
+              },
+            ],
+          };
+
+    // Apply this to your 'conditions' array
+    conditions.push({
+      flight_offers: {
+        some: tripTypeCondition,
+      },
+    });
 
     const dataResponse = await prisma.data.findMany({
       where: { AND: conditions },
@@ -156,30 +163,22 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             price_id: true,
           },
           where: {
-            branded_fareinfo: {
-              cabin_class: {
-                equals:
-                  cabin === "Premium"
-                    ? "Premium Economy"
-                    : cabin === "First"
-                      ? "First Class"
-                      : cabin,
-                mode: "insensitive",
+            AND: [
+              {
+                branded_fareinfo: {
+                  cabin_class: {
+                    equals:
+                      cabin === "Premium"
+                        ? "Premium Economy"
+                        : cabin === "First"
+                          ? "First Class"
+                          : cabin,
+                    mode: "insensitive",
+                  },
+                },
               },
-            },
-            // segments: {
-            //   some:
-            //     trip === "round-trip"
-            //       ? { OR: [outboundFilter, inboundFilter] }
-            //       : outboundFilter,
-            // },
-            AND:
-              trip === "round-trip"
-                ? [
-                    { segments: { some: outboundFilter } },
-                    { segments: { some: inboundFilter } },
-                  ]
-                : [{ segments: { some: outboundFilter } }],
+              tripTypeCondition, // <--- This ensures only round-trip offers are included
+            ],
           },
           include: {
             branded_fareinfo: {
@@ -373,7 +372,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         flight_offers: updatedFlightOffers,
       };
     });
-    console.log(JSON.stringify(finalData.slice(0, 2), null, 2));
+    // console.log("final data", JSON.stringify(finalData.slice(0,5), null, 2))
     return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);

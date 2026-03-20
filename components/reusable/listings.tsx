@@ -83,6 +83,7 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
           <FlightDataFilters
             isPending={isPending}
             data={data as unknown as FlightDataProps[]} // Type assertion - Narrowed to FlightDataProps type
+            trip={trip}
             adultCount={adultCount}
             childCount={childCount}
             infantCount={infantCount}
