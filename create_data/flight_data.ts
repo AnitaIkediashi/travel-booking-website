@@ -64,10 +64,6 @@ function populateFakeAirlines() {
   });
 }
 
-/**
- * Now accepts a 'targetDate' (from the loop) 
- * instead of a range (windowStart/End).
- */
 function populateFakeSegments(
   targetDate: Date,
   originCode: string,
@@ -465,7 +461,6 @@ async function main() {
                 segments: {
                   create: [
                     {
-                      // Destructure to EXCLUDE the _iso fields from the Prisma data object
                       departure_airport_code: outbound.departure_airport_code,
                       arrival_airport_code: outbound.arrival_airport_code,
                       total_time: outbound.total_time,
