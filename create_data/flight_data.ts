@@ -446,7 +446,7 @@ async function main() {
                           feature_name: "SEAT TYPE",
                           category: "SEAT & SPACE",
                           availability: 
-                            cabin === "Economy" ? "STANDARD" : cabin === "Premium Economy" ? "WIDE" : cabin === "Business" ? "LIE-FLAT" : "FULLY-ENCLOSED"
+                            cabin === "Economy" ? "STANDARD" : cabin === "Premium Economy" ? "WIDE" : cabin === "Business" ? "LIE-FLAT" : "FULLY-RECLINED"
                         },
                         {
                           feature_name: "CONNECTIVITY",
