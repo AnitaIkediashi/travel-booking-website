@@ -420,7 +420,6 @@ async function main() {
               ? routeBaseAmount * 1.8
               : routeBaseAmount;
 
-            // FIX 2 & 3: Ensure 'legs' matches the Prisma schema (connecting airports)
             const offer = await tx.flightOffers.create({
               data: {
                 flight_offer_id: createdData.id,
@@ -440,7 +439,7 @@ async function main() {
                           feature_name: "WIFI",
                           category: "AMENITIES",
                           availability:
-                            cabin === "Business" ? "INCLUDED" : "OPTIONAL",
+                            cabin === "Business" ? "INCLUDED" : cabin === "First Class" ? "INCLUDED" : "OPTIONAL",
                         },
                         {
                           feature_name: "MEAL",
