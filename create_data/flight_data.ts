@@ -460,6 +460,7 @@ async function main() {
                 },
                 segments: {
                   create: [
+                  // Outbound flight
                     {
                       departure_airport_code: outbound.departure_airport_code,
                       arrival_airport_code: outbound.arrival_airport_code,
@@ -484,6 +485,7 @@ async function main() {
                         })),
                       },
                     },
+                  // Inbound flight
                     ...(inbound
                       ? [
                           {
