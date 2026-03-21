@@ -1,4 +1,3 @@
-// import { CarrierDataProps } from "@/types/flight_type";
 import { prisma } from "../lib/prisma";
 import { faker } from "@faker-js/faker";
 import cron from "node-cron";
