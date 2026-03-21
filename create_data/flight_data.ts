@@ -530,6 +530,28 @@ async function main() {
               },
             });
 
+            await tx.baggage.create({
+              data: {
+                baggage_id: createdData.id,
+                type: "CHECKED",
+                included: true,
+                weight: cabin === 'Economy' ? 23 : 32,
+                count: config.baggage,
+                param_name: 'kg'
+              },
+            });
+
+            await tx.baggage.create({
+              data: {
+                baggage_id: createdData.id,
+                type: "CARRY_ON",
+                included: true,
+                weight: cabin === "Economy" ? 7 : 10,
+                count: config.baggage,
+                param_name: "kg",
+              },
+            });
+
             // 4. PRICE BREAKDOWN LOGIC
             let mainAdultTotal = 0;
             let mainAdultBase = 0;
@@ -656,16 +678,7 @@ async function main() {
           })),
         });
 
-        // Add other summary items (Baggage, Stops, etc.) as you did before...
-        await tx.baggage.create({
-          data: {
-            baggage_id: createdData.id,
-            type: "CHECKED",
-            included: true,
-            weight: 23,
-          },
-        });
-
+        // Add other summary items (Stops, etc.) 
         await tx.departureInterval.create({
           data: { interval_id: createdData.id, start: "06:00", end: "23:00" },
         });

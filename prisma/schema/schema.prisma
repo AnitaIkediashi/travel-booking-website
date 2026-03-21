@@ -104,8 +104,9 @@ model Baggage {
   baggage_id    String // FK
   type          String
   included      Boolean
-  weight        Int?
-  param_name    String?
+  weight        Int
+  count         Int
+  param_name    String
   baggageFlight Data    @relation(fields: [baggage_id], references: [id], onDelete: Cascade)
 }
 
