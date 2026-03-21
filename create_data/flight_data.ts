@@ -449,9 +449,15 @@ async function main() {
                         {
                           feature_name: "SEAT TYPE",
                           category: "SEAT & SPACE",
-                           availability: 
+                          availability: 
                             cabin === "Economy" ? "STANDARD" : cabin === "Premium Economy" ? "WIDE" : cabin === "Business" ? "LIE-FLAT" : "FULLY-ENCLOSED"
-                          },
+                        },
+                        {
+                          feature_name: "CONNECTIVITY",
+                          category: "USB PORT & CONNECTIVITY",
+                          availability: 
+                            cabin === "Business" ? "INCLUDED" : cabin === "First Class" ? "INCLUDED" : "OPTIONAL"
+                        },
                       ],
                     },
                   },
