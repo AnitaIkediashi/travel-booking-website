@@ -446,6 +446,12 @@ async function main() {
                           category: "DINING",
                           availability: "INCLUDED",
                         },
+                        {
+                          feature_name: "SEAT TYPE",
+                          category: "SEAT & SPACE",
+                           availability: 
+                            cabin === "Economy" ? "STANDARD" : cabin === "Premium Economy" ? "WIDE" : cabin === "Business" ? "LIE-FLAT" : "FULLY-ENCLOSED"
+                          },
                       ],
                     },
                   },
