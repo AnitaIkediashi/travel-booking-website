@@ -4,6 +4,15 @@ import cron from "node-cron";
 
 console.log("🚀 SCRIPT INITIALIZED");
 
+type FakeLeg = {
+  total_time: number;
+  departure_time: string;
+  arrival_time: string;
+  departure_code: string;
+  arrival_code: string;
+  cabin_class: string;
+}
+
 /**
  * Record utility type is used to define an object type with specific key-value pairs.
  * written in Record<Keys, Type>
@@ -17,7 +26,10 @@ console.log("🚀 SCRIPT INITIALIZED");
  * 5. Duration
  * 6. flight schedules
  * 7. Segments and legs - which depends on the outbound and inbound airports
+ * outbound flights - one way flights
+ * inbound flights = round trip flights
  * 8. Airlines operating the flights
+ * 9. Stops - depends on the total no of Legs of a segment
  *
  * The flight day creates like 10 - 15 offers of different flight times for each cabin classes
  */
@@ -110,59 +122,55 @@ function populateFakeLegsData(
     (code) => code !== originCode && code !== destinationCode,
   );
 
-  // 2. Decide numLegs:
-  // If we have no hubs, it MUST be 1.
-  // If we have hubs, randomly choose 1 or 2.
-  const numLegs =
-    possibleHubs.length > 0 ? faker.number.int({ min: 1, max: 2 }) : 1;
+  // Determine number of stops (0 to 2)
+  // 0 stops = 1 leg, 1 stop = 2 legs, 2 stops = 3 legs
+  const numStops =
+    possibleHubs.length > 0 ? faker.number.int({ min: 0, max: 2 }) : 0;
+  const numLegs = numStops + 1;
 
   const legs = [];
   // time difference between segment start and end
-  const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime(); // milliseconds -ms
+  const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime();
 
-  // 3. Use the single numLegs variable to drive the branching logic
-  if (numLegs === 1) {
+  // Total layover time to subtract (e.g., 90 mins per stop)
+  const totalLayoverMs =
+    numStops * faker.number.int({ min: 60, max: 120 }) * 60 * 1000;
+  const totalFlyingMs = totalSegmentMs - totalLayoverMs;
+
+  let currentDepartureCode = originCode;
+  let currentDepartureTime = new Date(segmentStart);
+
+  // Select transit hubs if needed
+  const transitHubs =
+    numStops > 0 ? faker.helpers.arrayElements(possibleHubs, numStops) : [];
+
+  for (let i = 0; i < numLegs; i++) {
+    const isLastLeg = i === numLegs - 1;
+    const arrivalCode = isLastLeg ? destinationCode : transitHubs[i];
+
+    // Distribute flying time (roughly equal but slightly randomized)
+    const legFlyingMs = isLastLeg
+      ? segmentEnd.getTime() -
+        currentDepartureTime.getTime() -
+        (isLastLeg ? 0 : totalLayoverMs / numStops)
+      : (totalFlyingMs / numLegs) * faker.number.float({ min: 0.8, max: 1.2 });
+
+    const arrivalTime = new Date(currentDepartureTime.getTime() + legFlyingMs);
+
     legs.push({
-      total_time: Math.floor(totalSegmentMs / 60000),
-      departure_time: segmentStart.toISOString(),
-      arrival_time: segmentEnd.toISOString(),
-      departure_code: originCode,
-      arrival_code: destinationCode,
+      total_time: Math.floor(legFlyingMs / 60000),
+      departure_time: currentDepartureTime.toISOString(),
+      arrival_time: arrivalTime.toISOString(),
+      departure_code: currentDepartureCode,
+      arrival_code: arrivalCode,
       cabin_class: cabinClass,
     });
-  } else {
-    // This block ONLY runs if numLegs is 2 AND possibleHubs exists
-    const transitAirport = faker.helpers.arrayElement(possibleHubs);
 
-    const layoverMs = faker.number.int({ min: 60, max: 150 }) * 60 * 1000; // milliseconds
-    const flyingMs = totalSegmentMs - layoverMs;
-
-    // think of the total flight time as 100% - we need to split it between the two legs, thats where the 45% and 55% comes in - we want the second leg to be slightly longer on average to mimic real world patterns
-    const firstLegMs = flyingMs * 0.45;
-    const secondLegMs = flyingMs * 0.55;
-
-    const firstLegArrival = new Date(segmentStart.getTime() + firstLegMs);
-    const secondLegDeparture = new Date(firstLegArrival.getTime() + layoverMs);
-
-    // Leg 1: Origin -> Transit
-    legs.push({
-      total_time: Math.floor(firstLegMs / 60000),
-      departure_time: segmentStart.toISOString(),
-      arrival_time: firstLegArrival.toISOString(),
-      departure_code: originCode,
-      arrival_code: transitAirport,
-      cabin_class: cabinClass,
-    });
-
-    // Leg 2: Transit -> Destination
-    legs.push({
-      total_time: Math.floor(secondLegMs / 60000),
-      departure_time: secondLegDeparture.toISOString(),
-      arrival_time: segmentEnd.toISOString(),
-      departure_code: transitAirport,
-      arrival_code: destinationCode,
-      cabin_class: cabinClass,
-    });
+    if (!isLastLeg) {
+      const layoverMs = totalLayoverMs / numStops;
+      currentDepartureTime = new Date(arrivalTime.getTime() + layoverMs);
+      currentDepartureCode = arrivalCode;
+    }
   }
 
   return legs;
@@ -368,6 +376,8 @@ async function main() {
 
         const numSchedules = faker.number.int({ min: 10, max: 15 });
 
+        const stopCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+
         for (let i = 0; i < numSchedules; i++) {
           const isRoundTrip = Math.random() < 0.6;
 
@@ -416,6 +426,32 @@ async function main() {
               ? routeBaseAmount * 1.8
               : routeBaseAmount;
 
+            // Generate dynamic legs for outbound
+            const outboundLegs = populateFakeLegsData(
+              outbound.departure_time,
+              outbound.arrival_time,
+              cabin,
+              depAirport.airport_code,
+              arrAirport.airport_code,
+              allAvailableCodes,
+            );
+
+            // Increment stop count based on number of legs
+            stopCounts[outboundLegs.length - 1]++;
+
+            let inboundLegs:FakeLeg[] = [];
+            if (inbound) {
+              inboundLegs = populateFakeLegsData(
+                inbound.departure_time,
+                inbound.arrival_time,
+                cabin,
+                arrAirport.airport_code,
+                depAirport.airport_code,
+                allAvailableCodes,
+              );
+              stopCounts[inboundLegs.length - 1]++;
+            }
+
             const offer = await tx.flightOffers.create({
               data: {
                 flight_offer_id: createdData.id,
@@ -435,7 +471,11 @@ async function main() {
                           feature_name: "WIFI",
                           category: "AMENITIES",
                           availability:
-                            cabin === "Business" ? "INCLUDED" : cabin === "First Class" ? "INCLUDED" : "OPTIONAL",
+                            cabin === "Business"
+                              ? "INCLUDED"
+                              : cabin === "First Class"
+                                ? "INCLUDED"
+                                : "OPTIONAL",
                         },
                         {
                           feature_name: "MEAL",
@@ -445,14 +485,24 @@ async function main() {
                         {
                           feature_name: "SEAT TYPE",
                           category: "SEAT & SPACE",
-                          availability: 
-                            cabin === "Economy" ? "STANDARD" : cabin === "Premium Economy" ? "WIDE" : cabin === "Business" ? "LIE-FLAT" : "FULLY-RECLINED"
+                          availability:
+                            cabin === "Economy"
+                              ? "STANDARD"
+                              : cabin === "Premium Economy"
+                                ? "WIDE"
+                                : cabin === "Business"
+                                  ? "LIE-FLAT"
+                                  : "FULLY-RECLINED",
                         },
                         {
                           feature_name: "CONNECTIVITY",
                           category: "USB PORT & CONNECTIVITY",
-                          availability: 
-                            cabin === "Business" ? "INCLUDED" : cabin === "First Class" ? "INCLUDED" : "OPTIONAL"
+                          availability:
+                            cabin === "Business"
+                              ? "INCLUDED"
+                              : cabin === "First Class"
+                                ? "INCLUDED"
+                                : "OPTIONAL",
                         },
                       ],
                     },
@@ -460,7 +510,7 @@ async function main() {
                 },
                 segments: {
                   create: [
-                  // Outbound flight
+                    // Outbound flight
                     {
                       departure_airport_code: outbound.departure_airport_code,
                       arrival_airport_code: outbound.arrival_airport_code,
@@ -468,14 +518,7 @@ async function main() {
                       departure_time: outbound.departure_time_iso,
                       arrival_time: outbound.arrival_time_iso,
                       legs: {
-                        create: populateFakeLegsData(
-                          outbound.departure_time,
-                          outbound.arrival_time,
-                          cabin,
-                          depAirport.airport_code,
-                          arrAirport.airport_code,
-                          allAvailableCodes,
-                        ).map((leg) => ({
+                        create: outboundLegs.map((leg) => ({
                           departure_airport_code: leg.departure_code,
                           arrival_airport_code: leg.arrival_code,
                           departure_time: leg.departure_time,
@@ -485,7 +528,7 @@ async function main() {
                         })),
                       },
                     },
-                  // Inbound flight
+                    // Inbound flight
                     ...(inbound
                       ? [
                           {
@@ -496,14 +539,7 @@ async function main() {
                             departure_time: inbound.departure_time_iso,
                             arrival_time: inbound.arrival_time_iso,
                             legs: {
-                              create: populateFakeLegsData(
-                                inbound.departure_time,
-                                inbound.arrival_time,
-                                cabin,
-                                arrAirport.airport_code,
-                                depAirport.airport_code,
-                                allAvailableCodes,
-                              ).map((leg) => ({
+                              create: inboundLegs.map((leg) => ({
                                 departure_airport_code: leg.departure_code,
                                 arrival_airport_code: leg.arrival_code,
                                 departure_time: leg.departure_time,
@@ -535,9 +571,9 @@ async function main() {
                 baggage_id: createdData.id,
                 type: "CHECKED",
                 included: true,
-                weight: cabin === 'Economy' ? 23 : 32,
+                weight: cabin === "Economy" ? 23 : 32,
                 count: config.baggage,
-                param_name: 'kg'
+                param_name: "kg",
               },
             });
 
@@ -693,9 +729,17 @@ async function main() {
           data: { arrival_id: flightTimes.id, start: "08:00", end: "02:00" },
         });
 
-        await tx.stop.create({
-          data: { stop_id: createdData.id, no_of_stops: 0, count: 1 },
-        });
+        for (const [stops, count] of Object.entries(stopCounts)) {
+          if (count > 0) {
+            await tx.stop.create({
+              data: {
+                stop_id: createdData.id,
+                no_of_stops: parseInt(stops),
+                count: count,
+              },
+            });
+          }
+        }
 
         for (const air of currentFlightAirlines) {
           await tx.airlines.create({
