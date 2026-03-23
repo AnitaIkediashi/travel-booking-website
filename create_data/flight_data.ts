@@ -513,12 +513,22 @@ async function main() {
                               : cabin === "Premium Economy"
                                 ? "WIDE"
                                 : cabin === "Business"
-                                  ? "LIE-FLAT"
+                                  ? "FULLY-RECLINED"
                                   : "FULLY-RECLINED",
                         },
                         {
                           feature_name: "CONNECTIVITY",
-                          category: "USB PORT & CONNECTIVITY",
+                          category: "USB PORT & POWER OUTLET",
+                          availability:
+                            cabin === "Business"
+                              ? "INCLUDED"
+                              : cabin === "First Class"
+                                ? "INCLUDED"
+                                : "OPTIONAL",
+                        },
+                        {
+                          feature_name: "SEAT BACK ENTERTAINMENT",
+                          category: "MEDIA ENTERTAINMENT",
                           availability:
                             cabin === "Business"
                               ? "INCLUDED"
