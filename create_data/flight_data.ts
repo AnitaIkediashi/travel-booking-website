@@ -92,7 +92,21 @@ function populateFakeSegments(
     0,
   );
 
-  const durationMinutes = faker.number.int({ min: 90, max: 600 });
+  // Use a weighted probability for variety
+  const roll = Math.random();
+  let durationMinutes: number;
+
+  if (roll < 0.4) {
+    // 40% chance for Short Haul (1.5h - 3h)
+    durationMinutes = faker.number.int({ min: 90, max: 180 });
+  } else if (roll < 0.8) {
+    // 40% chance for Medium Haul (3h - 8h)
+    durationMinutes = faker.number.int({ min: 181, max: 480 });
+  } else {
+    // 20% chance for Long Haul (8h - 20h)
+    durationMinutes = faker.number.int({ min: 481, max: 1200 });
+  }
+
   const arrivalTime = new Date(
     departureTime.getTime() + durationMinutes * 60000,
   );
@@ -116,60 +130,68 @@ function populateFakeLegsData(
   destinationCode: string,
   validAirportCodes: string[],
 ) {
-  // 1. First, find potential transit hubs
-  // this depends if the flights needs like a mid airport to first land to - like a layover
   const possibleHubs = validAirportCodes.filter(
     (code) => code !== originCode && code !== destinationCode,
   );
 
-  // Determine number of stops (0 to 2)
-  // 0 stops = 1 leg, 1 stop = 2 legs, 2 stops = 3 legs
-  const numStops =
-    possibleHubs.length > 0 ? faker.number.int({ min: 0, max: 2 }) : 0;
-  const numLegs = numStops + 1;
-
-  const legs = [];
-  // time difference between segment start and end
   const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime();
+  const totalMinutes = totalSegmentMs / (1000 * 60);
 
-  // Total layover time to subtract (e.g., 90 mins per stop)
-  const totalLayoverMs =
-    numStops * faker.number.int({ min: 60, max: 120 }) * 60 * 1000;
-  const totalFlyingMs = totalSegmentMs - totalLayoverMs;
+  // 1. DYNAMIC STOP LIMIT LOGIC
+  // We define thresholds:
+  // Under 3 hours: Non-stop only (0 stops)
+  // 3 to 6 hours: Max 1 stop
+  // Over 6 hours: Max 2 stops
+  let maxStops = 0;
+  if (totalMinutes >= 360) {
+    maxStops = 2; // Long haul
+  } else if (totalMinutes >= 180) {
+    maxStops = 1; // Medium haul
+  }
 
-  let currentDepartureCode = originCode;
+  // 2. Decide numStops based on the threshold
+  const numStops =
+    possibleHubs.length > 0 ? faker.number.int({ min: 0, max: maxStops }) : 0;
+
+  const numLegs = numStops + 1;
+  const legs = [];
+
+  // 3. Ensure Layovers don't eat the whole flight time
+  // Each stop needs at least 60 mins, but we cap total layover at 50% of trip
+  const minLayoverMs = 60 * 60 * 1000;
+  const totalLayoverMs = Math.min(
+    numStops * minLayoverMs,
+    totalSegmentMs * 0.5,
+  );
+
+  const flyingMs = totalSegmentMs - totalLayoverMs;
+  const transitHubs = faker.helpers.arrayElements(possibleHubs, numStops);
+
   let currentDepartureTime = new Date(segmentStart);
-
-  // Select transit hubs if needed
-  const transitHubs =
-    numStops > 0 ? faker.helpers.arrayElements(possibleHubs, numStops) : [];
+  let currentOrigin = originCode;
 
   for (let i = 0; i < numLegs; i++) {
     const isLastLeg = i === numLegs - 1;
-    const arrivalCode = isLastLeg ? destinationCode : transitHubs[i];
+    const currentDestination = isLastLeg ? destinationCode : transitHubs[i];
 
-    // Distribute flying time (roughly equal but slightly randomized)
-    const legFlyingMs = isLastLeg
-      ? segmentEnd.getTime() -
-        currentDepartureTime.getTime() -
-        (isLastLeg ? 0 : totalLayoverMs / numStops)
-      : (totalFlyingMs / numLegs) * faker.number.float({ min: 0.8, max: 1.2 });
-
+    // Split flying time across legs
+    const legFlyingMs = flyingMs / numLegs;
     const arrivalTime = new Date(currentDepartureTime.getTime() + legFlyingMs);
 
     legs.push({
       total_time: Math.floor(legFlyingMs / 60000),
       departure_time: currentDepartureTime.toISOString(),
       arrival_time: arrivalTime.toISOString(),
-      departure_code: currentDepartureCode,
-      arrival_code: arrivalCode,
+      departure_code: currentOrigin,
+      arrival_code: currentDestination,
       cabin_class: cabinClass,
     });
 
     if (!isLastLeg) {
-      const layoverMs = totalLayoverMs / numStops;
-      currentDepartureTime = new Date(arrivalTime.getTime() + layoverMs);
-      currentDepartureCode = arrivalCode;
+      // Add layover and move to next leg
+      const actualLayover = totalLayoverMs / numStops;
+      currentDepartureTime = new Date(arrivalTime.getTime() + actualLayover);
+      currentOrigin = currentDestination;
     }
   }
 
