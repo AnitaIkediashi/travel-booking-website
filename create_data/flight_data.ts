@@ -11,7 +11,15 @@ type FakeLeg = {
   departure_code: string;
   arrival_code: string;
   cabin_class: string;
-}
+};
+
+type FakeAirport = {
+  airport_code: string;
+  airport_name: string;
+  city: string;
+  country: string;
+  image_url: string | null;
+};
 
 /**
  * Record utility type is used to define an object type with specific key-value pairs.
@@ -128,59 +136,49 @@ function populateFakeLegsData(
   cabinClass: string,
   originCode: string,
   destinationCode: string,
-  validAirportCodes: string[],
+  allAvailableCodes: string[], // Use the string array here
 ) {
-  const possibleHubs = validAirportCodes.filter(
+  // Filter out the origin and destination so they aren't used as hubs
+  const possibleHubs = allAvailableCodes.filter(
     (code) => code !== originCode && code !== destinationCode,
   );
 
   const totalSegmentMs = segmentEnd.getTime() - segmentStart.getTime();
   const totalMinutes = totalSegmentMs / (1000 * 60);
 
-  // 1. DYNAMIC STOP LIMIT LOGIC
-  // We define thresholds:
-  // Under 3 hours: Non-stop only (0 stops)
-  // 3 to 6 hours: Max 1 stop
-  // Over 6 hours: Max 2 stops
+  // Logic to determine stops
   let maxStops = 0;
-  if (totalMinutes >= 360) {
-    maxStops = 2; // Long haul
-  } else if (totalMinutes >= 180) {
-    maxStops = 1; // Medium haul
-  }
+  if (totalMinutes >= 480) maxStops = 2;
+  else if (totalMinutes >= 180) maxStops = 1;
 
-  // 2. Decide numStops based on the threshold
   const numStops =
-    possibleHubs.length > 0 ? faker.number.int({ min: 0, max: maxStops }) : 0;
+    possibleHubs.length > 0
+      ? faker.number.int({
+          min: 0,
+          max: Math.min(maxStops, possibleHubs.length),
+        })
+      : 0;
 
   const numLegs = numStops + 1;
-  const legs = [];
-
-  // 3. Ensure Layovers don't eat the whole flight time
-  // Each stop needs at least 60 mins, but we cap total layover at 50% of trip
-  const minLayoverMs = 60 * 60 * 1000;
-  const totalLayoverMs = Math.min(
-    numStops * minLayoverMs,
-    totalSegmentMs * 0.5,
-  );
-
-  const flyingMs = totalSegmentMs - totalLayoverMs;
   const transitHubs = faker.helpers.arrayElements(possibleHubs, numStops);
 
-  let currentDepartureTime = new Date(segmentStart);
+  // Time math
+  const totalLayoverMs = numStops > 0 ? totalSegmentMs * 0.3 : 0; // 30% of trip for layovers
+  const flyingMsPerLeg = (totalSegmentMs - totalLayoverMs) / numLegs;
+  const layoverMsPerStop = numStops > 0 ? totalLayoverMs / numStops : 0;
+
+  const legs = [];
+  let currentStartTime = new Date(segmentStart);
   let currentOrigin = originCode;
 
   for (let i = 0; i < numLegs; i++) {
     const isLastLeg = i === numLegs - 1;
     const currentDestination = isLastLeg ? destinationCode : transitHubs[i];
-
-    // Split flying time across legs
-    const legFlyingMs = flyingMs / numLegs;
-    const arrivalTime = new Date(currentDepartureTime.getTime() + legFlyingMs);
+    const arrivalTime = new Date(currentStartTime.getTime() + flyingMsPerLeg);
 
     legs.push({
-      total_time: Math.floor(legFlyingMs / 60000),
-      departure_time: currentDepartureTime.toISOString(),
+      total_time: Math.floor(flyingMsPerLeg / 60000),
+      departure_time: currentStartTime.toISOString(),
       arrival_time: arrivalTime.toISOString(),
       departure_code: currentOrigin,
       arrival_code: currentDestination,
@@ -188,13 +186,10 @@ function populateFakeLegsData(
     });
 
     if (!isLastLeg) {
-      // Add layover and move to next leg
-      const actualLayover = totalLayoverMs / numStops;
-      currentDepartureTime = new Date(arrivalTime.getTime() + actualLayover);
+      currentStartTime = new Date(arrivalTime.getTime() + layoverMsPerStop);
       currentOrigin = currentDestination;
     }
   }
-
   return legs;
 }
 
@@ -315,7 +310,7 @@ async function main() {
 
   console.info("Launching multi-day seed process...");
 
-  const createdAirports = [];
+  const createdAirports: FakeAirport[] = [];
   for (const airport of fakeAirports) {
     const created = await prisma.airport.upsert({
       where: { airport_code: airport.code },
@@ -335,13 +330,6 @@ async function main() {
     });
     createdAirports.push(created);
   }
-
-  // Pick route
-  const [depAirport, arrAirport] = faker.helpers.arrayElements(
-    createdAirports,
-    2,
-  );
-  const allAvailableCodes = createdAirports.map((a) => a.airport_code);
 
   const latestSegment = await prisma.segment.findFirst({
     orderBy: { departure_time: "desc" },
@@ -403,6 +391,13 @@ async function main() {
         for (let i = 0; i < numSchedules; i++) {
           const isRoundTrip = Math.random() < 0.6;
 
+          // Pick route
+          const [depAirport, arrAirport] = faker.helpers.arrayElements(
+            createdAirports,
+            2,
+          );
+          const allAvailableCodes = createdAirports.map((a) => a.airport_code);
+
           const outbound = populateFakeSegments(
             flightDate,
             depAirport.airport_code,
@@ -461,7 +456,7 @@ async function main() {
             // Increment stop count based on number of legs
             stopCounts[outboundLegs.length - 1]++;
 
-            let inboundLegs:FakeLeg[] = [];
+            let inboundLegs: FakeLeg[] = [];
             if (inbound) {
               inboundLegs = populateFakeLegsData(
                 inbound.departure_time,
@@ -743,7 +738,7 @@ async function main() {
           })),
         });
 
-        // Add other summary items (Stops, etc.) 
+        // Add other summary items (Stops, etc.)
         await tx.departureInterval.create({
           data: { interval_id: createdData.id, start: "06:00", end: "23:00" },
         });
