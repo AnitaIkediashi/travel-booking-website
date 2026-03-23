@@ -527,8 +527,8 @@ async function main() {
                                 : "OPTIONAL",
                         },
                         {
-                          feature_name: "SEAT BACK ENTERTAINMENT",
-                          category: "MEDIA ENTERTAINMENT",
+                          feature_name: "SEATBACK SCREEN",
+                          category: "MEDIA",
                           availability:
                             cabin === "Business"
                               ? "INCLUDED"
