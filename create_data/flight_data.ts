@@ -492,12 +492,11 @@ async function main() {
                         {
                           feature_name: "WIFI",
                           category: "AMENITIES",
-                          availability:
-                            cabin === "Business"
-                              ? "INCLUDED"
-                              : cabin === "First Class"
-                                ? "INCLUDED"
-                                : "OPTIONAL",
+                          availability: ["Business", "First Class"].includes(
+                            cabin,
+                          )
+                            ? "INCLUDED"
+                            : "OPTIONAL",
                         },
                         {
                           feature_name: "MEAL",
@@ -519,22 +518,20 @@ async function main() {
                         {
                           feature_name: "CONNECTIVITY",
                           category: "USB PORT & POWER OUTLET",
-                          availability:
-                            cabin === "Business"
-                              ? "INCLUDED"
-                              : cabin === "First Class"
-                                ? "INCLUDED"
-                                : "OPTIONAL",
+                          availability: ["Business", "First Class"].includes(
+                            cabin,
+                          )
+                            ? "INCLUDED"
+                            : "OPTIONAL",
                         },
                         {
                           feature_name: "SEATBACK SCREEN",
                           category: "MEDIA",
-                          availability:
-                            cabin === "Business"
-                              ? "INCLUDED"
-                              : cabin === "First Class"
-                                ? "INCLUDED"
-                                : "OPTIONAL",
+                          availability: ["Business", "First Class"].includes(
+                            cabin,
+                          )
+                            ? "INCLUDED"
+                            : "OPTIONAL",
                         },
                       ],
                     },
