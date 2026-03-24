@@ -37,7 +37,7 @@ type FakeAirport = {
  * outbound flights - one way flights
  * inbound flights = round trip flights
  * 8. Airlines operating the flights
- * 9. Stops - depends on the total no of Legs of a segment
+ * 9. Stops - depends on the total no of Legs of a segment (legs.length - 1)
  *
  * The flight day creates like 10 - 15 offers of different flight times for each cabin classes
  */
