@@ -136,7 +136,7 @@ function populateFakeLegsData(
   cabinClass: string,
   originCode: string,
   destinationCode: string,
-  allAvailableCodes: string[], // Use the string array here
+  allAvailableCodes: string[],
 ) {
   // Filter out the origin and destination so they aren't used as hubs
   const possibleHubs = allAvailableCodes.filter(
