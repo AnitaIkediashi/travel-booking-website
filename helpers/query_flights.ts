@@ -372,7 +372,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         flight_offers: updatedFlightOffers,
       };
     });
-    // console.log("final data", JSON.stringify(finalData.slice(0,5), null, 2))
+    // console.log("final data", JSON.stringify(finalData.slice(0,1), null, 2))
     return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);

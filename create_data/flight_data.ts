@@ -598,28 +598,6 @@ async function main() {
               },
             });
 
-            await tx.baggage.create({
-              data: {
-                baggage_id: createdData.id,
-                type: "CHECKED",
-                included: true,
-                weight: cabin === "Economy" ? 23 : 32,
-                count: config.baggage,
-                param_name: "kg",
-              },
-            });
-
-            await tx.baggage.create({
-              data: {
-                baggage_id: createdData.id,
-                type: "CARRY_ON",
-                included: true,
-                weight: cabin === "Economy" ? 7 : 10,
-                count: config.baggage,
-                param_name: "kg",
-              },
-            });
-
             // 4. PRICE BREAKDOWN LOGIC
             let mainAdultTotal = 0;
             let mainAdultBase = 0;
@@ -722,6 +700,37 @@ async function main() {
             duration_min: globalMinDuration,
             duration_max: globalMaxDuration,
           },
+        });
+
+        const commonBaggage = [
+          {
+            type: "CARRY_ON",
+            weight: 7,
+            count: 1,
+            included: true,
+            param_name: "kg",
+          },
+          {
+            type: "CHECKED",
+            weight: 23,
+            count: 1,
+            included: true,
+            param_name: "kg",
+          },
+          {
+            type: "CHECKED",
+            weight: 32,
+            count: 2,
+            included: false,
+            param_name: "kg",
+          },
+        ];
+
+        await tx.baggage.createMany({
+          data: commonBaggage.map((item) => ({
+            ...item,
+            baggage_id: createdData.id,
+          })),
         });
 
         await tx.shortLayoverConnection.create({

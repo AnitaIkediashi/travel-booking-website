@@ -11,6 +11,7 @@ import { FlightDisplayData } from "./flight_display_data";
 import { Button } from "@/components/reusable/button";
 import { FilterIcon } from "@/components/icons/filter";
 import { Filters } from "./filters";
+import { StopFilter } from "./stop_filter";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -39,6 +40,7 @@ export const FlightDataFilters = ({
   const [openPriceFilter, setOpenPriceFilter] = useState(false);
   const [openTimeFilter, setOpenTimeFilter] = useState(false);
   const [openAirlinesFilter, setOpenAirlinesFilter] = useState(false);
+  const [openStopsFilter, setOpenStopsFilter] = useState(false);
   const [sortBy, setSortBy] = useState("best");
 
   /**
@@ -53,6 +55,16 @@ export const FlightDataFilters = ({
       data.flatMap((flight) => flight.airlines?.map((a) => a.iata_code).filter(Boolean) as string[] ?? []) // Loop through all flights and their airlines, extract iata codes, filter out falsy values, and flatten the result into a single array
     );
   }); // track which airlines are selected as an array
+
+  const [selectedStops, setSelectedStops] = useState<number[]>(() => {
+    if(!data || data.length === 0) return []
+    return (
+      data.flatMap((item) => item.stops?.map((stop) => stop.no_of_stops).filter((val): val is number => val !== null && val !== undefined) 
+      ?? [])
+    )
+  })
+
+  console.log('selected stops: ', selectedStops)
 
   const [showFilters, setShowFilters] = useState(false); // on small screens
 
@@ -223,6 +235,10 @@ export const FlightDataFilters = ({
     setOpenAirlinesFilter(!openAirlinesFilter);
   };
 
+  const handleOpenStopsFilter = () => {
+    setOpenStopsFilter(!openStopsFilter);
+  };
+
   // 1. Loading state
   if (isPending) {
     return <SkeletonSection />;
@@ -333,6 +349,13 @@ export const FlightDataFilters = ({
     });
   };
 
+  const handleStopChange = (codes: number[]) => {
+    console.log(codes)
+    startTransition(() => {
+      setSelectedStops(codes);
+    });
+  };
+
   const handleSortByChange = (value: string) => {
     startTransition(() => {
       setSortBy(value);
@@ -367,6 +390,12 @@ export const FlightDataFilters = ({
           onClose={handleOpenAirlinesFilter}
           onChange={handleAirlineChange}
           selectedAirlines={selectedAirlines}
+        />
+        <StopFilter
+          openFilter={openStopsFilter}
+          onClose={handleOpenStopsFilter}
+          onChange={handleStopChange}
+          selectedStops={selectedStops}
         />
       </aside>
       <Filters showFilters={showFilters} onClose={handleShowFilters}>
