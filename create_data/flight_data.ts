@@ -348,10 +348,18 @@ async function main() {
       return;
     }
     startDate = new Date(lastDate);
+    // this means that if the DB has like some data left it continues from it stops until it reaches the 90 day max
     startDate.setDate(lastDate.getDate() + 1);
   }
 
   const diffTime = ninetyDaysFromNow.getTime() - startDate.getTime();
+  /**
+   * 1000 (ms to seconds)
+   * 60 (seconds to minutes)
+   * 60 (minutes to hours)
+   * 24 (hours to days)
+   * max to 0
+   */
   const daysToGenerate = Math.max(
     0,
     Math.ceil(diffTime / (1000 * 60 * 60 * 24)),
