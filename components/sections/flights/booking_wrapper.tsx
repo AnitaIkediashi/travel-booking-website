@@ -1,4 +1,8 @@
+import { ConnectivityIcon } from "@/components/icons/connectivity";
 import { MealIcon } from "@/components/icons/meal";
+import { MediaIcon } from "@/components/icons/media";
+import { StandardSeatTypeIcon } from "@/components/icons/standard_seat_type";
+import { WideSeatTypeIcon } from "@/components/icons/wide_seat_type";
 import { WifiIcon } from "@/components/icons/wifi";
 import { BoxShadow } from "@/components/reusable/box_shadow";
 import { CardDetails } from "@/components/reusable/card_details";
@@ -32,16 +36,29 @@ export const BookingWrapper = async ({
   const segments = offers[0].segments;
 
   const featureSrc = offers[0].branded_fareinfo?.features?.flatMap(
-    (feature, index) =>
-      feature.feature_name === "WIFI" && feature.availability === "INCLUDED" ? (
-        <WifiIcon key={index} />
-      ) : feature.feature_name === "MEAL" &&
-        feature.availability === "INCLUDED" ? (
-        <MealIcon key={index} />
-      ) : (
-        []
-      ),
-  );
+      (feature, index) =>
+        feature.feature_name === "WIFI" && feature.availability === "INCLUDED" ? (
+          <WifiIcon key={index} />
+        ) : feature.feature_name === "MEAL" &&
+          feature.availability === "INCLUDED" ? (
+          <MealIcon key={index} />
+        ) : feature.feature_name === "SEAT TYPE" &&
+          feature.availability === "STANDARD" ? (
+          <StandardSeatTypeIcon key={index} />
+        ) : feature.feature_name === "SEAT TYPE" &&
+          feature.availability === "WIDE" ? (
+          <WideSeatTypeIcon key={index} />
+        ) : feature.feature_name === "SEAT TYPE" &&
+          feature.availability === "FULLY-RECLINED" ? (
+          <WideSeatTypeIcon key={index} />
+        ) : feature.feature_name === "CONNECTIVITY" &&
+          feature.availability === "INCLUDED" ? (
+          <ConnectivityIcon key={index} />
+        ) : feature.feature_name === "SEATBACK SCREEN" &&
+          feature.availability === "INCLUDED" ? (
+          <MediaIcon key={index} />
+        ) : null,
+    );
 
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">

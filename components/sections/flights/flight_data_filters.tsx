@@ -33,7 +33,7 @@ export const FlightDataFilters = ({
   adultCount,
   infantCount,
   childCount,
-  trip
+  trip,
 }: FlightFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [timeRange, setTimeRange] = useState<[number, number] | null>(null);
@@ -50,21 +50,25 @@ export const FlightDataFilters = ({
    * Note: the Boolean type assertion is used to filter out any undefined values from the mapped array.
    */
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>(() => {
-    if(!data || data.length === 0) return [];
-    return (
-      data.flatMap((flight) => flight.airlines?.map((a) => a.iata_code).filter(Boolean) as string[] ?? []) // Loop through all flights and their airlines, extract iata codes, filter out falsy values, and flatten the result into a single array
-    );
+    if (!data || data.length === 0) return [];
+    return data.flatMap(
+      (flight) =>
+        (flight.airlines
+          ?.map((a) => a.iata_code)
+          .filter(Boolean) as string[]) ?? [],
+    ); // Loop through all flights and their airlines, extract iata codes, filter out falsy values, and flatten the result into a single array
   }); // track which airlines are selected as an array
 
   const [selectedStops, setSelectedStops] = useState<number[]>(() => {
-    if(!data || data.length === 0) return []
-    return (
-      data.flatMap((item) => item.stops?.map((stop) => stop.no_of_stops).filter((val): val is number => val !== null && val !== undefined) 
-      ?? [])
-    )
-  })
-
-  console.log('selected stops: ', selectedStops)
+    if (!data || data.length === 0) return [];
+    return data.flatMap(
+      (item) =>
+        item.stops
+          ?.map((stop) => stop.no_of_stops)
+          .filter((val): val is number => val !== null && val !== undefined) ??
+        [],
+    );
+  });
 
   const [showFilters, setShowFilters] = useState(false); // on small screens
 
@@ -78,7 +82,7 @@ export const FlightDataFilters = ({
    *  The use of useMemo hook to memoize or cache data and avoid unnecessary recalculations
    * It optimizes performance by recalculating filteredSortedData, allOffers, airlines, tripFilter only when its dependencies change.
    * its particularly useful when dealing with large datasets or complex filtering and sorting logic.
-   * 
+   *
    * flatMap method - It transforms each element into a new collection
    * and then merges all those collections into one single, continuous structure
    * - its like using map method and then flatten the array by one level
@@ -100,7 +104,6 @@ export const FlightDataFilters = ({
     return Array.from(unique.entries()).map(([code, name]) => ({ name, code }));
   }, [data]);
 
-
   const filteredSortedData = useMemo(() => {
     if (!data) return [];
 
@@ -109,52 +112,68 @@ export const FlightDataFilters = ({
         .map((flight) => {
           // Filter the offers WITHIN this flight
           const validOffers = (flight.flight_offers ?? [])
-          .filter((offer) => {
-            // A. Price Range check
-            const price = offer.price_breakdown?.total?.amount ?? 0;
-            if (priceRange && (price < priceRange[0] || price > priceRange[1]))
-              return false;
+            .filter((offer) => {
+              // A. Price Range check
+              const price = offer.price_breakdown?.total?.amount ?? 0;
+              if (
+                priceRange &&
+                (price < priceRange[0] || price > priceRange[1])
+              )
+                return false;
 
-    
+              // C. Airline check
+              // We check if the airline in this offer is one of the selected ones
+              const offerAirlines =
+                offer.segments
+                  ?.flatMap(
+                    (s) =>
+                      s.legs?.flatMap(
+                        (l) => l.carriers?.map((c) => c.code) ?? [],
+                      ) ?? [],
+                  )
+                  // This filter cleans out 'undefined' and tells TS they are now definitely strings
+                  .filter((code): code is string => !!code) ?? [];
 
-            // C. Airline check
-            // We check if the airline in this offer is one of the selected ones
-            const offerAirlines =
-              offer.segments
-                ?.flatMap(
-                  (s) =>
-                    s.legs?.flatMap(
-                      (l) => l.carriers?.map((c) => c.code) ?? [],
-                    ) ?? [],
-                )
-                // This filter cleans out 'undefined' and tells TS they are now definitely strings
-                .filter((code): code is string => !!code) ?? [];
+              if (
+                selectedAirlines.length > 0 &&
+                !offerAirlines.some((code) => selectedAirlines.includes(code))
+              )
+                return false;
 
-            if (
-              selectedAirlines.length > 0 &&
-              !offerAirlines.some((code) => selectedAirlines.includes(code))
-            )
-              return false;
+              // D. Duration check
+              const totalDuration =
+                offer.segments?.reduce(
+                  (sum, s) => sum + (s.total_time ?? 0),
+                  0,
+                ) ?? 0;
 
-            // D. Duration check
-            const totalDuration =
-              offer.segments?.reduce(
-                (sum, s) => sum + (s.total_time ?? 0),
-                0,
-              ) ?? 0;
+              if (
+                timeRange &&
+                (totalDuration < timeRange[0] || totalDuration > timeRange[1])
+              )
+                return false;
 
-            if (
-              timeRange &&
-              (totalDuration < timeRange[0] || totalDuration > timeRange[1])
-            )
-              return false;
+              // E. stop check
+              const totalLegs =
+                offer.segments?.reduce(
+                  (acc, segment) => acc + (segment.legs?.length ?? 0),
+                  0,
+                ) ?? 0;
 
-            return true;
-          })
-          .map((offer) => ({
-            ...offer,
-            trip_type: trip
-          }))
+              // Stops = Legs - 1 (e.g., 1 leg is 0 stops, 2 legs is 1 stop)
+              const actualStops = Math.max(0, totalLegs - 1);
+
+              if (
+                selectedStops.length > 0 &&
+                !selectedStops.includes(actualStops)
+              )
+                return false;
+              return true;
+            })
+            .map((offer) => ({
+              ...offer,
+              trip_type: trip,
+            }));
           return { ...flight, flight_offers: validOffers };
         })
         /**
@@ -221,7 +240,15 @@ export const FlightDataFilters = ({
           return 0;
         })
     );
-  }, [priceRange, timeRange, sortBy, selectedAirlines, data, trip]);
+  }, [
+    priceRange,
+    timeRange,
+    sortBy,
+    selectedAirlines,
+    data,
+    trip,
+    selectedStops,
+  ]);
 
   const handleOpenPriceFilter = () => {
     setOpenPriceFilter(!openPriceFilter);
@@ -308,7 +335,7 @@ export const FlightDataFilters = ({
   const prices =
     allOffers
       ?.map((offer) => offer.price_breakdown?.total?.amount)
-      .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope. 
+      .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope.
 
   const allDurations = allOffers.map(
     (offer) =>
@@ -318,7 +345,6 @@ export const FlightDataFilters = ({
   const minDuration = allDurations.length > 0 ? Math.min(...allDurations) : 0;
   const maxDuration =
     allDurations.length > 0 ? Math.max(...allDurations) : 1440;
-
 
   // Step B: Ensure we don't pass an empty array to Math.min (which returns Infinity)
   const hasPrices = prices.length > 0;
@@ -349,10 +375,9 @@ export const FlightDataFilters = ({
     });
   };
 
-  const handleStopChange = (codes: number[]) => {
-    console.log(codes)
+  const handleStopChange = (count: number[]) => {
     startTransition(() => {
-      setSelectedStops(codes);
+      setSelectedStops(count);
     });
   };
 

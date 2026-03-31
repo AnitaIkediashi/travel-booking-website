@@ -21,8 +21,6 @@ export const SegmentData = ({
   childCount,
 }: segmentDataProps) => {
   if (!offers) return [];
-
-  // console.log(JSON.stringify(offers, null, 2))
   
   const hasMultipleSegments = (offers?.segments?.length ?? 0) > 1;
   const departCode = offers.segments?.[0].departure_airport_code;
@@ -42,13 +40,24 @@ export const SegmentData = ({
     reassignedArrivalCode = arrivalCode;
   }
 
-  const tripType = '';
+  const tripType = offers.trip_type;
 
   const departDate = getDate(offers.segments?.[0].departure_time);
 
   const arrivalDate = getDate(
     offers.segments?.[offers.segments.length - 1].arrival_time,
   );
+
+  const totalLegs =
+    offers.segments?.reduce(
+      (acc, segment) => acc + (segment.legs?.length ?? 0),
+      0,
+    ) ?? 0;
+
+  const stopCount = Math.max(0, totalLegs - 1);
+
+  const stopLabel =
+    stopCount === 0 ? "non stop" : stopCount === 1 ? "1 stop" : "2 stop";
 
   const cabin = offers.branded_fareinfo?.cabin_class;
 
@@ -72,11 +81,7 @@ export const SegmentData = ({
           const carrier = firstLeg?.carriers?.[0];
 
           if (!firstLeg || !carrier) return null;
-          const stopCount = segment.legs?.length ?? 0;
-          const stopLabel =
-            stopCount <= 1
-              ? "non stop"
-              : `${stopCount - 1} Stop${stopCount > 2 ? "s" : ""}`;
+          
           return (
             <div
               key={index}
@@ -99,9 +104,11 @@ export const SegmentData = ({
                   <p className="text-sm opacity-40">{carrier.name}</p>
                 </div>
               </div>
-              <p className="text-sm font-semibold opacity-78 hidden md:block">
-                {stopLabel}
-              </p>
+              {index === 0 && (
+                <p className="text-sm font-semibold opacity-78 hidden md:block">
+                  {stopLabel}
+                </p>
+              )}
               <div className="md:flex flex-col hidden">
                 <p className="opacity-78 font-semibold">
                   {getDuration(segment.departure_time, segment.arrival_time)}

@@ -1,8 +1,16 @@
+import { ConnectivityIcon } from "@/components/icons/connectivity";
 import { MealIcon } from "@/components/icons/meal";
+import { MediaIcon } from "@/components/icons/media";
+import { StandardSeatTypeIcon } from "@/components/icons/standard_seat_type";
+import { WideSeatTypeIcon } from "@/components/icons/wide_seat_type";
 import { WifiIcon } from "@/components/icons/wifi";
 import { BoxShadow } from "@/components/reusable/box_shadow";
 import { Button } from "@/components/reusable/button";
-import { formatDateTime, formateToReadableDate, getDuration } from "@/helpers/convertNumberToTime";
+import {
+  formatDateTime,
+  formateToReadableDate,
+  getDuration,
+} from "@/helpers/convertNumberToTime";
 import { fetchCountryName } from "@/helpers/query_flights";
 import { FlightSearchParamsProps, NewFlightOffer } from "@/types/flight_type";
 import Image from "next/image";
@@ -16,7 +24,7 @@ type FlightDetailWrapperProps = {
 export const FlightDetailWrapper = async ({
   offers,
   totalTravelers,
-  searchProps
+  searchProps,
 }: FlightDetailWrapperProps) => {
   if (!offers || offers.length === 0) return;
 
@@ -36,14 +44,47 @@ export const FlightDetailWrapper = async ({
 
   const segments = offers[0].segments;
 
-  const featureSrc = offers[0].branded_fareinfo?.features?.flatMap((feature, index) => feature.feature_name === 'WIFI' && feature.availability === 'INCLUDED' ? <WifiIcon key={index} /> : feature.feature_name === 'MEAL' && feature.availability === 'INCLUDED' ? <MealIcon key={index} /> : []);
+  const featureSrc = offers[0].branded_fareinfo?.features?.flatMap(
+    (feature, index) =>
+      feature.feature_name === "WIFI" && feature.availability === "INCLUDED" ? (
+        <WifiIcon key={index} />
+      ) : feature.feature_name === "MEAL" &&
+        feature.availability === "INCLUDED" ? (
+        <MealIcon key={index} />
+      ) : feature.feature_name === "SEAT TYPE" &&
+        feature.availability === "STANDARD" ? (
+        <StandardSeatTypeIcon key={index} />
+      ) : feature.feature_name === "SEAT TYPE" &&
+        feature.availability === "WIDE" ? (
+        <WideSeatTypeIcon key={index} />
+      ) : feature.feature_name === "SEAT TYPE" &&
+        feature.availability === "FULLY-RECLINED" ? (
+        <WideSeatTypeIcon key={index} />
+      ) : feature.feature_name === "CONNECTIVITY" &&
+        feature.availability === "INCLUDED" ? (
+        <ConnectivityIcon key={index} />
+      ) : feature.feature_name === "SEATBACK SCREEN" &&
+        feature.availability === "INCLUDED" ? (
+        <MediaIcon key={index} />
+      ) : null,
+  );
 
-  const {from, to, depart, return: returnDate, trip, cabin: cabinType, adults, child, infant, token} = searchProps
+  const {
+    from,
+    to,
+    depart,
+    return: returnDate,
+    trip,
+    cabin: cabinType,
+    adults,
+    child,
+    infant,
+    token,
+  } = searchProps;
 
+  let bookingUrl = "";
 
-  let bookingUrl = ''
-
-  if(trip === 'round-trip') {
+  if (trip === "round-trip") {
     bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&return=${returnDate}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
   } else {
     bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
@@ -105,12 +146,24 @@ export const FlightDetailWrapper = async ({
                     src={
                       feature.availability === "INCLUDED"
                         ? "/flights/check-mark.png"
-                        : "/flights/optional_mark_in_circle.png"
+                        : feature.availability === "STANDARD"
+                          ? "/flights/business.png"
+                          : feature.availability === "WIDE"
+                            ? "/flights/business.png"
+                            : feature.availability === "FULLY-RECLINED"
+                              ? "/flights/business.png"
+                              : "/flights/optional_mark_in_circle.png"
                     }
                     alt={
                       feature.availability === "INCLUDED"
                         ? "Included feature"
-                        : "Optional feature"
+                        : feature.availability === "STANDARD"
+                          ? "Standard seat type"
+                          : feature.availability === "WIDE"
+                            ? "Wide seat type"
+                            : feature.availability === "FULLY-RECLINED"
+                              ? "Fully reclined seat type"
+                              : "Optional feature"
                     }
                     width={20}
                     height={20}
@@ -198,7 +251,9 @@ export const FlightDetailWrapper = async ({
                       <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                         {flightNumber}
                       </small>
-                      <div className="mt-1.5 flex gap-1.5">{featureSrc}</div>
+                      <div className="mt-1.5 flex gap-1.5 items-center">
+                        {featureSrc}
+                      </div>
                     </div>
                   </div>
                 );
