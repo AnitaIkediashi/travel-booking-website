@@ -2,9 +2,10 @@ import { Checkbox, CheckboxChangeEvent, Select } from "antd";
 import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { cardTypeLogoLight } from "@/utils/card_types";
 import Image from "next/image";
+import { validateLuhn } from "@/utils/luhnCheck";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -52,7 +53,6 @@ export const CreateCardForm = ({
   };
 
   const handleCheckedInfo = (e: CheckboxChangeEvent) => {
-    console.log("checked: ", e.target.checked);
     setCardFormData((prev) => ({
       ...prev,
       saveCard: e.target.checked,
@@ -101,6 +101,24 @@ export const CreateCardForm = ({
     }
   };
 
+  const handleCardSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const newErrors: Partial<CardFormData> = {};
+
+    if (!validateLuhn(cardFormData.cardNumber))
+      newErrors.cardNumber = "Invalid card number";
+    if (cardFormData.expDate.length < 5) newErrors.expDate = "Invalid date";
+    if (cardFormData.cvc.length < 2) newErrors.cvc = "Invalid CVC";
+    if (!cardFormData.cardName) newErrors.cardName = "Name is required";
+    if (!cardFormData.country) newErrors.country = "Select a country";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      console.log("Success:", cardFormData);
+      // Proceed with API call or Stripe integration
+    }
+  };
 
   return (
     <div
@@ -127,7 +145,7 @@ export const CreateCardForm = ({
           <h2 className="font-bold text-2xl md:text-[4xl] text-black mb-12">
             Add a new Card
           </h2>
-          <form action="">
+          <form action="" onSubmit={handleCardSubmit}>
             <div className="flex flex-col gap-y-6 mb-10">
               <div className="relative">
                 <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
@@ -142,8 +160,21 @@ export const CreateCardForm = ({
                     value={cardFormData.cardNumber}
                     onChange={handleCardInputChange}
                   />
-                  {detectCardType !== "" && <Image src={detectCardType.src} alt={detectCardType.alt} width={24} height={16} className="absolute z-10 top-0.5 right-4 w-auto h-auto" />}
+                  {detectCardType !== "" && (
+                    <Image
+                      src={detectCardType.src}
+                      alt={detectCardType.alt}
+                      width={24}
+                      height={16}
+                      className="absolute z-10 top-0.5 right-4 w-auto h-auto"
+                    />
+                  )}
                 </fieldset>
+                {errors.cardNumber && (
+                  <span className="text-red-500 text-xs absolute -bottom-4">
+                    {errors.cardNumber}
+                  </span>
+                )}
               </div>
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="relative lg:w-1/2 w-full">
@@ -160,6 +191,11 @@ export const CreateCardForm = ({
                       onChange={handleCardInputChange}
                     />
                   </fieldset>
+                  {errors.expDate && (
+                    <span className="text-red-500 text-xs absolute -bottom-4">
+                      {errors.expDate}
+                    </span>
+                  )}
                 </div>
                 <div className="relative lg:w-1/2 w-full">
                   <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
@@ -175,6 +211,11 @@ export const CreateCardForm = ({
                       onChange={handleCardInputChange}
                     />
                   </fieldset>
+                  {errors.cvc && (
+                    <span className="text-red-500 text-xs absolute -bottom-4">
+                      {errors.cvc}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="relative">
@@ -191,6 +232,11 @@ export const CreateCardForm = ({
                     onChange={handleCardInputChange}
                   />
                 </fieldset>
+                {errors.cardName && (
+                  <span className="text-red-500 text-xs absolute -bottom-4">
+                    {errors.cardName}
+                  </span>
+                )}
               </div>
               <div className="relative">
                 <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
@@ -206,6 +252,11 @@ export const CreateCardForm = ({
                     onChange={countrySearch}
                   />
                 </fieldset>
+                {errors.country && (
+                  <span className="text-red-500 text-xs absolute -bottom-4">
+                    {errors.country}
+                  </span>
+                )}
               </div>
               <div className="relative">
                 <Checkbox
