@@ -1,12 +1,27 @@
-import { Checkbox, Select } from "antd";
+import { Checkbox, CheckboxChangeEvent, Select } from "antd";
 import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
-import { useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
+import { cardTypeLogoLight } from "@/utils/card_types";
+import Image from "next/image";
+
+/**
+ * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
+ */
 
 type CreateCardFormProps = {
   showCardForm: boolean;
   onClose: () => void;
+};
+
+type CardFormData = {
+  cardNumber: string;
+  expDate: string;
+  cvc: string;
+  cardName: string;
+  country: string;
+  saveCard: boolean;
 };
 
 const inputClassName =
@@ -18,11 +33,74 @@ export const CreateCardForm = ({
 }: CreateCardFormProps) => {
   const CountryOptions = useMemo(() => countryList().getData(), []);
 
-  const [searchCountry, setSearchCountry] = useState('')
+  const [cardFormData, setCardFormData] = useState<CardFormData>({
+    cardNumber: "",
+    expDate: "",
+    cvc: "",
+    cardName: "",
+    country: "",
+    saveCard: false,
+  });
+
+  const [errors, setErrors] = useState<Partial<CardFormData>>({});
 
   const countrySearch = (value: string) => {
-    setSearchCountry(value)
-  }
+    setCardFormData((prev) => ({
+      ...prev,
+      country: value,
+    }));
+  };
+
+  const handleCheckedInfo = (e: CheckboxChangeEvent) => {
+    console.log("checked: ", e.target.checked);
+    setCardFormData((prev) => ({
+      ...prev,
+      saveCard: e.target.checked,
+    }));
+  };
+
+  //card type detection
+  const detectCardType = useMemo(() => {
+    const num = cardFormData.cardNumber.replace(/\s/g, ""); // Remove spaces
+    if (/^4/.test(num)) return cardTypeLogoLight.visa;
+    if (/^5[1-5]/.test(num)) return cardTypeLogoLight.mastercard;
+    if (/^3[47]/.test(num)) return cardTypeLogoLight.amex;
+    if (/^3(0[0-5]|[68])/.test(num)) return cardTypeLogoLight.diners;
+    if (/^6(011|5)/.test(num)) return cardTypeLogoLight.discover;
+    if (/^62/.test(num)) return cardTypeLogoLight.union;
+    return "";
+  }, [cardFormData.cardNumber]);
+
+  const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    let formattedValue = value;
+
+    if (name === "cardNumber") {
+      // Remove all non-digits and add space every 4 digits
+      formattedValue = value
+        .replace(/\D/g, "")
+        .replace(/(\d{4})(?=\d)/g, "$1 ")
+        .trim()
+        .slice(0, 19);
+    } else if (name === "expDate") {
+      // Format as MM/YY
+      formattedValue = value
+        .replace(/\D/g, "")
+        .replace(/(\d{2})(?=\d)/g, "$1/")
+        .slice(0, 5);
+    } else if (name === "cvc") {
+      formattedValue = value.replace(/\D/g, "").slice(0, 3);
+    }
+
+    setCardFormData((prev) => ({ ...prev, [name]: formattedValue }));
+
+    // Clear error when user starts typing
+    if (errors[name as keyof CardFormData]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
 
   return (
     <div
@@ -52,15 +130,19 @@ export const CreateCardForm = ({
           <form action="">
             <div className="flex flex-col gap-y-6 mb-10">
               <div className="relative">
-                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
                   <legend className="text-blackish-green text-sm capitalize">
                     card number
                   </legend>
                   <input
                     type="text"
+                    name="cardNumber"
                     placeholder="1234 5678 9012 3456"
                     className={inputClassName}
+                    value={cardFormData.cardNumber}
+                    onChange={handleCardInputChange}
                   />
+                  {detectCardType !== "" && <Image src={detectCardType.src} alt={detectCardType.alt} width={24} height={16} className="absolute z-10 top-0.5 right-4 w-auto h-auto" />}
                 </fieldset>
               </div>
               <div className="flex flex-col lg:flex-row gap-6">
@@ -72,7 +154,10 @@ export const CreateCardForm = ({
                     <input
                       type="text"
                       placeholder="MM/YY"
+                      name="expDate"
                       className={inputClassName}
+                      value={cardFormData.expDate}
+                      onChange={handleCardInputChange}
                     />
                   </fieldset>
                 </div>
@@ -84,7 +169,10 @@ export const CreateCardForm = ({
                     <input
                       type="text"
                       placeholder="123"
+                      name="cvc"
                       className={inputClassName}
+                      value={cardFormData.cvc}
+                      onChange={handleCardInputChange}
                     />
                   </fieldset>
                 </div>
@@ -97,7 +185,10 @@ export const CreateCardForm = ({
                   <input
                     type="text"
                     placeholder="John Doe"
+                    name="cardName"
                     className={inputClassName}
+                    value={cardFormData.cardName}
+                    onChange={handleCardInputChange}
                   />
                 </fieldset>
               </div>
@@ -108,7 +199,7 @@ export const CreateCardForm = ({
                   </legend>
                   <Select
                     options={CountryOptions}
-                    value={searchCountry}
+                    value={cardFormData.country}
                     allowClear
                     showSearch
                     className="w-full text-blackish-green-10"
@@ -116,8 +207,13 @@ export const CreateCardForm = ({
                   />
                 </fieldset>
               </div>
-              <div>
-                <Checkbox>
+              <div className="relative">
+                <Checkbox
+                  name="saveCard"
+                  checked={cardFormData.saveCard}
+                  onChange={handleCheckedInfo}
+                  className="text-blackish-green-10"
+                >
                   Securely save my information for 1-click checkout
                 </Checkbox>
               </div>

@@ -60,6 +60,15 @@ export const BookingWrapper = async ({
         ) : null,
     );
 
+  const totalLegs =
+    segments?.reduce((acc, segment) => acc + (segment.legs?.length ?? 0), 0) ??
+    0;
+
+  const stopCount = Math.max(0, totalLegs - 1);
+
+  const stopLabel =
+    stopCount === 0 ? "non stop" : stopCount === 1 ? "1 stop" : "2 stop";
+
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
@@ -68,11 +77,6 @@ export const BookingWrapper = async ({
             <BoxShadow className="shadow-large p-6">
               <div className="flex flex-col gap-y-6 h-full justify-between">
                 {segments.map(async (segment, idx) => {
-                  const stopCount = segment.legs?.length ?? 0;
-                  const stopLabel =
-                    stopCount <= 1
-                      ? "non stop"
-                      : `${stopCount - 1} Stop${stopCount > 2 ? "s" : ""}`;
 
                   const firstLeg = segment.legs?.[0];
                   const carrier = firstLeg?.carriers?.[0];
@@ -147,7 +151,7 @@ export const BookingWrapper = async ({
                         <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                           {flightNumber}
                         </small>
-                        <div className="mt-1.5 flex gap-1.5">{featureSrc}</div>
+                        <div className="mt-1.5 flex gap-1.5 items-center">{featureSrc}</div>
                       </div>
                     </div>
                   );
