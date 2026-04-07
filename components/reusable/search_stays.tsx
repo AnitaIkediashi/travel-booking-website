@@ -10,6 +10,7 @@ import { ArrowDownIcon } from "../icons/arrow_down";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { StaysDropdown } from "./stays_dropdown";
+import { inputClassName } from "@/utils/inputClassName";
 
 type InitialState = {
   destination: string;
@@ -135,7 +136,7 @@ export const SearchStays = () => {
               <div className="w-full ml-8">
                 <input
                   type="text"
-                  className="outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out"
+                  className={inputClassName}
                   value={initialValues.destination}
                   onChange={handleDestinationChange}
                 />

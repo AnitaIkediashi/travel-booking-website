@@ -13,6 +13,7 @@ import { AirportProps, FlightSearchParamsProps } from "@/types/flight_type";
 import { FlightSuggestions } from "../dropdowns/flight_suggestions";
 import { ValidateFlightsInputEntriesModal } from "../modals/validate_flights_input_entries_modal";
 import { useRouter } from "next/navigation";
+import { inputClassName } from "@/utils/inputClassName";
 
 /**
  * NOTES: 1. Day.js is a minimalist JavaScript library designed to make parsing, validating, manipulating, and displaying dates and times in web applications much easier and more efficient than using the built-in JavaScript Date object
@@ -28,9 +29,6 @@ export const disabledDate = (current: dayjs.Dayjs) => {
   // Can not select days before today
   return current < dayjs().startOf("day");
 }
-
-export const inputClassName =
-  "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
 export type InitialState = {
   fromValue: string;

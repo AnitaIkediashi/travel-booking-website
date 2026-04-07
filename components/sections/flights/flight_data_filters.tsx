@@ -279,6 +279,7 @@ export const FlightDataFilters = ({
           alt="no data"
           width={400}
           height={400}
+          className="w-[400px] h-[400px]"
         />
         <p className="font-medium text-blackish-green">
           No flight records, ensure to search the appropriate flights

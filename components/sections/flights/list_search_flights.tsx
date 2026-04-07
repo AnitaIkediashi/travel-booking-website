@@ -11,7 +11,8 @@ import { ValidateFlightsInputEntriesModal } from "@/components/modals/validate_f
 import { Button } from "@/components/reusable/button";
 import { MagnifyingGlass } from "@/components/icons/magnifying_glass";
 import { useRouter } from "next/navigation";
-import { dateFormat, disabledDate, InitialState, inputClassName, RangePicker } from "@/components/reusable/search_flights";
+import { dateFormat, disabledDate, InitialState, RangePicker } from "@/components/reusable/search_flights";
+import { inputClassName } from "@/utils/inputClassName";
 
 
 type QueryParams = {

@@ -6,6 +6,7 @@ import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { cardTypeLogoLight } from "@/utils/card_types";
 import Image from "next/image";
 import { validateLuhn } from "@/utils/luhnCheck";
+import { inputClassName } from "@/utils/inputClassName";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -25,8 +26,6 @@ type CardFormData = {
   saveCard: boolean;
 };
 
-const inputClassName =
-  "outline-none text-blackish-green-10 text-base w-full focus:border-2 focus:border-blue-500/10 focus:rounded-sm focus:border-b-blue-500 transition-all duration-100 ease-in-out";
 
 export const CreateCardForm = ({
   showCardForm,
@@ -105,6 +104,7 @@ export const CreateCardForm = ({
     e.preventDefault();
     const newErrors: Partial<CardFormData> = {};
 
+    //validating on the client side
     if (!validateLuhn(cardFormData.cardNumber))
       newErrors.cardNumber = "Invalid card number";
     if (cardFormData.expDate.length < 5) newErrors.expDate = "Invalid date";
@@ -116,8 +116,19 @@ export const CreateCardForm = ({
 
     if (Object.keys(newErrors).length === 0) {
       console.log("Success:", cardFormData);
-      // Proceed with API call or Stripe integration
+      //just testing for now
+      setCardFormData({
+        cardNumber: "",
+        expDate: "",
+        cvc: "",
+        cardName: "",
+        country: "",
+        saveCard: false,
+      });
+      // return;
     }
+
+    // re-validation check on the server side to avoid fraudulent card addition
   };
 
   return (
@@ -159,6 +170,7 @@ export const CreateCardForm = ({
                     className={inputClassName}
                     value={cardFormData.cardNumber}
                     onChange={handleCardInputChange}
+                    required
                   />
                   {detectCardType !== "" && (
                     <Image
@@ -189,6 +201,7 @@ export const CreateCardForm = ({
                       className={inputClassName}
                       value={cardFormData.expDate}
                       onChange={handleCardInputChange}
+                      required
                     />
                   </fieldset>
                   {errors.expDate && (
@@ -209,6 +222,7 @@ export const CreateCardForm = ({
                       className={inputClassName}
                       value={cardFormData.cvc}
                       onChange={handleCardInputChange}
+                      required
                     />
                   </fieldset>
                   {errors.cvc && (
@@ -230,6 +244,7 @@ export const CreateCardForm = ({
                     className={inputClassName}
                     value={cardFormData.cardName}
                     onChange={handleCardInputChange}
+                    required
                   />
                 </fieldset>
                 {errors.cardName && (
@@ -250,6 +265,7 @@ export const CreateCardForm = ({
                     showSearch
                     className="w-full text-blackish-green-10"
                     onChange={countrySearch}
+                    aria-required
                   />
                 </fieldset>
                 {errors.country && (
@@ -264,6 +280,7 @@ export const CreateCardForm = ({
                   checked={cardFormData.saveCard}
                   onChange={handleCheckedInfo}
                   className="text-blackish-green-10"
+                  required
                 >
                   Securely save my information for 1-click checkout
                 </Checkbox>
