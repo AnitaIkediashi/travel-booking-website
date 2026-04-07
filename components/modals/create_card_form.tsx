@@ -30,7 +30,6 @@ const today = new Date();
 const currentYearCentury = today.getFullYear().toString().slice(0, 2)
 
 
-
 export const CreateCardForm = ({
   showCardForm,
   onClose,
@@ -111,13 +110,30 @@ export const CreateCardForm = ({
     //validating on the client side
     if (!validateLuhn(cardFormData.cardNumber))
       newErrors.cardNumber = "Invalid card number";
-    // if (cardFormData.expDate.length < 5) newErrors.expDate = "Invalid date";
     if (cardFormData.cvc.length < 2) newErrors.cvc = "Invalid CVC";
     if (!cardFormData.cardName) newErrors.cardName = "Name is required";
     if (!cardFormData.country) newErrors.country = "Select a country";
 
     // advance expiration date check
-    const [month, year] = cardFormData.expDate.split("/")
+    const [monthStr, yearStr] = cardFormData.expDate.split("/");
+    const month = parseInt(monthStr, 10);
+    const year = parseInt(currentYearCentury + yearStr, 10);
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // getMonth() is 0-indexed
+    const currentYear = now.getFullYear();
+
+    if (!cardFormData.expDate || cardFormData.expDate.length < 5) {
+      newErrors.expDate = "Expiration date is required";
+    } else if (month < 1 || month > 12) {
+      newErrors.expDate = "Month must be 01-12";
+    } else if (
+      year < currentYear ||
+      (year === currentYear && month < currentMonth)
+    ) {
+      newErrors.expDate = "Card has expired";
+    }
+
 
     setErrors(newErrors);
 
@@ -287,7 +303,6 @@ export const CreateCardForm = ({
                   checked={cardFormData.saveCard}
                   onChange={handleCheckedInfo}
                   className="text-blackish-green-10"
-                  required
                 >
                   Securely save my information for 1-click checkout
                 </Checkbox>
