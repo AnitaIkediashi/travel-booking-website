@@ -26,6 +26,11 @@ type CardFormData = {
   saveCard: boolean;
 };
 
+const today = new Date();
+const currentYearCentury = today.getFullYear().toString().slice(0, 2)
+
+console.log(currentYearCentury)
+
 
 export const CreateCardForm = ({
   showCardForm,
@@ -107,10 +112,13 @@ export const CreateCardForm = ({
     //validating on the client side
     if (!validateLuhn(cardFormData.cardNumber))
       newErrors.cardNumber = "Invalid card number";
-    if (cardFormData.expDate.length < 5) newErrors.expDate = "Invalid date";
+    // if (cardFormData.expDate.length < 5) newErrors.expDate = "Invalid date";
     if (cardFormData.cvc.length < 2) newErrors.cvc = "Invalid CVC";
     if (!cardFormData.cardName) newErrors.cardName = "Name is required";
     if (!cardFormData.country) newErrors.country = "Select a country";
+
+    // advance expiration date check
+    const [month, year] = cardFormData.expDate.split("/")
 
     setErrors(newErrors);
 
