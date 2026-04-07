@@ -29,7 +29,6 @@ type CardFormData = {
 const today = new Date();
 const currentYearCentury = today.getFullYear().toString().slice(0, 2)
 
-console.log(currentYearCentury)
 
 
 export const CreateCardForm = ({
