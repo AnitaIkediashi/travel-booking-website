@@ -7,6 +7,8 @@ import { cardTypeLogoLight } from "@/utils/card_types";
 import Image from "next/image";
 import { validateLuhn } from "@/utils/luhnCheck";
 import { inputClassName } from "@/utils/inputClassName";
+import { currentYearCentury } from "@/helpers/currentYearCentury";
+import { processCardAddition } from "@/lib/actions/card-actions";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -26,10 +28,6 @@ type CardFormData = {
   saveCard: boolean;
 };
 
-const today = new Date();
-const currentYearCentury = today.getFullYear().toString().slice(0, 2)
-
-
 export const CreateCardForm = ({
   showCardForm,
   onClose,
@@ -46,6 +44,8 @@ export const CreateCardForm = ({
   });
 
   const [errors, setErrors] = useState<Partial<CardFormData>>({});
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const countrySearch = (value: string) => {
     setCardFormData((prev) => ({
@@ -103,7 +103,7 @@ export const CreateCardForm = ({
     }
   };
 
-  const handleCardSubmit = (e: FormEvent) => {
+  const handleCardSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const newErrors: Partial<CardFormData> = {};
 
@@ -138,20 +138,28 @@ export const CreateCardForm = ({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Success:", cardFormData);
-      //just testing for now
-      setCardFormData({
-        cardNumber: "",
-        expDate: "",
-        cvc: "",
-        cardName: "",
-        country: "",
-        saveCard: false,
-      });
-      // return;
+      setIsLoading(true);
+      try {
+        // re-validation check on the server side to avoid fraudulent card addition
+        const response = await processCardAddition(cardFormData);
+        if (response.success) {
+          setCardFormData({
+            cardNumber: "",
+            expDate: "",
+            cvc: "",
+            cardName: "",
+            country: "",
+            saveCard: false,
+          });
+          
+        }
+      } catch (error) {
+        console.error("Submission failed", error);
+        setErrors({ cardName: "Something went wrong. Please try again." });
+      } finally {
+        setIsLoading(false);
+      }
     }
-
-    // re-validation check on the server side to avoid fraudulent card addition
   };
 
   return (
@@ -311,7 +319,7 @@ export const CreateCardForm = ({
             <div className="w-full">
               <Button
                 type="submit"
-                label="add card"
+                label={isLoading ? "processing..." : "add card"}
                 className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded"
               />
               <p className="text-center text-xs opacity-75">
