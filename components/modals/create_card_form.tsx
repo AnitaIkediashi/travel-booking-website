@@ -105,13 +105,23 @@ export const CreateCardForm = ({
 
   const handleCardSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrors({});
     const newErrors: Partial<CardFormData> = {};
 
     //validating on the client side
     if (!validateLuhn(cardFormData.cardNumber))
       newErrors.cardNumber = "Invalid card number";
-    if (cardFormData.cvc.length < 2) newErrors.cvc = "Invalid CVC";
-    if (!cardFormData.cardName) newErrors.cardName = "Name is required";
+    if (cardFormData.cvc.length === 0) {
+      newErrors.cvc = "CVC is required";
+    } else if (cardFormData.cvc.length !== 3) {
+      newErrors.cvc = "CVC must be exactly 3 digits";
+    }
+    if (cardFormData.cardName.trim().length === 0) {
+      newErrors.cardName = "Name is required";
+    } else if (cardFormData.cardName.trim().length <= 2) {
+      newErrors.cardName = "Name is too short";
+    }
     if (!cardFormData.country) newErrors.country = "Select a country";
 
     // advance expiration date check
@@ -134,31 +144,44 @@ export const CreateCardForm = ({
       newErrors.expDate = "Card has expired";
     }
 
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-      setIsLoading(true);
-      try {
-        // re-validation check on the server side to avoid fraudulent card addition
-        const response = await processCardAddition(cardFormData);
-        if (response.success) {
-          setCardFormData({
-            cardNumber: "",
-            expDate: "",
-            cvc: "",
-            cardName: "",
-            country: "",
-            saveCard: false,
-          });
-          
-        }
-      } catch (error) {
-        console.error("Submission failed", error);
-        setErrors({ cardName: "Something went wrong. Please try again." });
-      } finally {
-        setIsLoading(false);
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+    try {
+      // re-validation check on the server side to avoid fraudulent card addition
+      const response = await processCardAddition(cardFormData);
+      if (response.success) {
+        setCardFormData({
+          cardNumber: "",
+          expDate: "",
+          cvc: "",
+          cardName: "",
+          country: "",
+          saveCard: false,
+        });
+      } else {
+        const serverErrors: Partial<CardFormData> = {};
+        const e = response.errors;
+        if (e?.cardNumber)
+          serverErrors.cardNumber = e.cardNumber._errors[0];
+        if (e?.cvc)
+          serverErrors.cvc = e.cvc._errors[0];
+        if (e?.expDate)
+          serverErrors.expDate = e.expDate._errors[0];
+        if (e?.cardName)
+          serverErrors.cardName = e.cardName._errors[0];
+        if (e?.country)
+          serverErrors.country = e.country._errors[0];
+        setErrors(serverErrors);
       }
+    } catch (error) {
+      console.error("Submission failed", error);
+      setErrors({ cardName: "Something went wrong. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -201,7 +224,6 @@ export const CreateCardForm = ({
                     className={inputClassName}
                     value={cardFormData.cardNumber}
                     onChange={handleCardInputChange}
-                    required
                   />
                   {detectCardType !== "" && (
                     <Image
@@ -209,7 +231,7 @@ export const CreateCardForm = ({
                       alt={detectCardType.alt}
                       width={24}
                       height={16}
-                      className="absolute z-10 top-0.5 right-4 w-auto h-auto"
+                      className="absolute z-10 top-0.5 right-4 w-6 h-4"
                     />
                   )}
                 </fieldset>
@@ -232,7 +254,6 @@ export const CreateCardForm = ({
                       className={inputClassName}
                       value={cardFormData.expDate}
                       onChange={handleCardInputChange}
-                      required
                     />
                   </fieldset>
                   {errors.expDate && (
@@ -247,13 +268,12 @@ export const CreateCardForm = ({
                       cvc
                     </legend>
                     <input
-                      type="text"
+                      type="number"
                       placeholder="123"
                       name="cvc"
                       className={inputClassName}
                       value={cardFormData.cvc}
                       onChange={handleCardInputChange}
-                      required
                     />
                   </fieldset>
                   {errors.cvc && (
@@ -275,7 +295,6 @@ export const CreateCardForm = ({
                     className={inputClassName}
                     value={cardFormData.cardName}
                     onChange={handleCardInputChange}
-                    required
                   />
                 </fieldset>
                 {errors.cardName && (
@@ -296,7 +315,6 @@ export const CreateCardForm = ({
                     showSearch
                     className="w-full text-blackish-green-10"
                     onChange={countrySearch}
-                    aria-required
                   />
                 </fieldset>
                 {errors.country && (

@@ -4,6 +4,7 @@ import { validateLuhn } from "@/utils/luhnCheck";
 /**
  * 1. This file is intended to hold server actions related to card management, such as adding, updating, or deleting cards. These actions will interact with the database and handle the business logic for card operations.
  * 2. I am also going to be using Zod for input validation in these actions to ensure that the data being processed is valid and secure.
+ * 3. I am using 'unknown' cos i might know the shape of the data yet
  */
 import { z } from "zod";
 
