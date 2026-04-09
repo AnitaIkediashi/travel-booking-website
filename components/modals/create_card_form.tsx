@@ -10,6 +10,7 @@ import { inputClassName } from "@/utils/inputClassName";
 import { currentYearCentury } from "@/helpers/currentYearCentury";
 import { processCardAddition } from "@/lib/actions/card-actions";
 import { ToastContainer, toast } from "react-toastify";
+import { CardFormData } from "@/types/card_type";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -18,15 +19,6 @@ import { ToastContainer, toast } from "react-toastify";
 type CreateCardFormProps = {
   showCardForm: boolean;
   onClose: () => void;
-};
-
-type CardFormData = {
-  cardNumber: string;
-  expDate: string;
-  cvc: string;
-  cardName: string;
-  country: string;
-  saveCard: boolean;
 };
 
 export const CreateCardForm = ({
