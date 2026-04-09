@@ -167,6 +167,7 @@ export const CreateCardForm = ({
           closeOnClick: true,
           theme: "dark",
         });
+        onClose();
       } else {
         const serverErrors: Partial<CardFormData> = {};
         const e = response.errors;
