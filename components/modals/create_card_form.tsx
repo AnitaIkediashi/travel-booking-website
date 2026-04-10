@@ -10,7 +10,7 @@ import { inputClassName } from "@/utils/inputClassName";
 import { currentYearCentury } from "@/helpers/currentYearCentury";
 import { processCardAddition } from "@/lib/actions/card-actions";
 import { ToastContainer, toast } from "react-toastify";
-import { CardFormData } from "@/types/card_type";
+import { CardFormDataPayload } from "@/types/card_type";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -20,15 +20,17 @@ import { CardFormData } from "@/types/card_type";
 type CreateCardFormProps = {
   showCardForm: boolean;
   onClose: () => void;
+  priceInfo: unknown
 };
 
 export const CreateCardForm = ({
   showCardForm,
   onClose,
+  priceInfo,
 }: CreateCardFormProps) => {
   const CountryOptions = useMemo(() => countryList().getData(), []);
 
-  const [cardFormData, setCardFormData] = useState<CardFormData>({
+  const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
     cardNumber: "",
     expDate: "",
     cvc: "",
@@ -37,7 +39,7 @@ export const CreateCardForm = ({
     saveCard: false,
   });
 
-  const [errors, setErrors] = useState<Partial<CardFormData>>({});
+  const [errors, setErrors] = useState<Partial<CardFormDataPayload>>({});
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -96,7 +98,7 @@ export const CreateCardForm = ({
     setCardFormData((prev) => ({ ...prev, [name]: formattedValue })); // dynamic computed property name to update the corresponding field in state
 
     // Clear error when user starts typing
-    if (errors[name as keyof CardFormData]) {
+    if (errors[name as keyof CardFormDataPayload]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
@@ -105,7 +107,7 @@ export const CreateCardForm = ({
     e.preventDefault();
     setIsLoading(true);
     setErrors({});
-    const newErrors: Partial<CardFormData> = {};
+    const newErrors: Partial<CardFormDataPayload> = {};
 
     //validating on the client side
     if (!validateLuhn(cardFormData.cardNumber))
@@ -121,6 +123,9 @@ export const CreateCardForm = ({
       newErrors.cardName = "Name is too short";
     }
     if (!cardFormData.country) newErrors.country = "Select a country";
+
+    const cardTypeString =
+      detectCardType !== "" ? detectCardType.alt : "unknown";
 
     // advance expiration date check
     const [monthStr, yearStr] = cardFormData.expDate.split("/");
@@ -148,8 +153,13 @@ export const CreateCardForm = ({
       return;
     }
     try {
+
+      const cardPayload = {
+        ...cardFormData,
+        cardType: cardTypeString
+      }
       // re-validation check on the server side to avoid fraudulent card addition
-      const response = await processCardAddition(cardFormData);
+      const response = await processCardAddition(cardPayload, priceInfo);
       if (response.success) {
         setCardFormData({
           cardNumber: "",
@@ -166,7 +176,7 @@ export const CreateCardForm = ({
         });
         onClose();
       } else {
-        const serverErrors: Partial<CardFormData> = {};
+        const serverErrors: Partial<CardFormDataPayload> = {};
         const e = response.errors;
         if (e?.cardNumber) serverErrors.cardNumber = e.cardNumber._errors[0];
         if (e?.cvc) serverErrors.cvc = e.cvc._errors[0];

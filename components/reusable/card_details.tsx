@@ -4,16 +4,20 @@ import { useState } from "react";
 import { AddCard } from "./add_card"
 import { CreateCardForm } from "../modals/create_card_form";
 
-export const CardDetails = () => {
-  const [showCardForm, setShowCardForm] = useState(false)
+type CardDetailsProps<T> = {
+  priceInfo: T | undefined;
+};
+
+export const CardDetails = <T,>({ priceInfo }: CardDetailsProps<T>) => {
+  const [showCardForm, setShowCardForm] = useState(false);
 
   const handleOpenCardForm = () => {
-    setShowCardForm(true)
-  }
+    setShowCardForm(true);
+  };
 
   const handleCloseCardForm = () => {
-    setShowCardForm(false)
-  }
+    setShowCardForm(false);
+  };
 
   return (
     <>
@@ -30,7 +34,8 @@ export const CardDetails = () => {
       <CreateCardForm
         showCardForm={showCardForm}
         onClose={handleCloseCardForm}
+        priceInfo={priceInfo as unknown}
       />
     </>
   );
-}
+};

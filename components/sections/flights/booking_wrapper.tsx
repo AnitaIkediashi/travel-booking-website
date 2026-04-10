@@ -26,14 +26,16 @@ export const BookingWrapper = async ({
 }: BookingWrapperProps) => {
   if (!offers || offers.length === 0) return;
 
-  const totalPrice = offers[0].price_breakdown?.total?.amount;
-  const basefare = offers[0].price_breakdown?.base_fare?.amount;
-  const tax = offers[0].price_breakdown?.tax?.amount;
-  const discount = offers[0].price_breakdown?.discount?.amount;
+  const priceInfoObj = offers[0].price_breakdown;
+  const totalPrice = priceInfoObj?.total?.amount;
+  const basefare = priceInfoObj?.base_fare?.amount;
+  const tax = priceInfoObj?.tax?.amount;
+  const discount = priceInfoObj?.discount?.amount;
 
   const cabin = offers[0].branded_fareinfo?.cabin_class;
 
   const segments = offers[0].segments;
+
 
   const featureSrc = offers[0].branded_fareinfo?.features?.flatMap(
       (feature, index) =>
@@ -159,7 +161,7 @@ export const BookingWrapper = async ({
               </div>
             </BoxShadow>
             <BoxShadow className="shadow-large p-4">
-              <CardDetails />
+              <CardDetails priceInfo={priceInfoObj} />
             </BoxShadow>
           </div>
           <div className="xl:w-[40%] lg:w-[45%] w-full lg:order-2 order-1">

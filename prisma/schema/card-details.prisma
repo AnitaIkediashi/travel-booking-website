@@ -1,6 +1,7 @@
 model CardDetails {
     id         String @id @default(uuid())
     cardNumber String
+    cardType   String?
     expDate    String
     cvc        String
     cardName   String

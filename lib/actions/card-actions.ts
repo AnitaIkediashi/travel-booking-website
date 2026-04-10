@@ -9,6 +9,7 @@ import { validateLuhn } from "@/utils/luhnCheck";
  * 5. safeParse method is the non-throwing way to validate data in Zod: it returns an object that either contains the parsed data or a ZodError, so you can avoid try/catch.
  */
 import { z } from "zod";
+import { prisma } from "../prisma";
 
 // define the schema
 const cardSchema = z.object({
@@ -62,10 +63,10 @@ const cardSchema = z.object({
     .min(2, "Name is too short"),
   country: z.string().min(1, "Select a country"),
   saveCard: z.boolean().optional(),
+  cardType: z.string().optional(),
 });
 
-
-export async function processCardAddition(rawData: unknown) {
+export async function processCardAddition(rawData: unknown, priceInfo: unknown) {
   // 1. Re-validate on server (Security check)
   const validated = cardSchema.safeParse(rawData);
 
@@ -80,6 +81,26 @@ export async function processCardAddition(rawData: unknown) {
 
   // 2. THE PROCESSING (Database, Stripe, etc.)
   console.log("Processing secure data on server:", validated.data);
-  // await db.save(validated.data);
+  const { cardNumber, expDate, cvc, cardName, country, saveCard, cardType } =
+    validated.data
+
+  try {
+    if (saveCard) {
+      await prisma.cardDetails.create({
+        data: {
+          cardNumber: cardNumber.replace(/\s/g, ""),
+          expDate: expDate,
+          cvc: cvc,
+          cardName: cardName,
+          country: country,
+          cardType: cardType,
+        },
+      });
+      console.log("Card metadata saved to database.");
+    }
+  } catch (error) {
+    console.error("Payment Error:", error);
+    return { success: false, message: "Internal Server Error" };
+  }
   return { success: true };
 }
