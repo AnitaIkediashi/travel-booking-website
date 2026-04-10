@@ -5,6 +5,8 @@ import { validateLuhn } from "@/utils/luhnCheck";
  * 1. This file is intended to hold server actions related to card management, such as adding, updating, or deleting cards. These actions will interact with the database and handle the business logic for card operations.
  * 2. I am also going to be using Zod for input validation in these actions to ensure that the data being processed is valid and secure.
  * 3. I am using 'unknown' cos i might know the shape of the data yet
+ * 4. Every Zod schema stores an array of refinements. Refinements are a way to perform custom validation that Zod doesn't provide a native API for. the .refine API only generates a single issue with a "custom" error code, but .superRefine() makes it possible to create multiple issues using any of Zod's internal issue types
+ * 5. safeParse method is the non-throwing way to validate data in Zod: it returns an object that either contains the parsed data or a ZodError, so you can avoid try/catch.
  */
 import { z } from "zod";
 
@@ -28,7 +30,6 @@ const cardSchema = z.object({
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
 
-      // 3. Custom Month Logic (though regex handles 01-12,
       // you can add extra logic here if needed)
       if (month < 1 || month > 12) {
         ctx.addIssue({
@@ -69,7 +70,7 @@ export async function processCardAddition(rawData: unknown) {
   const validated = cardSchema.safeParse(rawData);
 
   if (!validated.success) {
-    const formattedErrors = validated.error.format();
+    const formattedErrors = validated.error.format(); //deprecated but still works.
 
     return {
       success: false,

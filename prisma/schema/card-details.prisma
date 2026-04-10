@@ -1,0 +1,8 @@
+model CardDetails {
+    id         String @id @default(uuid())
+    cardNumber String
+    expDate    String
+    cvc        String
+    cardName   String
+    country    String
+}

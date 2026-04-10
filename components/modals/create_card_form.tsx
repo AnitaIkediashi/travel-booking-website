@@ -14,6 +14,7 @@ import { CardFormData } from "@/types/card_type";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
+ * test() returns boolean indicating whether the regex matches the string
  */
 
 type CreateCardFormProps = {
@@ -73,6 +74,10 @@ export const CreateCardForm = ({
 
     if (name === "cardNumber") {
       // Remove all non-digits and add space every 4 digits
+      // \D matches any character that is not a digit
+      // \d matches a digit
+      // ?= is a positive lookahead that checks for the presence of digits ahead without including them in the match
+      // slice(0, 19) limits the input to 19 characters (16 digits + 3 spaces)
       formattedValue = value
         .replace(/\D/g, "")
         .replace(/(\d{4})(?=\d)/g, "$1 ")
@@ -88,7 +93,7 @@ export const CreateCardForm = ({
       formattedValue = value.replace(/\D/g, "").slice(0, 3);
     }
 
-    setCardFormData((prev) => ({ ...prev, [name]: formattedValue }));
+    setCardFormData((prev) => ({ ...prev, [name]: formattedValue })); // dynamic computed property name to update the corresponding field in state
 
     // Clear error when user starts typing
     if (errors[name as keyof CardFormData]) {
