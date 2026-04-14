@@ -1,10 +1,14 @@
 import { BookingWrapper } from "@/components/sections/flights/booking_wrapper";
+import { FlightBooking } from "@/components/sections/flights/flight_booking";
+import { HotelBooking } from "@/components/sections/hotels/hotel_booking";
 import { queryFlightToken } from "@/helpers/query_flights";
 import { FlightSearchParams } from "@/types/flight_type";
 import { redirect } from "next/navigation";
 
 const BookingPage = async ({ searchParams }: FlightSearchParams) => {
   const searchProps = await searchParams;
+
+  console.log("Received search parameters in BookingPage:", searchProps);
 
   const {
     from,
@@ -17,7 +21,14 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     infant,
     token,
     trip,
+    session_id,
   } = searchProps;
+
+  console.log("Session ID found in search parameters:", session_id);
+  // if(session_id) {
+  //   console.log("Session ID found in search parameters:", session_id);
+  //   // do the payment session here
+  // }
 
   if (!depart) return []; // to check it depart exists or not
 
@@ -29,7 +40,8 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
 
   const isPastDate = departDate < currentDate;
 
-  const isReturnDateValid = trip === 'round-trip' && returnDate && new Date(returnDate) < departDate
+  const isReturnDateValid =
+    trip === "round-trip" && returnDate && new Date(returnDate) < departDate;
 
   const adultCount = +(adults ?? 0);
   const childCount = +(child ?? 0);
@@ -42,7 +54,7 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     depart &&
     trip &&
     cabin &&
-    token && 
+    token &&
     !isPastDate &&
     !isReturnDateValid &&
     (adultCount > 0 || childCount > 0 || infantCount > 0);
@@ -52,7 +64,15 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
   }
 
   const data = await queryFlightToken(searchProps);
-  return <BookingWrapper offers={data} totalTravelers={totalTravelers} />;
+
+  return (
+    <BookingWrapper
+      flightChild={
+        <FlightBooking offers={data} totalTravelers={totalTravelers} />
+      }
+      hotelChild={<HotelBooking />}
+    />
+  );
 };
 
 export default BookingPage;

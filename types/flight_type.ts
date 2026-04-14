@@ -43,6 +43,7 @@ export type FlightSearchParamsProps = {
   infant?: number;
   cabin?: string;
   token?: string
+  session_id?: string;
 };
 
 
@@ -264,7 +265,7 @@ export type NewFlightOffer = {
   id: string;
   flight_offer_id: string;
   token: string;
-  trip_type: string | null;
+  trip_type?: string | null;
   flight_key: string;
   segments: SegmentProp[];
   branded_fareinfo: BrandedFareInfo | null;

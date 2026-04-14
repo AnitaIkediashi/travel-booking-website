@@ -159,7 +159,7 @@ export const CreateCardForm = ({
         cardType: cardTypeString
       }
       // re-validation check on the server side to avoid fraudulent card addition
-      const response = await processCardAddition(cardPayload, priceInfo);
+      const response = await processCardAddition(cardPayload, priceInfo, 'flight');
       if (response.success) {
         setCardFormData({
           cardNumber: "",
@@ -169,21 +169,36 @@ export const CreateCardForm = ({
           country: "",
           saveCard: false,
         });
-        toast.success("Card added successfully!", {
+        toast.success(response.message || "Card added successfully!", {
           position: "top-center",
           closeOnClick: true,
           theme: "dark",
         });
         onClose();
+        if (response.url) {
+          console.log("Redirecting to Stripe Checkout:", response.url);
+          // window.location.href = response.url; // This sends the user to Stripe
+        }
       } else {
-        const serverErrors: Partial<CardFormDataPayload> = {};
-        const e = response.errors;
-        if (e?.cardNumber) serverErrors.cardNumber = e.cardNumber._errors[0];
-        if (e?.cvc) serverErrors.cvc = e.cvc._errors[0];
-        if (e?.expDate) serverErrors.expDate = e.expDate._errors[0];
-        if (e?.cardName) serverErrors.cardName = e.cardName._errors[0];
-        if (e?.country) serverErrors.country = e.country._errors[0];
-        setErrors(serverErrors);
+        if(response.errors) {
+          const serverErrors: Partial<CardFormDataPayload> = {};
+          const e = response.errors;
+          if (e?.cardNumber) serverErrors.cardNumber = e.cardNumber._errors[0];
+          if (e?.cvc) serverErrors.cvc = e.cvc._errors[0];
+          if (e?.expDate) serverErrors.expDate = e.expDate._errors[0];
+          if (e?.cardName) serverErrors.cardName = e.cardName._errors[0];
+          if (e?.country) serverErrors.country = e.country._errors[0];
+          setErrors(serverErrors);
+        } 
+        if(response.message) {
+          const errorMessage = response.message;
+          toast.error(errorMessage, {
+            position: "top-center",
+            closeOnClick: true,
+            theme: "dark",
+          });
+        }
+        
       }
     } catch (error) {
       console.error("Submission failed", error);
