@@ -13,6 +13,7 @@
     "@gsap/react": "^2.1.2",
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^6.19.0",
+    "@stripe/react-stripe-js": "^6.1.0",
     "@stripe/stripe-js": "^9.1.0",
     "antd": "^6.2.1",
     "date-fns": "^4.1.0",
