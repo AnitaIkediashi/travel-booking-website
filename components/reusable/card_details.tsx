@@ -1,12 +1,18 @@
-'use client'
+"use client";
 
 import { useState } from "react";
-import { AddCard } from "./add_card"
+import { AddCard } from "./add_card";
 import { CreateCardForm } from "../modals/create_card_form";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 
 type CardDetailsProps<T> = {
   priceInfo: T | undefined;
 };
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
+);
 
 export const CardDetails = <T,>({ priceInfo }: CardDetailsProps<T>) => {
   const [showCardForm, setShowCardForm] = useState(false);
@@ -31,11 +37,13 @@ export const CardDetails = <T,>({ priceInfo }: CardDetailsProps<T>) => {
         </div>
         <AddCard onClick={handleOpenCardForm} />
       </div>
-      <CreateCardForm
-        showCardForm={showCardForm}
-        onClose={handleCloseCardForm}
-        priceInfo={priceInfo as unknown}
-      />
+      <Elements stripe={stripePromise}>
+        <CreateCardForm
+          showCardForm={showCardForm}
+          onClose={handleCloseCardForm}
+          priceInfo={priceInfo as unknown}
+        />
+      </Elements>
     </>
   );
 };

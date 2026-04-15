@@ -11,6 +11,14 @@ import { currentYearCentury } from "@/helpers/currentYearCentury";
 import { processCardAddition } from "@/lib/actions/card-actions";
 import { ToastContainer, toast } from "react-toastify";
 import { CardFormDataPayload } from "@/types/card_type";
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { StripeCardNumberElementChangeEvent } from "@stripe/stripe-js";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -23,12 +31,38 @@ type CreateCardFormProps = {
   priceInfo: unknown
 };
 
+const stripeStyle = {
+  base: {
+    color: "#1c1b1f",
+    fontWeight: "400",
+    fontSize: "16px",
+    fontFamily: "Montserrat, sans-serif",
+    lineHeight: "24px",
+  },
+};
+
+const stripeClasses = {
+  base: "outline-none w-full transition-all duration-100",
+  focus: "border-2 border-blue-500/10 border-b-blue-500 rounded-sm",
+  invalid: "border-red-500 text-red-500",
+};
+
+
 export const CreateCardForm = ({
   showCardForm,
   onClose,
   priceInfo,
 }: CreateCardFormProps) => {
   const CountryOptions = useMemo(() => countryList().getData(), []);
+
+  const [detectedBrand, setDetectedBrand] = useState<string>("");
+
+  const handleCardChange = (event: StripeCardNumberElementChangeEvent) => {
+    // Stripe returns the brand (e.g., 'amex', 'visa', 'mastercard')
+    if (event.brand) {
+      setDetectedBrand(event.brand);
+    }
+  };
 
   const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
     cardNumber: "",
@@ -68,6 +102,18 @@ export const CreateCardForm = ({
     if (/^62/.test(num)) return cardTypeLogoLight.union;
     return "";
   }, [cardFormData.cardNumber]);
+
+  const detectCardTypeTwo = useMemo(() => {
+    // Use your existing cardTypeLogoLight object
+    // If Stripe detects a brand, we look it up in your logo object
+    if (
+      detectedBrand &&
+      cardTypeLogoLight[detectedBrand as keyof typeof cardTypeLogoLight]
+    ) {
+      return cardTypeLogoLight[detectedBrand as keyof typeof cardTypeLogoLight];
+    }
+    return "";
+  }, [detectedBrand]);
 
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -246,29 +292,36 @@ export const CreateCardForm = ({
                     <legend className="text-blackish-green text-sm capitalize">
                       card number
                     </legend>
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      className={inputClassName}
-                      value={cardFormData.cardNumber}
-                      onChange={handleCardInputChange}
+                    <CardNumberElement
+                      options={{
+                        classes: stripeClasses,
+                        style: stripeStyle,
+                        showIcon: true, // Bonus: Shows the Visa/Mastercard logo
+                      }}
+                      // onChange={handleCardChange}
                     />
-                    {detectCardType !== "" && (
-                      <Image
-                        src={detectCardType.src}
-                        alt={detectCardType.alt}
-                        width={24}
-                        height={16}
-                        className="absolute z-10 top-0.5 right-4 w-6 h-4"
-                      />
-                    )}
+                    {/* {detectCardTypeTwo !== "" ? (
+                      <div className="absolute z-10 top-0.5 right-4 pointer-events-none w-6 h-5">
+                        <Image
+                          src={detectCardTypeTwo.src}
+                          alt={detectCardTypeTwo.alt}
+                          width={24}
+                          height={20}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="absolute z-10 top-0.5 right-4 pointer-events-none w-6 h-5">
+                        <Image
+                          src="/logos/light/default_card.png"
+                          alt='empty card icon'
+                          width={24}
+                          height={20}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )} */}
                   </fieldset>
-                  {errors.cardNumber && (
-                    <span className="text-red-500 text-xs absolute -bottom-4">
-                      {errors.cardNumber}
-                    </span>
-                  )}
                 </div>
                 <div className="flex flex-col lg:flex-row gap-6">
                   <div className="relative lg:w-1/2 w-full">
