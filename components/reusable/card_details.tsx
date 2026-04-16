@@ -5,16 +5,17 @@ import { AddCard } from "./add_card";
 import { CreateCardForm } from "../modals/create_card_form";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { PriceInfoProps } from "@/types/card_type";
 
-type CardDetailsProps<T> = {
-  priceInfo: T | undefined;
+type CardDetailsProps = {
+  priceInfo: PriceInfoProps;
 };
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
 );
 
-export const CardDetails = <T,>({ priceInfo }: CardDetailsProps<T>) => {
+export const CardDetails = ({ priceInfo }: CardDetailsProps) => {
   const [showCardForm, setShowCardForm] = useState(false);
 
   const handleOpenCardForm = () => {
@@ -41,7 +42,8 @@ export const CardDetails = <T,>({ priceInfo }: CardDetailsProps<T>) => {
         <CreateCardForm
           showCardForm={showCardForm}
           onClose={handleCloseCardForm}
-          priceInfo={priceInfo as unknown}
+          priceInfo={priceInfo}
+          flowType="flight"
         />
       </Elements>
     </>

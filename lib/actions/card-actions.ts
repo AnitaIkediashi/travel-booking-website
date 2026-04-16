@@ -1,39 +1,11 @@
 "use server";
 
-import { currentYearCentury } from "@/helpers/currentYearCentury";
-import { validateLuhn } from "@/utils/luhnCheck";
 import { z } from "zod";
 import { prisma } from "../prisma";
 import Stripe from "stripe";
+import { PriceInfoProps } from "@/types/card_type";
 
-type PriceInfoProps = {
-  total?: TotalPriceProps | null;
-  base_fare?: BasePriceProps | null;
-  tax?: TaxPriceProps | null;
-  discount?: DiscountPriceProps | null;
-  service_fee?: ServiceFeeProps | null;
-};
 
-type TotalPriceProps = {
-  currency_code: string;
-  amount: number;
-};
-
-type BasePriceProps = {
-  amount: number;
-};
-
-type TaxPriceProps = {
-  amount: number;
-};
-
-type ServiceFeeProps = {
-  amount: number;
-};
-
-type DiscountPriceProps = {
-  amount: number;
-};
 
 /**
  * 1. This file is intended to hold server actions related to card management, such as adding, updating, or deleting cards. These actions will interact with the database and handle the business logic for card operations.
@@ -47,49 +19,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // define the schema
 const cardSchema = z.object({
-  cardNumber: z.string().refine((val) => validateLuhn(val.replace(/\s/g, "")), {
-    message: "Invalid card number",
-  }),
-  expDate: z
-    .string()
-    .min(1, "Expiration date is required")
-    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Invalid format (MM/YY)")
-    .superRefine((val, ctx) => {
-      // 1. Split and parse values
-      const [monthStr, yearStr] = val.split("/");
-      const month = parseInt(monthStr, 10);
-      const year = parseInt(currentYearCentury + yearStr, 10);
-
-      // 2. Get current date context
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
-
-      // you can add extra logic here if needed)
-      if (month < 1 || month > 12) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Month must be 01-12",
-        });
-        return; // Stop further checks if this fails
-      }
-
-      // 4. Expiration Logic
-      if (
-        year < currentYear ||
-        (year === currentYear && month < currentMonth)
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Card has expired",
-        });
-      }
-    }),
-  cvc: z
-    .string()
-    .min(1, "CVC is required")
-    .length(3, "CVC must be exactly 3 digits")
-    .regex(/^\d+$/, "CVC must only contain numbers"),
   cardName: z
     .string()
     .trim()
@@ -100,108 +29,111 @@ const cardSchema = z.object({
   cardType: z.string().optional(),
 });
 
-export async function processCardAddition(
-  rawData: unknown,
-  priceInfo: unknown,
-  flowType: "flight" | "hotel",
-) {
+export async function processPaymentIntent(rawData: unknown, priceInfo: PriceInfoProps) {
   // 1. Re-validate on server (Security check)
   const validated = cardSchema.safeParse(rawData);
 
-  const priceDetails = priceInfo as PriceInfoProps;
-
-  const baseFare = priceDetails.base_fare?.amount || 0;
-  const tax = priceDetails.tax?.amount || 0;
-  const serviceFee = priceDetails.service_fee?.amount || 0;
-  const discount = priceDetails.discount?.amount || 0;
-
-  const totalAmount = baseFare + tax + serviceFee - discount;
-  const currency = priceDetails.total?.currency_code.toLowerCase() || "usd";
-
-  const successPath =
-    flowType === "flight"
-      ? "/flight-flow/flight-search/listing/flight-detail/booking"
-      : "/hotel-flow/hotel-search/listing/hotel-detail/booking";
-
-  const cancelPath =
-    flowType === "flight"
-      ? "/flight-flow/flight-search/listing/flight-detail/checkout"
-      : "/hotel-flow/hotel-search/listing/hotel-detail/checkout";
-
   if (!validated.success) {
-    const formattedErrors = validated.error.format(); //deprecated but still works.
-
     return {
       success: false,
-      errors: formattedErrors,
+      errors: validated.error.format(),
     };
   }
 
-  // 2. THE PROCESSING (Database, Stripe, etc.)
-  const { cardNumber, expDate, cvc, cardName, country, saveCard, cardType } =
-    validated.data;
-
-  const formattedCardNumber = cardNumber.replace(/\s/g, ""); // Remove spaces for storage/processing
-
   try {
-    //db logic
-    let dbMessage = "";
-    if (saveCard) {
-      const existingCardInfo = await prisma.cardDetails.findFirst({
-        where: {
-          cardNumber: formattedCardNumber,
-          expDate,
-          cvc,
-        },
-      });
-      if (existingCardInfo) {
-        dbMessage = "Card already exists";
-        console.log("Card already exists in database.");
-      }
-      await prisma.cardDetails.create({
-        data: {
-          cardNumber: formattedCardNumber,
-          expDate: expDate,
-          cvc: cvc,
-          cardName: cardName,
-          country: country,
-          cardType: cardType,
-        },
-      });
-      dbMessage = "Card saved successfully!";
-      console.log("Card metadata saved to database.");
-    }
-    const session = await stripe.checkout.sessions.create({
-      ui_mode: "elements",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: currency,
-            product_data: {
-              name: "Price details", // You can customize this
-              description: `Base: $${baseFare} + Tax: $${tax} + Service Fee: $${serviceFee} - Discount: $${discount}`,
-            },
-            unit_amount: totalAmount * 100, // Stripe expects amount in cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_URL}${successPath}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}${cancelPath}`,
+    const priceDetails = priceInfo
+
+    const baseFare = priceDetails.base_fare?.amount || 0;
+    const tax = priceDetails.tax?.amount || 0;
+    const serviceFee = priceDetails.service_fee?.amount || 0;
+    const discount = priceDetails.discount?.amount || 0;
+
+    const totalAmount = baseFare + tax + serviceFee - discount;
+    const currency = (priceDetails.total?.currency_code ?? "usd").toLowerCase();
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(totalAmount * 100), // Stripe expects amount in cents
+      currency,
+      // If saveCard is true, Stripe prepares the card for future "off-session" use
+      setup_future_usage: validated.data.saveCard ? "off_session" : undefined,
+      metadata: {
+        cardName: validated.data.cardName,
+        country: validated.data.country,
+        saveCard: String(validated.data.saveCard),
+      },
     });
 
     return {
       success: true,
-      message: saveCard
-        ? `${dbMessage} Redirecting to payment...`
-        : "Redirecting to secure payment...",
-      url: session.url,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
     };
-
   } catch (error) {
     console.error("Payment Error:", error);
     return { success: false, message: "Internal Server Error" };
+  }
+}
+
+export async function saveCardToDatabase(paymentIntentId: string) {
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      paymentIntentId,
+      {
+        expand: ["payment_method"],
+      },
+    );
+
+    const pm = paymentIntent.payment_method as Stripe.PaymentMethod;
+
+    // Check if the user opted to save and we have card details
+    if (paymentIntent.metadata.saveCard === "true" && pm.card) {
+      const cardName = paymentIntent.metadata.cardName;
+      const last4 = pm.card.last4;
+      const expMonth = pm.card.exp_month;
+      const expYear = pm.card.exp_year;
+
+      // 1. Check if a card with these exact details already exists for this user
+      const existingCard = await prisma.cardDetails.findFirst({
+        where: {
+          cardName: cardName,
+          last4: last4,
+          expMonth: expMonth,
+          expYear: expYear,
+          // userid: currentUser.id (you would need to get the current user's ID from your auth context/session) - soon
+        },
+      });
+
+      // 2. If it exists, return the specific flag to the UI
+      if (existingCard) {
+        return {
+          success: false,
+          message: "Card already exists",
+          hasCardAlreadyCreated: true,
+        };
+      }
+
+      // 3. Otherwise, proceed with creation
+      await prisma.cardDetails.create({
+        data: {
+          stripePaymentMethodId: pm.id,
+          cardType: pm.card.brand,
+          last4: last4,
+          expMonth: expMonth,
+          expYear: expYear,
+          cardName: cardName,
+          country: paymentIntent.metadata.country,
+        },
+      });
+
+      return { success: true };
+    }
+
+    return { success: false, message: "Save card option not selected" };
+  } catch (error) {
+    console.error("Migration Error:", error);
+    return {
+      success: false,
+      message: "An error occurred while saving the card",
+    };
   }
 }

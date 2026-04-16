@@ -8,8 +8,6 @@ import { redirect } from "next/navigation";
 const BookingPage = async ({ searchParams }: FlightSearchParams) => {
   const searchProps = await searchParams;
 
-  console.log("Received search parameters in BookingPage:", searchProps);
-
   const {
     from,
     to,
@@ -21,14 +19,7 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     infant,
     token,
     trip,
-    session_id,
   } = searchProps;
-
-  console.log("Session ID found in search parameters:", session_id);
-  // if(session_id) {
-  //   console.log("Session ID found in search parameters:", session_id);
-  //   // do the payment session here
-  // }
 
   if (!depart) return []; // to check it depart exists or not
 

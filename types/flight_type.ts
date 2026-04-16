@@ -43,7 +43,6 @@ export type FlightSearchParamsProps = {
   infant?: number;
   cabin?: string;
   token?: string
-  session_id?: string;
 };
 
 

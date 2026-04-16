@@ -1,9 +1,10 @@
 model CardDetails {
-    id         String @id @default(uuid())
-    cardNumber String
-    cardType   String?
-    expDate    String
-    cvc        String
-    cardName   String
-    country    String
+    id                    String @id @default(uuid())
+    stripePaymentMethodId String @unique // The "Token" from Stripe
+    cardType              String? // e.g., "visa", "mastercard"
+    last4                 String  // e.g., "4242"
+    expMonth              Int
+    expYear               Int
+    cardName              String
+    country               String
 }

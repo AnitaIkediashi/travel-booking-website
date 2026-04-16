@@ -3,14 +3,10 @@ import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { cardTypeLogoLight } from "@/utils/card_types";
-import Image from "next/image";
-import { validateLuhn } from "@/utils/luhnCheck";
 import { inputClassName } from "@/utils/inputClassName";
-import { currentYearCentury } from "@/helpers/currentYearCentury";
-import { processCardAddition } from "@/lib/actions/card-actions";
+import { processPaymentIntent, saveCardToDatabase } from "@/lib/actions/card-actions";
 import { ToastContainer, toast } from "react-toastify";
-import { CardFormDataPayload } from "@/types/card_type";
+import { CardFormDataPayload, PriceInfoProps } from "@/types/card_type";
 import {
   CardNumberElement,
   CardExpiryElement,
@@ -18,7 +14,8 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { StripeCardNumberElementChangeEvent } from "@stripe/stripe-js";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
 
 /**
  * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
@@ -28,7 +25,8 @@ import { StripeCardNumberElementChangeEvent } from "@stripe/stripe-js";
 type CreateCardFormProps = {
   showCardForm: boolean;
   onClose: () => void;
-  priceInfo: unknown
+  priceInfo: PriceInfoProps
+  flowType: string;
 };
 
 const stripeStyle = {
@@ -52,28 +50,21 @@ export const CreateCardForm = ({
   showCardForm,
   onClose,
   priceInfo,
+  flowType
 }: CreateCardFormProps) => {
+  const router = useRouter();
+  const stripe = useStripe();
+  const elements = useElements();
   const CountryOptions = useMemo(() => countryList().getData(), []);
 
-  const [detectedBrand, setDetectedBrand] = useState<string>("");
-
-  const handleCardChange = (event: StripeCardNumberElementChangeEvent) => {
-    // Stripe returns the brand (e.g., 'amex', 'visa', 'mastercard')
-    if (event.brand) {
-      setDetectedBrand(event.brand);
-    }
-  };
-
   const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
-    cardNumber: "",
-    expDate: "",
-    cvc: "",
     cardName: "",
     country: "",
     saveCard: false,
   });
 
-  const [errors, setErrors] = useState<Partial<CardFormDataPayload>>({});
+  const [errors, setErrors] =
+    useState<z.ZodFormattedError<CardFormDataPayload> | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -91,169 +82,108 @@ export const CreateCardForm = ({
     }));
   };
 
-  //card type detection
-  const detectCardType = useMemo(() => {
-    const num = cardFormData.cardNumber.replace(/\s/g, ""); // Remove spaces
-    if (/^4/.test(num)) return cardTypeLogoLight.visa;
-    if (/^5[1-5]/.test(num)) return cardTypeLogoLight.mastercard;
-    if (/^3[47]/.test(num)) return cardTypeLogoLight.amex;
-    if (/^3(0[0-5]|[68])/.test(num)) return cardTypeLogoLight.diners;
-    if (/^6(011|5)/.test(num)) return cardTypeLogoLight.discover;
-    if (/^62/.test(num)) return cardTypeLogoLight.union;
-    return "";
-  }, [cardFormData.cardNumber]);
-
-  const detectCardTypeTwo = useMemo(() => {
-    // Use your existing cardTypeLogoLight object
-    // If Stripe detects a brand, we look it up in your logo object
-    if (
-      detectedBrand &&
-      cardTypeLogoLight[detectedBrand as keyof typeof cardTypeLogoLight]
-    ) {
-      return cardTypeLogoLight[detectedBrand as keyof typeof cardTypeLogoLight];
-    }
-    return "";
-  }, [detectedBrand]);
-
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    let formattedValue = value;
-
-    if (name === "cardNumber") {
-      // Remove all non-digits and add space every 4 digits
-      // \D matches any character that is not a digit
-      // \d matches a digit
-      // ?= is a positive lookahead that checks for the presence of digits ahead without including them in the match
-      // slice(0, 19) limits the input to 19 characters (16 digits + 3 spaces)
-      formattedValue = value
-        .replace(/\D/g, "")
-        .replace(/(\d{4})(?=\d)/g, "$1 ")
-        .trim()
-        .slice(0, 19);
-    } else if (name === "expDate") {
-      // Format as MM/YY
-      formattedValue = value
-        .replace(/\D/g, "")
-        .replace(/(\d{2})(?=\d)/g, "$1/")
-        .slice(0, 5);
-    } else if (name === "cvc") {
-      formattedValue = value.replace(/\D/g, "").slice(0, 3);
-    }
-
-    setCardFormData((prev) => ({ ...prev, [name]: formattedValue })); // dynamic computed property name to update the corresponding field in state
+    setCardFormData((prev) => ({ ...prev, [name]: value }));
 
     // Clear error when user starts typing
-    if (errors[name as keyof CardFormDataPayload]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (errors && name in errors) {
+      setErrors((prev) => {
+        if (!prev) return null;
+
+        // We create a copy and cast it to 'any' internally just for the deletion,
+        // or better, use a rest-spread to omit the key without 'any'
+        const {
+          [name as keyof z.ZodFormattedError<CardFormDataPayload>]: _,
+          ...remainingErrors
+        } = prev;
+
+        return remainingErrors as z.ZodFormattedError<CardFormDataPayload>;
+      });
     }
   };
 
   const handleCardSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!stripe || !elements) return;
+
     setIsLoading(true);
-    setErrors({});
-    const newErrors: Partial<CardFormDataPayload> = {};
+    setErrors(null);
 
-    //validating on the client side
-    if (!validateLuhn(cardFormData.cardNumber))
-      newErrors.cardNumber = "Invalid card number";
-    if (cardFormData.cvc.length === 0) {
-      newErrors.cvc = "CVC is required";
-    } else if (cardFormData.cvc.length !== 3) {
-      newErrors.cvc = "CVC must be exactly 3 digits";
-    }
-    if (cardFormData.cardName.trim().length === 0) {
-      newErrors.cardName = "Name is required";
-    } else if (cardFormData.cardName.trim().length <= 2) {
-      newErrors.cardName = "Name is too short";
-    }
-    if (!cardFormData.country) newErrors.country = "Select a country";
-
-    const cardTypeString =
-      detectCardType !== "" ? detectCardType.alt : "unknown";
-
-    // advance expiration date check
-    const [monthStr, yearStr] = cardFormData.expDate.split("/");
-    const month = parseInt(monthStr, 10);
-    const year = parseInt(currentYearCentury + yearStr, 10);
-
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1; // getMonth() is 0-indexed
-    const currentYear = now.getFullYear();
-
-    if (!cardFormData.expDate || cardFormData.expDate.length < 5) {
-      newErrors.expDate = "Expiration date is required";
-    } else if (month < 1 || month > 12) {
-      newErrors.expDate = "Month must be 01-12";
-    } else if (
-      year < currentYear ||
-      (year === currentYear && month < currentMonth)
-    ) {
-      newErrors.expDate = "Card has expired";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setIsLoading(false);
-      return;
-    }
     try {
+      // 1. Initialize the Payment Intent on the server
+      const intentResponse = await processPaymentIntent(
+        cardFormData,
+        priceInfo,
+      );
 
-      const cardPayload = {
-        ...cardFormData,
-        cardType: cardTypeString
+      if (!intentResponse.success) {
+        if (intentResponse.errors) {
+          // This will now be type-compatible!
+          setErrors(
+            intentResponse.errors as z.ZodFormattedError<CardFormDataPayload>,
+          );
+        } else {
+          toast.error(intentResponse.message || "Failed to initialize payment");
+        }
+        setIsLoading(false);
+        return;
       }
-      // re-validation check on the server side to avoid fraudulent card addition
-      const response = await processCardAddition(cardPayload, priceInfo, 'flight');
-      if (response.success) {
-        setCardFormData({
-          cardNumber: "",
-          expDate: "",
-          cvc: "",
-          cardName: "",
-          country: "",
-          saveCard: false,
+
+      // 2. Confirm the payment with the Stripe SDK
+      const cardNumberElement = elements.getElement(CardNumberElement);
+
+      const { paymentIntent, error: stripeError } =
+        await stripe.confirmCardPayment(intentResponse.clientSecret!, {
+          payment_method: {
+            card: cardNumberElement!,
+            billing_details: {
+              name: cardFormData.cardName,
+              address: { country: cardFormData.country },
+            },
+          },
         });
-        toast.success(response.message || "Card added successfully!", {
-          position: "top-center",
-          closeOnClick: true,
-          theme: "dark",
-        });
+
+      if (stripeError) {
+        toast.error(stripeError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Finalize DB saving if successful and saveCard was checked
+      if (paymentIntent.status === "succeeded") {
+        if (cardFormData.saveCard) {
+          const saveResult = await saveCardToDatabase(paymentIntent.id);
+
+          // CHECK if the card already exists
+          if (saveResult?.hasCardAlreadyCreated) {
+            toast.error("This card is already saved in your account.");
+            setIsLoading(false);
+            return; // STOP the function here so it doesn't redirect
+          }
+        }
+
+        toast.success("Payment successful!");
+
+        // Reset and close
+        setCardFormData({ cardName: "", country: "", saveCard: false });
         onClose();
-        if (response.url) {
-          console.log("Redirecting to Stripe Checkout:", response.url);
-          // window.location.href = response.url; // This sends the user to Stripe
-        }
-      } else {
-        if(response.errors) {
-          const serverErrors: Partial<CardFormDataPayload> = {};
-          const e = response.errors;
-          if (e?.cardNumber) serverErrors.cardNumber = e.cardNumber._errors[0];
-          if (e?.cvc) serverErrors.cvc = e.cvc._errors[0];
-          if (e?.expDate) serverErrors.expDate = e.expDate._errors[0];
-          if (e?.cardName) serverErrors.cardName = e.cardName._errors[0];
-          if (e?.country) serverErrors.country = e.country._errors[0];
-          setErrors(serverErrors);
-        } 
-        if(response.message) {
-          const errorMessage = response.message;
-          toast.error(errorMessage, {
-            position: "top-center",
-            closeOnClick: true,
-            theme: "dark",
-          });
-        }
-        
+
+        const successPath =
+          flowType === "flight"
+            ? "/flight-flow/booking-confirmation"
+            : "/hotel-flow/booking-confirmation";
+
+        // Append the payment_intent ID if your success page needs to fetch details
+        router.push(`${successPath}?payment_intent=${paymentIntent.id}`);
+
+        // Optional: Redirect user to a success or booking page
+        // window.location.href = "/booking-confirmation";
       }
     } catch (error) {
       console.error("Submission failed", error);
-      toast.error("Failed to add card.", {
-        position: "top-center",
-        closeOnClick: true,
-        theme: "dark",
-      });
-      setErrors({ cardName: "Something went wrong. Please try again." });
+      toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -297,30 +227,9 @@ export const CreateCardForm = ({
                         classes: stripeClasses,
                         style: stripeStyle,
                         showIcon: true, // Bonus: Shows the Visa/Mastercard logo
+                        disableLink: true, // removes the save card link that appears on some browsers
                       }}
-                      // onChange={handleCardChange}
                     />
-                    {/* {detectCardTypeTwo !== "" ? (
-                      <div className="absolute z-10 top-0.5 right-4 pointer-events-none w-6 h-5">
-                        <Image
-                          src={detectCardTypeTwo.src}
-                          alt={detectCardTypeTwo.alt}
-                          width={24}
-                          height={20}
-                          className="w-full h-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="absolute z-10 top-0.5 right-4 pointer-events-none w-6 h-5">
-                        <Image
-                          src="/logos/light/default_card.png"
-                          alt='empty card icon'
-                          width={24}
-                          height={20}
-                          className="w-full h-full"
-                        />
-                      </div>
-                    )} */}
                   </fieldset>
                 </div>
                 <div className="flex flex-col lg:flex-row gap-6">
@@ -329,40 +238,26 @@ export const CreateCardForm = ({
                       <legend className="text-blackish-green text-sm capitalize">
                         exp. date
                       </legend>
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        name="expDate"
-                        className={inputClassName}
-                        value={cardFormData.expDate}
-                        onChange={handleCardInputChange}
+                      <CardExpiryElement
+                        options={{
+                          classes: stripeClasses,
+                          style: stripeStyle,
+                        }}
                       />
                     </fieldset>
-                    {errors.expDate && (
-                      <span className="text-red-500 text-xs absolute -bottom-4">
-                        {errors.expDate}
-                      </span>
-                    )}
                   </div>
                   <div className="relative lg:w-1/2 w-full">
                     <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
                       <legend className="text-blackish-green text-sm uppercase">
                         cvc
                       </legend>
-                      <input
-                        type="number"
-                        placeholder="123"
-                        name="cvc"
-                        className={inputClassName}
-                        value={cardFormData.cvc}
-                        onChange={handleCardInputChange}
+                      <CardCvcElement
+                        options={{
+                          classes: stripeClasses,
+                          style: stripeStyle,
+                        }}
                       />
                     </fieldset>
-                    {errors.cvc && (
-                      <span className="text-red-500 text-xs absolute -bottom-4">
-                        {errors.cvc}
-                      </span>
-                    )}
                   </div>
                 </div>
                 <div className="relative">
@@ -379,9 +274,9 @@ export const CreateCardForm = ({
                       onChange={handleCardInputChange}
                     />
                   </fieldset>
-                  {errors.cardName && (
+                  {errors?.cardName?._errors?.[0] && (
                     <span className="text-red-500 text-xs absolute -bottom-4">
-                      {errors.cardName}
+                      {errors.cardName._errors[0]}
                     </span>
                   )}
                 </div>
@@ -399,9 +294,9 @@ export const CreateCardForm = ({
                       onChange={countrySearch}
                     />
                   </fieldset>
-                  {errors.country && (
+                  {errors?.country?._errors?.[0] && (
                     <span className="text-red-500 text-xs absolute -bottom-4">
-                      {errors.country}
+                      {errors.country._errors[0]}
                     </span>
                   )}
                 </div>

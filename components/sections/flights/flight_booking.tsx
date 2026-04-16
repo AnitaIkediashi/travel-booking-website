@@ -29,6 +29,13 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
   const tax = priceInfoObj?.tax?.amount;
   const discount = priceInfoObj?.discount?.amount;
 
+  const newPriceObj = {
+    total: { currency_code: priceInfoObj?.total?.currency_code, amount: priceInfoObj?.total?.amount },
+    base_fare: { amount: priceInfoObj?.base_fare?.amount },
+    tax: { amount: priceInfoObj?.tax?.amount },
+    discount: { amount: priceInfoObj?.discount?.amount },
+  }
+
   const cabin = offers[0].branded_fareinfo?.cabin_class;
 
   const segments = offers[0].segments;
@@ -158,7 +165,7 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
               </div>
             </BoxShadow>
             <BoxShadow className="shadow-large p-4">
-              <CardDetails priceInfo={priceInfoObj} />
+              <CardDetails priceInfo={newPriceObj} />
             </BoxShadow>
           </div>
           <div className="xl:w-[40%] lg:w-[45%] w-full lg:order-2 order-1">
