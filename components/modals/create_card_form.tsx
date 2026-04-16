@@ -17,10 +17,6 @@ import {
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 
-/**
- * Partial<T> is a built-in utility type that constructs a new type where all properties of the original type T are set to optional
- * test() returns boolean indicating whether the regex matches the string
- */
 
 type CreateCardFormProps = {
   showCardForm: boolean;
@@ -316,6 +312,7 @@ export const CreateCardForm = ({
                   type="submit"
                   label={isLoading ? "processing..." : "add card"}
                   className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded"
+                  disabled={isLoading ? true : false}
                 />
                 <p className="text-center text-xs opacity-75">
                   By confirming your subscription, you allow Stripe to charge
