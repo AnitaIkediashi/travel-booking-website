@@ -40,30 +40,28 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
 
   const segments = offers[0].segments;
 
-  const featureSrc = offers[0].branded_fareinfo?.features?.flatMap(
-    (feature, index) =>
-      feature.feature_name === "WIFI" && feature.availability === "INCLUDED" ? (
-        <WifiIcon key={index} />
-      ) : feature.feature_name === "MEAL" &&
-        feature.availability === "INCLUDED" ? (
-        <MealIcon key={index} />
-      ) : feature.feature_name === "SEAT TYPE" &&
-        feature.availability === "STANDARD" ? (
-        <StandardSeatTypeIcon key={index} />
-      ) : feature.feature_name === "SEAT TYPE" &&
-        feature.availability === "WIDE" ? (
-        <WideSeatTypeIcon key={index} />
-      ) : feature.feature_name === "SEAT TYPE" &&
-        feature.availability === "FULLY-RECLINED" ? (
-        <WideSeatTypeIcon key={index} />
-      ) : feature.feature_name === "CONNECTIVITY" &&
-        feature.availability === "INCLUDED" ? (
-        <ConnectivityIcon key={index} />
-      ) : feature.feature_name === "SEATBACK SCREEN" &&
-        feature.availability === "INCLUDED" ? (
-        <MediaIcon key={index} />
-      ) : null,
-  );
+  const featureSrc = (offers[0].branded_fareinfo?.features || [])
+    .map((feature, index) => {
+      const { feature_name: name, availability: avail } = feature;
+      if (name === "WIFI" && avail === "INCLUDED")
+        return <WifiIcon key={`wifi-${index}`} />;
+      if (name === "MEAL" && avail === "INCLUDED")
+        return <MealIcon key={`meal-${index}`} />;
+      if (name === "SEAT TYPE" && avail === "STANDARD")
+        return <StandardSeatTypeIcon key={`std-seat-${index}`} />;
+      if (
+        name === "SEAT TYPE" &&
+        (avail === "WIDE" || avail === "FULLY-RECLINED")
+      )
+        return <WideSeatTypeIcon key={`wide-seat-${index}`} />;
+      if (name === "CONNECTIVITY" && avail === "INCLUDED")
+        return <ConnectivityIcon key={`conn-${index}`} />;
+      if (name === "SEATBACK SCREEN" && avail === "INCLUDED")
+        return <MediaIcon key={`media-${index}`} />;
+
+      return null;
+    })
+    .filter(Boolean);
 
   const totalLegs =
     segments?.reduce((acc, segment) => acc + (segment.legs?.length ?? 0), 0) ??
@@ -156,7 +154,18 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
                           {flightNumber}
                         </small>
                         <div className="mt-1.5 flex gap-1.5 items-center">
-                          {featureSrc}
+                          {featureSrc.map((icon, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-1.5"
+                            >
+                              {icon}
+                              {/* If it's NOT the last icon, add a separator */}
+                              {index < featureSrc.length - 1 && (
+                                <span className="h-3 w-px bg-blackish-green/30" />
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>

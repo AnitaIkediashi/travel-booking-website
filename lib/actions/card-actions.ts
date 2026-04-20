@@ -5,17 +5,17 @@ import { prisma } from "../prisma";
 import Stripe from "stripe";
 import { PriceInfoProps } from "@/types/card_type";
 
-
-
 /**
  * 1. This file is intended to hold server actions related to card management, such as adding, updating, or deleting cards. These actions will interact with the database and handle the business logic for card operations.
  * 2. I am also going to be using Zod for input validation in these actions to ensure that the data being processed is valid and secure.
  * 3. I am using 'unknown' cos i might know the shape of the data yet
  * 4. Every Zod schema stores an array of refinements. Refinements are a way to perform custom validation that Zod doesn't provide a native API for. the .refine API only generates a single issue with a "custom" error code, but .superRefine() makes it possible to create multiple issues using any of Zod's internal issue types
  * 5. safeParse method is the non-throwing way to validate data in Zod: it returns an object that either contains the parsed data or a ZodError, so you can avoid try/catch.
+ * 6. For the Stripe integration, I use the Payment Intents API rather than the Checkout Session API because the checkout flow is fully customized on my side instead of relying on Stripe’s default checkout. This allows me to include elements like tax, discounts, and service fees directly in the total amount. The Payment Intents API is used to collect and process payments immediately, while a PaymentIntent object manages the entire payment lifecycle—from creation to completion—and handles any required authentication steps along the way.
+ * Note:  PaymentIntent requires a customer-configured Account or Customer object - authenticated user
  */
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!); // secret key for the server 'sk'
 
 // define the schema
 const cardSchema = z.object({
@@ -29,11 +29,15 @@ const cardSchema = z.object({
   cardType: z.string().optional(),
 });
 
-export async function processPaymentIntent(rawData: unknown, priceInfo: PriceInfoProps) {
+export async function processPaymentIntent(
+  rawData: unknown,
+  priceInfo: PriceInfoProps,
+) {
   // 1. Re-validate on server (Security check)
   const validated = cardSchema.safeParse(rawData);
 
   if (!validated.success) {
+    console.error("error message: ", z.prettifyError(validated.error));
     return {
       success: false,
       errors: validated.error.format(),
@@ -41,7 +45,7 @@ export async function processPaymentIntent(rawData: unknown, priceInfo: PriceInf
   }
 
   try {
-    const priceDetails = priceInfo
+    const priceDetails = priceInfo;
 
     const baseFare = priceDetails.base_fare?.amount || 0;
     const tax = priceDetails.tax?.amount || 0;
