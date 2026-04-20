@@ -12,7 +12,8 @@ import { PriceInfoProps } from "@/types/card_type";
  * 4. Every Zod schema stores an array of refinements. Refinements are a way to perform custom validation that Zod doesn't provide a native API for. the .refine API only generates a single issue with a "custom" error code, but .superRefine() makes it possible to create multiple issues using any of Zod's internal issue types
  * 5. safeParse method is the non-throwing way to validate data in Zod: it returns an object that either contains the parsed data or a ZodError, so you can avoid try/catch.
  * 6. For the Stripe integration, I use the Payment Intents API rather than the Checkout Session API because the checkout flow is fully customized on my side instead of relying on Stripe’s default checkout. This allows me to include elements like tax, discounts, and service fees directly in the total amount. The Payment Intents API is used to collect and process payments immediately, while a PaymentIntent object manages the entire payment lifecycle—from creation to completion—and handles any required authentication steps along the way.
- * Note:  PaymentIntent requires a customer-configured Account or Customer object - authenticated user
+ * Note:  PaymentIntent requires a customer-configured Account or Customer object - authenticated 
+ * 7. By adding the **expand property**, you are telling Stripe: "Don't just give me the ID string; go fetch the full object and embed it right here." With expansion, your result becomes a nested object:
  */
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!); // secret key for the server 'sk'
@@ -83,7 +84,7 @@ export async function saveCardToDatabase(paymentIntentId: string) {
     const paymentIntent = await stripe.paymentIntents.retrieve(
       paymentIntentId,
       {
-        expand: ["payment_method"],
+        expand: ["payment_method"], // you want to fetch extra keywords such as the payment methods
       },
     );
 
