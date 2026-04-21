@@ -60,8 +60,12 @@ export const CreateCardForm = ({
     saveCard: false,
   });
 
-  // const [errors, setErrors] =
-  //   useState<z.ZodFormattedError<CardFormDataPayload> | null>(null);
+  /**
+   * ReturnType<T> is a built-in Utility Type that extracts and
+   * constructs a new type based on the value returned by a function type T
+   * So its like saying I don't want to type the object structure myself. Just look at whatever 
+   * z.treeifyError returns and make that the requirement for my state.
+   */
 
   const [errors, setErrors] = useState<ReturnType<
     typeof z.treeifyError<CardFormDataPayload>
@@ -97,7 +101,7 @@ export const CreateCardForm = ({
 
         // 2. Use the asserted fieldName here
         /**
-         * The underscore is just a placeholder name. It allows you to "capture" the field 
+         * The underscore is just a placeholder name. It allows you to "capture" the field
          * you want to remove so that the "rest" of the object stays clean and error-free for that specific field.
          */
         const { [fieldName]: _, ...remainingProperties } = prev.properties;
@@ -296,7 +300,9 @@ export const CreateCardForm = ({
                       options={CountryOptions}
                       value={cardFormData.country}
                       allowClear
-                      showSearch
+                      showSearch={{
+                        optionFilterProp: "label",
+                      }}
                       className="w-full text-blackish-green-10"
                       onChange={countrySearch}
                     />
