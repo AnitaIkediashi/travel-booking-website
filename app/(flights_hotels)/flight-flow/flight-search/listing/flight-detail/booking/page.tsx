@@ -54,12 +54,12 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     redirect("/flight-flow/flight-search/listing");
   }
 
-  const data = await queryFlightToken(searchProps);
+  const flightData = await queryFlightToken(searchProps);
 
   return (
     <BookingWrapper
       flightChild={
-        <FlightBooking offers={data} totalTravelers={totalTravelers} />
+        <FlightBooking offers={flightData} totalTravelers={totalTravelers} />
       }
       hotelChild={<HotelBooking />}
     />

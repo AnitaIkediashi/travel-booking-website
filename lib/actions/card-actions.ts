@@ -24,7 +24,7 @@ const cardSchema = z.object({
     .string()
     .trim()
     .min(1, "Name is required")
-    .min(2, "Name is too short"),
+    .min(3, "Name is too short"),
   country: z.string().min(1, "Select a country"),
   saveCard: z.boolean().optional(),
   cardType: z.string().optional(),
@@ -38,10 +38,11 @@ export async function processPaymentIntent(
   const validated = cardSchema.safeParse(rawData);
 
   if (!validated.success) {
-    console.error("error message: ", z.prettifyError(validated.error));
+    console.error("error message prettify: ", z.prettifyError(validated.error));
     return {
       success: false,
-      errors: validated.error.format(),
+      // errors: validated.error.format(), // deprecated
+      errors: z.treeifyError(validated.error), // replaced the format() in the new version of zod
     };
   }
 

@@ -12,7 +12,7 @@ type CardDetailsProps = {
 };
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, // for client 'pk'
 );
 
 export const CardDetails = ({ priceInfo }: CardDetailsProps) => {

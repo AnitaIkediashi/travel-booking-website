@@ -4,7 +4,10 @@ import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { inputClassName } from "@/utils/inputClassName";
-import { processPaymentIntent, saveCardToDatabase } from "@/lib/actions/card-actions";
+import {
+  processPaymentIntent,
+  saveCardToDatabase,
+} from "@/lib/actions/card-actions";
 import { ToastContainer, toast } from "react-toastify";
 import { CardFormDataPayload, PriceInfoProps } from "@/types/card_type";
 import {
@@ -17,11 +20,10 @@ import {
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 
-
 type CreateCardFormProps = {
   showCardForm: boolean;
   onClose: () => void;
-  priceInfo: PriceInfoProps
+  priceInfo: PriceInfoProps;
   flowType: string;
 };
 
@@ -41,12 +43,11 @@ const stripeClasses = {
   invalid: "border-red-500 text-red-500",
 };
 
-
 export const CreateCardForm = ({
   showCardForm,
   onClose,
   priceInfo,
-  flowType
+  flowType,
 }: CreateCardFormProps) => {
   const router = useRouter();
   const stripe = useStripe();
@@ -59,8 +60,12 @@ export const CreateCardForm = ({
     saveCard: false,
   });
 
-  const [errors, setErrors] =
-    useState<z.ZodFormattedError<CardFormDataPayload> | null>(null);
+  // const [errors, setErrors] =
+  //   useState<z.ZodFormattedError<CardFormDataPayload> | null>(null);
+
+  const [errors, setErrors] = useState<ReturnType<
+    typeof z.treeifyError<CardFormDataPayload>
+  > | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -83,19 +88,24 @@ export const CreateCardForm = ({
 
     setCardFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user starts typing
-    if (errors && name in errors) {
+    // 1. Cast name to a key of the properties object
+    const fieldName = name as keyof NonNullable<typeof errors>["properties"];
+
+    if (errors?.properties && fieldName in errors.properties) {
       setErrors((prev) => {
-        if (!prev) return null;
+        if (!prev || !prev.properties) return prev;
 
-        // We create a copy and cast it to 'any' internally just for the deletion,
-        // or better, use a rest-spread to omit the key without 'any'
-        const {
-          [name as keyof z.ZodFormattedError<CardFormDataPayload>]: _,
-          ...remainingErrors
-        } = prev;
+        // 2. Use the asserted fieldName here
+        /**
+         * The underscore is just a placeholder name. It allows you to "capture" the field 
+         * you want to remove so that the "rest" of the object stays clean and error-free for that specific field.
+         */
+        const { [fieldName]: _, ...remainingProperties } = prev.properties;
 
-        return remainingErrors as z.ZodFormattedError<CardFormDataPayload>;
+        return {
+          ...prev,
+          properties: remainingProperties,
+        };
       });
     }
   };
@@ -116,9 +126,10 @@ export const CreateCardForm = ({
 
       if (!intentResponse.success) {
         if (intentResponse.errors) {
-          // This will now be type-compatible!
           setErrors(
-            intentResponse.errors as z.ZodFormattedError<CardFormDataPayload>,
+            intentResponse.errors as ReturnType<
+              typeof z.treeifyError<CardFormDataPayload>
+            >,
           );
         } else {
           toast.error(intentResponse.message || "Failed to initialize payment");
@@ -270,9 +281,9 @@ export const CreateCardForm = ({
                       onChange={handleCardInputChange}
                     />
                   </fieldset>
-                  {errors?.cardName?._errors?.[0] && (
+                  {errors?.properties?.cardName?.errors?.[0] && (
                     <span className="text-red-500 text-xs absolute -bottom-4">
-                      {errors.cardName._errors[0]}
+                      {errors.properties.cardName.errors[0]}
                     </span>
                   )}
                 </div>
@@ -290,9 +301,9 @@ export const CreateCardForm = ({
                       onChange={countrySearch}
                     />
                   </fieldset>
-                  {errors?.country?._errors?.[0] && (
+                  {errors?.properties?.country?.errors?.[0] && (
                     <span className="text-red-500 text-xs absolute -bottom-4">
-                      {errors.country._errors[0]}
+                      {errors.properties.country.errors[0]}
                     </span>
                   )}
                 </div>
