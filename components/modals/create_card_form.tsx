@@ -1,3 +1,5 @@
+"use client";
+
 import { Checkbox, CheckboxChangeEvent, Select } from "antd";
 import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
@@ -18,7 +20,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type CreateCardFormProps = {
   showCardForm: boolean;
@@ -50,6 +52,7 @@ export const CreateCardForm = ({
   flowType,
 }: CreateCardFormProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const stripe = useStripe();
   const elements = useElements();
   const CountryOptions = useMemo(() => countryList().getData(), []);
@@ -63,8 +66,7 @@ export const CreateCardForm = ({
   /**
    * ReturnType<T> is a built-in Utility Type that extracts and
    * constructs a new type based on the value returned by a function type T
-   * So its like saying I don't want to type the object structure myself. Just look at whatever 
-   * z.treeifyError returns and make that the requirement for my state.
+   * So its like saying I don't want to type the object structure myself. Just look at whatever z.treeifyError returns and make that the requirement for my state.
    */
 
   const [errors, setErrors] = useState<ReturnType<
@@ -93,6 +95,11 @@ export const CreateCardForm = ({
     setCardFormData((prev) => ({ ...prev, [name]: value }));
 
     // 1. Cast name to a key of the properties object
+    /**
+     * The keyof operator takes an object type and turns it into a list of its keys (a "Union" of strings).
+     * NonNullable refers to both a built-in utility type and a general category of types that exclude null and undefined
+     * as keyword - type assertion
+     */
     const fieldName = name as keyof NonNullable<typeof errors>["properties"];
 
     if (errors?.properties && fieldName in errors.properties) {
@@ -164,6 +171,8 @@ export const CreateCardForm = ({
 
       // 3. Finalize DB saving if successful and saveCard was checked
       if (paymentIntent.status === "succeeded") {
+        const currentParams = new URLSearchParams(searchParams.toString());
+        currentParams.set("cardName", cardFormData.cardName);
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
 
@@ -177,20 +186,19 @@ export const CreateCardForm = ({
 
         toast.success("Payment successful!");
 
+        const successPath =
+          flowType === "flight"
+            ? "/flight-flow/flight-search/booking-success"
+            : "/hotel-flow/flight-search/booking-success";
         // Reset and close
         setCardFormData({ cardName: "", country: "", saveCard: false });
         onClose();
 
-        const successPath =
-          flowType === "flight"
-            ? "/flight-flow/booking-confirmation"
-            : "/hotel-flow/booking-confirmation";
 
         // Append the payment_intent ID if your success page needs to fetch details
-        router.push(`${successPath}?payment_intent=${paymentIntent.id}`);
+        // router.push(`${successPath}?payment_intent=${paymentIntent.id}`);
 
-        // Optional: Redirect user to a success or booking page
-        // window.location.href = "/booking-confirmation";
+        router.push(`${successPath}${currentParams.toString()}`);
       }
     } catch (error) {
       console.error("Submission failed", error);
