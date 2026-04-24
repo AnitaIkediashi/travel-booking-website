@@ -21,6 +21,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 
 type CreateCardFormProps = {
   showCardForm: boolean;
@@ -172,7 +173,33 @@ export const CreateCardForm = ({
       // 3. Finalize DB saving if successful and saveCard was checked
       if (paymentIntent.status === "succeeded") {
         const currentParams = new URLSearchParams(searchParams.toString());
-        currentParams.set("cardName", cardFormData.cardName);
+
+        const from = currentParams.get("from");
+          const to = currentParams.get("to");
+          const trip = currentParams.get("trip");
+          const depart = currentParams.get("depart");
+          const returnDate = currentParams.get("return");
+          const adults = +(currentParams.get("adults") ?? 0); //convert to number
+          const child = +(currentParams.get("child") ?? 0);
+          const infant = +(currentParams.get("infant") ?? 0);
+          const cabin = currentParams.get("cabin");
+          const token = currentParams.get("token");
+        
+        const bookingPayLoad = {
+          flowType,
+          cardName: cardFormData.cardName,
+          from,
+          to,
+          depart,
+          return: returnDate,
+          adults,
+          child,
+          infant,
+          cabin,
+          trip,
+          token,
+        }
+
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
 
@@ -186,19 +213,26 @@ export const CreateCardForm = ({
 
         toast.success("Payment successful!");
 
-        const successPath =
-          flowType === "flight"
-            ? "/flight-flow/flight-search/booking-success"
-            : "/hotel-flow/flight-search/booking-success";
-        // Reset and close
-        setCardFormData({ cardName: "", country: "", saveCard: false });
-        onClose();
+        const urlResponse = await getSecureBookingUrl(bookingPayLoad);
+        
+        if (urlResponse.success && urlResponse.bookingId) {
+          const successPath =
+            flowType === "flight"
+              ? "/flight-flow/flight-search/booking-success"
+              : "/hotel-flow/flight-search/booking-success";
+
+          setCardFormData({ cardName: "", country: "", saveCard: false });
+
+          router.push(
+            `${successPath}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
+          );
+
+          onClose();
+        }
 
 
         // Append the payment_intent ID if your success page needs to fetch details
         // router.push(`${successPath}?payment_intent=${paymentIntent.id}`);
-
-        router.push(`${successPath}${currentParams.toString()}`);
       }
     } catch (error) {
       console.error("Submission failed", error);
