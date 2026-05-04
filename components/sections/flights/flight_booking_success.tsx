@@ -1,20 +1,27 @@
+import { BuildingSingleIcon } from "@/components/icons/building_single";
+import { CalenderIcon } from "@/components/icons/calender";
 import { FlightDesc } from "@/components/icons/flight_desc";
 import { ShareIcon } from "@/components/icons/share";
+import { TimeIcon } from "@/components/icons/time";
+import { WideSeatTypeIcon } from "@/components/icons/wide_seat_type";
+import { BarcodeDisplay } from "@/components/reusable/barcode_to_display";
 import { Button } from "@/components/reusable/button";
-import { formatDateTime } from "@/helpers/convertNumberToTime";
+import { formatDateTime, getDate } from "@/helpers/convertNumberToTime";
 import { fetchCountryName } from "@/helpers/query_flights";
 import { NewFlightOffer } from "@/types/flight_type";
 
 type FlightBookingSuccessProps = {
   offers: NewFlightOffer[] | undefined;
   totalTravelers: number;
-    cardName: string;
+  cardName: string;
+  paymentIntentId: string;
 };
 
 export const FlightBookingSuccess = async ({
   offers,
   cardName,
   totalTravelers,
+  paymentIntentId,
 }: FlightBookingSuccessProps) => {
   if (!offers || offers.length === 0) return;
 
@@ -48,7 +55,43 @@ export const FlightBookingSuccess = async ({
   const stopLabel =
     stopCount === 0 ? "non stop" : stopCount === 1 ? "1 stop" : "2 stop";
 
-  const flightNumber = segments[0]?.legs?.[0]?.flight_info?.flight_number ?? "N/A";
+  const flightNumber =
+    segments[0]?.legs?.[0]?.flight_info?.flight_number ?? "N/A";
+
+  const dateToDepart = getDate(segments[0].departure_time);
+
+  const seatNo = "N/A";
+
+  const carrier = segments[0]?.legs?.[0]?.carriers?.[0]?.name ?? "N/A";
+
+  const gateType = "N/A";
+
+  const flightInfo = [
+    {
+      id: 1,
+      icon: <CalenderIcon />,
+      label: "from",
+      value: departCityAndCountry?.country,
+    },
+    {
+      id: 2,
+      icon: <TimeIcon />,
+      label: "depart time",
+      value: dateToDepart,
+    },
+    {
+      id: 3,
+      icon: <BuildingSingleIcon />,
+      label: "gate",
+      value: gateType,
+    },
+    {
+      id: 4,
+      icon: <WideSeatTypeIcon fillColor="#8DD3BB" />,
+      label: "seat",
+      value: seatNo,
+    },
+  ];
 
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
@@ -79,7 +122,7 @@ export const FlightBookingSuccess = async ({
             </small>
           </div>
           <div className="flex flex-col gap-4">
-            <p className="md:text-[32px] text-2xl font-bold text-blackish-green text-right">
+            <p className="md:text-[32px] text-2xl font-bold text-blackish-green lg:text-right">
               ${totalPrice}
             </p>
             <div className="flex items-center gap-[15px]">
@@ -96,8 +139,8 @@ export const FlightBookingSuccess = async ({
           </div>
         </div>
         <div className="flex flex-col gap-16">
-          <div className="flex border rounded-2xl border-[#EAEAEA]">
-            <div className="w-1/4 bg-[#EBF6F2] py-[34.5px] px-6 rounded-tl-2xl rounded-bl-2xl">
+          <div className="flex md:flex-row flex-col border rounded-2xl border-[#EAEAEA]">
+            <div className="w-full md:w-1/4 bg-[#EBF6F2] py-[34.5px] px-6 rounded-tl-2xl rounded-bl-2xl">
               <div className="flex flex-col mb-4">
                 <p className="text-[32px] font-semibold">{departTime}</p>
                 <small className="text-blackish-green/60 font-medium text-xs">
@@ -117,7 +160,7 @@ export const FlightBookingSuccess = async ({
                 </small>
               </div>
             </div>
-            <div className="w-3/4 grow rounded-tr-2xl rounded-br-2xl flex flex-col">
+            <div className="w-full md:w-3/4 grow rounded-tr-2xl rounded-br-2xl flex flex-col">
               <div className="bg-mint-green-100 p-6 flex items-center justify-between">
                 <div className="flex flex-col">
                   <p className="text-xl font-bold capitalize">{cardName}</p>
@@ -128,9 +171,33 @@ export const FlightBookingSuccess = async ({
                 </div>
                 <p className="text-sm font-bold">{cabin} class</p>
               </div>
-              <div className="flex-1 bg-white flex flex-col justify-between p-6">
-                <div className="flex flex-wrap gap-8"></div>
-                <div></div>
+              <div className="flex-1 bg-white flex flex-col justify-between p-6 gap-10">
+                <div className="flex w-full md:justify-between gap-8 flex-wrap">
+                  {flightInfo.map((info) => (
+                    <div key={info.id} className="flex items-center gap-[5px]">
+                      <div className="w-8 h-8 grid place-items-center bg-mint-green-40 rounded">
+                        {info.icon}
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="opacity-60 text-sm font-semibold capitalize">
+                          {info.label}
+                        </p>
+                        <small className="text-xs font-medium">
+                          {info.value}
+                        </small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex lg:justify-between flex-1 lg:flex-row flex-col">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[32px] font-semibold">{carrier}</p>
+                    <small className="opacity-60 text-xs">{flightNumber}</small>
+                  </div>
+                  <div className="lg:self-end">
+                    <BarcodeDisplay value={paymentIntentId} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

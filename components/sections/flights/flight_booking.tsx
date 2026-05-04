@@ -53,7 +53,9 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
         name === "SEAT TYPE" &&
         (avail === "WIDE" || avail === "FULLY-RECLINED")
       )
-        return <WideSeatTypeIcon key={`wide-seat-${index}`} />;
+        return (
+          <WideSeatTypeIcon key={`wide-seat-${index}`} fillColor="#112211" />
+        );
       if (name === "CONNECTIVITY" && avail === "INCLUDED")
         return <ConnectivityIcon key={`conn-${index}`} />;
       if (name === "SEATBACK SCREEN" && avail === "INCLUDED")

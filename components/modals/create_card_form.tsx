@@ -174,17 +174,19 @@ export const CreateCardForm = ({
       if (paymentIntent.status === "succeeded") {
         const currentParams = new URLSearchParams(searchParams.toString());
 
+        const paymentIntentId = paymentIntent.id;
+
         const from = currentParams.get("from");
-          const to = currentParams.get("to");
-          const trip = currentParams.get("trip");
-          const depart = currentParams.get("depart");
-          const returnDate = currentParams.get("return");
-          const adults = +(currentParams.get("adults") ?? 0); //convert to number
-          const child = +(currentParams.get("child") ?? 0);
-          const infant = +(currentParams.get("infant") ?? 0);
-          const cabin = currentParams.get("cabin");
-          const token = currentParams.get("token");
-        
+        const to = currentParams.get("to");
+        const trip = currentParams.get("trip");
+        const depart = currentParams.get("depart");
+        const returnDate = currentParams.get("return");
+        const adults = +(currentParams.get("adults") ?? 0); //convert to number
+        const child = +(currentParams.get("child") ?? 0);
+        const infant = +(currentParams.get("infant") ?? 0);
+        const cabin = currentParams.get("cabin");
+        const token = currentParams.get("token");
+
         const bookingPayLoad = {
           flowType,
           cardName: cardFormData.cardName,
@@ -198,7 +200,8 @@ export const CreateCardForm = ({
           cabin,
           trip,
           token,
-        }
+          paymentIntentId
+        };
 
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
@@ -214,7 +217,7 @@ export const CreateCardForm = ({
         toast.success("Payment successful!");
 
         const urlResponse = await getSecureBookingUrl(bookingPayLoad);
-        
+
         if (urlResponse.success && urlResponse.bookingId) {
           const successPath =
             flowType === "flight"
@@ -229,7 +232,6 @@ export const CreateCardForm = ({
 
           onClose();
         }
-
 
         // Append the payment_intent ID if your success page needs to fetch details
         // router.push(`${successPath}?payment_intent=${paymentIntent.id}`);

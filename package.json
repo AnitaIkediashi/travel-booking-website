@@ -24,6 +24,7 @@
     "node-cron": "^4.2.1",
     "pg": "^8.16.3",
     "react": "19.2.0",
+    "react-barcode": "^1.6.1",
     "react-dom": "19.2.0",
     "react-loading-skeleton": "^3.5.0",
     "react-select-country-list": "^2.2.3",

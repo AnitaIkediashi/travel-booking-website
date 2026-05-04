@@ -18,6 +18,7 @@ type FlightPayload = {
   cabin: string;
   trip: string;
   token: string;
+  paymentIntentId: string;
 };
 
 type HotelPayload = {
@@ -29,6 +30,7 @@ type HotelPayload = {
   roomCount: number;
   adultCount: number;
   childrenCount: number;
+  paymentIntentId: string;
 };
 
 type BookingPayload = FlightPayload | HotelPayload;
@@ -58,6 +60,7 @@ const BookingSuccessPage = async ({
         offers={flightData}
         totalTravelers={totalTravelers}
         cardName={bookingId.cardName}
+        paymentIntentId={bookingId.paymentIntentId}
       />
     );
   } else if (bookingId.flowType === "hotel") {

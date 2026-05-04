@@ -6,6 +6,7 @@
   --mint-green-100: #8dd3bb;
   --mint-green-70: #d7e2ee;
   --mint-green-50: #cdeae1;
+  --mint-green-40: #EBF6F2;
   --salmon-100: #ff8682;
   --neutrals-70: #fafbfc;
   --blackish-green-10: #1c1b1f;
@@ -24,6 +25,7 @@
   --color-mint-green-100: var(--mint-green-100);
   --color-mint-green-70: var(--mint-green-70);
   --color-mint-green-50: var(--mint-green-50);
+  --color-mint-green-40: var(--mint-green-40);
   --color-salmon-100: var(--salmon-100);
   --color-neutrals-70: var(--neutrals-70);
   --shadow-light: var(--box-shadow-light);
@@ -103,6 +105,10 @@ body {
   aspect-ratio: 1;
   border-radius: 50%;
   animation: l5 1s infinite linear alternate;
+}
+
+.barcode {
+  max-width: 100%;
 }
 
 @keyframes l5 {
