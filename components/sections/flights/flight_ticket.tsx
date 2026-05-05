@@ -16,6 +16,7 @@ import html2canvas from "html2canvas";
 /**
  * Note: I had to use default style attribute for the print of the content ref-
  * for it to work properly due to html2canvas does not support external css - recent version of tailwind
+ * I had to use react-to-print library to handle the print functionality and used the custom print function to generate the pdf using jsPDF and html2canvas, this is because react-to-print shows the native print window box before downloading the pdf, and I wanted to directly download the pdf without showing the print window, using html2canvas to capture the content of the ticket and then generate a pdf using jsPDF.
  */
 
 type FlightTicketProps = {
