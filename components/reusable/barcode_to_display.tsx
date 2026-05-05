@@ -13,8 +13,6 @@ export const BarcodeDisplay = ({ value }: { value: string }) => {
       displayValue={false}
       background="transparent"
       className="barcode"
-
-    
     />
   );
 };

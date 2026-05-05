@@ -1,5 +1,4 @@
 
-import { ViewMoreIcon } from "@/components/icons/view_more";
 import { Button } from "@/components/reusable/button";
 import { formatDateTime, getDate, getDuration } from "@/helpers/convertNumberToTime";
 import { FlightOffer } from "@/types/flight_type";
@@ -81,7 +80,7 @@ export const SegmentData = ({
           const carrier = firstLeg?.carriers?.[0];
 
           if (!firstLeg || !carrier) return null;
-          
+
           return (
             <div
               key={index}
@@ -173,7 +172,7 @@ export const SegmentData = ({
         <Button
           type="button"
           className="capitalize h-10 w-full bg-mint-green-100 text-sm font-semibold flex md:hidden items-center justify-center rounded hover:bg-blackish-green hover:text-white"
-          icon={<ViewMoreIcon />}
+          label="view"
           href={segmentDetailUrl}
         />
       </div>
