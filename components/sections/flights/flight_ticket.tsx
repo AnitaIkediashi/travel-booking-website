@@ -10,6 +10,13 @@ import { BarcodeDisplay } from "@/components/reusable/barcode_to_display";
 import { Button } from "@/components/reusable/button";
 import { useReactToPrint } from "react-to-print";
 import { useRef } from "react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+
+/**
+ * Note: I had to use default style attribute for the print of the content ref-
+ * for it to work properly due to html2canvas does not support external css - recent version of tailwind
+ */
 
 type FlightTicketProps = {
   ticketInfo: TicketInfoProps;
@@ -42,8 +49,70 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({
     contentRef,
-    documentTitle: () => `flight-ticket-${ticketInfo.departAirportCode}-${ticketInfo.arrivalAirportCode}-${ticketInfo.dateToDepart}`,
-    
+    documentTitle: () =>
+      `flight-ticket-${ticketInfo.departAirportCode}-${ticketInfo.arrivalAirportCode}-${ticketInfo.dateToDepart}`,
+    print: async (printIframe: HTMLIFrameElement) => {
+      const iframeDocument = printIframe.contentDocument;
+      if (iframeDocument) {
+        const targetElement =
+          (iframeDocument.body.firstElementChild as HTMLElement) ||
+          iframeDocument.body;
+
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+
+          const canvas = await html2canvas(targetElement, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+          });
+
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF({
+            orientation: "l",
+            unit: "mm",
+            format: "a4",
+          });
+
+          // 1. Define your margin (in mm)
+          const margin = 10;
+
+          // 2. Calculate available space (Page size minus margins on both sides)
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+
+          const maxWidth = pageWidth - margin * 2;
+          const maxHeight = pageHeight - margin * 2;
+
+          // 3. Calculate the image ratio to fit within the "available space"
+          const imgProps = pdf.getImageProperties(imgData);
+          const ratio = Math.min(
+            maxWidth / imgProps.width,
+            maxHeight / imgProps.height,
+          );
+
+          const finalWidth = imgProps.width * ratio;
+          const finalHeight = imgProps.height * ratio;
+
+          // 4. Center the image in the remaining space
+          // (Page width - image width) / 2 creates equal margins
+          const xXoordinate = (pageWidth - finalWidth) / 2;
+          const yCoordinate = (pageHeight - finalHeight) / 2;
+
+          pdf.addImage(
+            imgData,
+            "PNG",
+            xXoordinate,
+            yCoordinate,
+            finalWidth,
+            finalHeight,
+          );
+          pdf.save(`ticket-${ticketInfo.paymentIntentId}-${ticketInfo.dateToDepart}-${ticketInfo.departAirportCode}-${ticketInfo.arrivalAirportCode}.pdf`);
+        } catch (error) {
+          console.error("PDF Generation Error:", error);
+        }
+      }
+    },
   });
 
   const flightInfo = [
@@ -118,21 +187,25 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
         </div>
       </div>
       <div
-        className="flex md:flex-row flex-col border rounded-2xl border-[#EAEAEA]"
+        className="flex md:flex-row flex-col border rounded-2xl"
+        style={{ borderColor: "#EAEAEA" }}
         ref={contentRef}
       >
-        <div className="w-full md:w-1/4 bg-[#EBF6F2] py-[34.5px] px-6 rounded-tl-2xl rounded-bl-2xl flex flex-col justify-between">
+        <div
+          className="w-full md:w-1/4 py-[34.5px] px-6 rounded-tl-2xl rounded-tr-2xl md:rounded-tr-none md:rounded-bl-2xl flex flex-col justify-between"
+          style={{ backgroundColor: "#EBF6F2" }}
+        >
           <div className="flex flex-col mb-4">
             <p className="lg:text-[32px] text-2xl font-semibold">
               {ticketInfo.departTime}
             </p>
-            <small className="text-blackish-green/60 font-medium text-xs">
+            <small className="font-medium text-xs" style={{ opacity: "60%" }}>
               {ticketInfo.departCountry} ({ticketInfo.departAirportCode})
             </small>
           </div>
           <div className="flex items-center mb-4">
             <FlightDesc />
-            <span className="text-xs text-blackish-green/60">
+            <span className="text-xs" style={{ opacity: "60%" }}>
               {ticketInfo.stopLabel}
             </span>
           </div>
@@ -140,13 +213,16 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
             <p className="lg:text-[32px] text-2xl font-semibold">
               {ticketInfo.arrivalTime}
             </p>
-            <small className="text-blackish-green/60 font-medium text-xs">
+            <small className="font-medium text-xs" style={{ opacity: "60%" }}>
               {ticketInfo.arriveCountry} ({ticketInfo.arrivalAirportCode})
             </small>
           </div>
         </div>
         <div className="w-full md:w-3/4 grow rounded-tr-2xl rounded-br-2xl flex flex-col">
-          <div className="bg-mint-green-100 p-6 flex items-center justify-between">
+          <div
+            className="p-6 flex items-center justify-between md:rounded-tr-2xl"
+            style={{ backgroundColor: "#8dd3bb" }}
+          >
             <div className="flex flex-col">
               <p className="text-xl font-bold capitalize">
                 {ticketInfo.cardName}
@@ -158,11 +234,17 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
             </div>
             <p className="text-sm font-bold">{ticketInfo.cabin} class</p>
           </div>
-          <div className="flex-1 bg-white flex flex-col justify-between p-6 gap-10">
+          <div
+            className="flex-1 flex flex-col justify-between p-6 gap-10"
+            style={{ backgroundColor: "#fff" }}
+          >
             <div className="flex w-full md:justify-between gap-8 flex-wrap">
               {flightInfo.map((info) => (
                 <div key={info.id} className="flex items-center gap-[5px]">
-                  <div className="w-8 h-8 grid place-items-center bg-mint-green-40 rounded">
+                  <div
+                    className="w-8 h-8 grid place-items-center rounded"
+                    style={{ backgroundColor: "#ebf6f2" }}
+                  >
                     {info.icon}
                   </div>
                   <div className="flex flex-col">
