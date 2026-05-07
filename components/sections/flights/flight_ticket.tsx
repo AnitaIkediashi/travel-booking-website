@@ -97,13 +97,13 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
 
           // 4. Center the image in the remaining space
           // (Page width - image width) / 2 creates equal margins
-          const xXoordinate = (pageWidth - finalWidth) / 2;
+          const xCoordinate = (pageWidth - finalWidth) / 2;
           const yCoordinate = (pageHeight - finalHeight) / 2;
 
           pdf.addImage(
             imgData,
             "PNG",
-            xXoordinate,
+            xCoordinate,
             yCoordinate,
             finalWidth,
             finalHeight,
