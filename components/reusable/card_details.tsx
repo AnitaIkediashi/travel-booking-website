@@ -9,13 +9,14 @@ import { PriceInfoProps } from "@/types/card_type";
 
 type CardDetailsProps = {
   priceInfo: PriceInfoProps;
+  flowType: string;
 };
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, // for client 'pk'
 );
 
-export const CardDetails = ({ priceInfo }: CardDetailsProps) => {
+export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
   const [showCardForm, setShowCardForm] = useState(false);
 
   const handleOpenCardForm = () => {
@@ -43,7 +44,7 @@ export const CardDetails = ({ priceInfo }: CardDetailsProps) => {
           showCardForm={showCardForm}
           onClose={handleCloseCardForm}
           priceInfo={priceInfo}
-          flowType="flight"
+          flowType={flowType}
         />
       </Elements>
     </>

@@ -176,7 +176,7 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
               </div>
             </BoxShadow>
             <BoxShadow className="shadow-large p-4">
-              <CardDetails priceInfo={newPriceObj} />
+              <CardDetails priceInfo={newPriceObj} flowType="flight" />
             </BoxShadow>
           </div>
           <div className="xl:w-[40%] lg:w-[45%] w-full lg:order-2 order-1">
