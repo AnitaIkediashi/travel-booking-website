@@ -1,4 +1,5 @@
 import { FlightHotelCard } from "@/components/navigation/flight_hotels_card";
+import { Footer } from "@/components/navigation/footer";
 import { HomeNavbar } from "@/components/navigation/home_navbar";
 import { PlanTrip } from "@/components/sections/home/plan-trip";
 import { Reviews } from "@/components/sections/home/reviews";
@@ -10,6 +11,7 @@ export default function Home() {
       <PlanTrip />
       <FlightHotelCard />
       <Reviews />
+      <Footer />
     </section>
   );
 }
