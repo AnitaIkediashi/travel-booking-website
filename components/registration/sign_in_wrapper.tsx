@@ -1,4 +1,5 @@
-import { ImageCarousel } from "./image_carousel";
+
+import { ImageCarouselWrapper } from "./image_carousel_wrapper";
 import { SignInForm } from "./sign_in_form";
 
 export const SignInWrapper = () => {
@@ -7,7 +8,7 @@ export const SignInWrapper = () => {
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0 h-[calc(100vh-104px)]">
         <div className="w-full flex gap-[104px] h-full">
           <SignInForm />
-          <ImageCarousel />
+          <ImageCarouselWrapper />
         </div>
       </div>
     </section>

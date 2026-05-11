@@ -140,6 +140,30 @@ body {
   }
 }
 
+#slider_one:checked ~ .carousel_wrapper .carousel {
+  transform: translateX(0);
+}
+
+#slider_two:checked ~ .carousel_wrapper .carousel {
+  transform: translateX(-100%);
+}
+
+/* When the third radio is checked, move the carousel */
+#slider_three:checked ~ .carousel_wrapper .carousel {
+  transform: translateX(-200%);
+}
+
+/* for sliders when clicked */
+#slider_one:checked ~ .carousel_sliders label.slider_one,
+#slider_two:checked ~ .carousel_sliders label.slider_two,
+#slider_three:checked ~ .carousel_sliders label.slider_three {
+  width: 32px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--mint-green-100);
+  cursor: pointer;
+}
+
 @media print {
   @page {
     /* size: landscape; */
