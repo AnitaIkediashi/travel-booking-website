@@ -3,5 +3,5 @@ export type ForgotPasswordProps = {
 };
 
 type ForgotPasswordSearchParams = {
-    verify: string
+    step: string
 }

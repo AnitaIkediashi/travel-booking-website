@@ -17,7 +17,7 @@ const randomImages = shuffleArray(allImages).slice(0, 3);
 export const ImageCarouselWrapper = () => {
 
   return (
-    <div className="lg:w-[55%] hidden lg:block h-full">
+    <div className="lg:w-[55%] hidden lg:block h-auto">
       <ImageCarousel randomImages={randomImages} />
     </div>
   );
