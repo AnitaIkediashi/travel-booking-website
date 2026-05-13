@@ -49,7 +49,7 @@ export const ResetPasswordForm = () => {
                   <input
                     type="password"
                     placeholder="Re-enter Password"
-                    name="confirmPassword"
+                    name="reEnterPassword"
                     className={inputClassName}
                   />
                 </fieldset>

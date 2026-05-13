@@ -2,10 +2,10 @@ import { ForgotPasswordWrapper } from "@/components/registration/forgot_password
 import { ImageCarouselWrapper } from "@/components/registration/image_carousel_wrapper"
 import { ResetPasswordWrapper } from "@/components/registration/reset_password_wrapper"
 import { VerifyPasswordWrapper } from "@/components/registration/verify_password_wrapper"
-import { ForgotPasswordProps } from "@/types/authentication_type"
+import { StepVerificationProps } from "@/types/authentication_type"
 
 
-const ForgotPasswordPage = async ({searchParams}: ForgotPasswordProps) => {
+const ForgotPasswordPage = async ({searchParams}: StepVerificationProps) => {
   const forgotPasswordSearchProps = await searchParams
   const request = forgotPasswordSearchProps.step
   return (

@@ -14,10 +14,16 @@ const allImages = [image1, image2, image3, image4, image5];
 
 const randomImages = shuffleArray(allImages).slice(0, 3);
 
-export const ImageCarouselWrapper = () => {
+type ImageCarouselProps = {
+  type?: string
+};
+
+export const ImageCarouselWrapper = ({type}: ImageCarouselProps) => {
 
   return (
-    <div className="lg:w-[55%] hidden lg:block h-auto">
+    <div
+      className={`${type === "signup" ? "lg:w-[40%]" : "lg:w-[55%]"} hidden lg:block h-full`}
+    >
       <ImageCarousel randomImages={randomImages} />
     </div>
   );

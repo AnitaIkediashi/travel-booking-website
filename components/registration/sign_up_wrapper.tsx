@@ -1,6 +1,7 @@
+import { SignUpForm } from "./sign_up_form"
 
 export const SignUpWrapper = () => {
   return (
-    <div>sign_up_wrapper</div>
+    <SignUpForm />
   )
 }

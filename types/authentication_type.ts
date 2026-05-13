@@ -1,7 +1,7 @@
-export type ForgotPasswordProps = {
-  searchParams: Promise<ForgotPasswordSearchParams>;
+export type StepVerificationProps = {
+  searchParams: Promise<StepVerificationSearchParams>;
 };
 
-type ForgotPasswordSearchParams = {
+type StepVerificationSearchParams = {
     step: string
 }
