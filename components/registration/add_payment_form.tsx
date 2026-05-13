@@ -4,8 +4,13 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "../reusable/button";
 import { LeftArrowIcon } from "../icons/left_arrow";
-import { inputClassName } from "@/utils/inputClassName";
-import { Checkbox } from "antd";
+import { AddCardForm } from "./add_card_form";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, // for client 'pk'
+);
 
 export const AddPaymentForm = () => {
   const router = useRouter();
@@ -40,85 +45,9 @@ export const AddPaymentForm = () => {
           </p>
         </div>
         <div>
-          <form action="">
-            <div className="flex flex-col gap-y-6 mb-8">
-              <div className="relative">
-                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-                  <legend className="text-blackish-green text-sm capitalize">
-                    card number
-                  </legend>
-                  <input
-                    type="Email"
-                    placeholder="Email"
-                    name="email"
-                    className={inputClassName}
-                  />
-                </fieldset>
-              </div>
-              <div className="flex flex-col md:flex-row items-center gap-4">
-                <div className="relative w-full md:w-1/2">
-                  <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-                    <legend className="text-blackish-green text-sm capitalize">
-                      first name
-                    </legend>
-                    <input
-                      type="text"
-                      placeholder="Type your first name"
-                      name="firstName"
-                      className={inputClassName}
-                    />
-                  </fieldset>
-                </div>
-                <div className="relative w-full md:w-1/2">
-                  <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-                    <legend className="text-blackish-green text-sm capitalize">
-                      last name
-                    </legend>
-                    <input
-                      type="text"
-                      placeholder="Type your last name"
-                      name="lastName"
-                      className={inputClassName}
-                    />
-                  </fieldset>
-                </div>
-              </div>
-              <div className="relative">
-                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-                  <legend className="text-blackish-green text-sm capitalize">
-                    card number
-                  </legend>
-                  <input
-                    type="Email"
-                    placeholder="Email"
-                    name="email"
-                    className={inputClassName}
-                  />
-                </fieldset>
-              </div>
-              <div className="relative">
-                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-                  <legend className="text-blackish-green text-sm capitalize">
-                    card number
-                  </legend>
-                  <input
-                    type="Email"
-                    placeholder="Email"
-                    name="email"
-                    className={inputClassName}
-                  />
-                </fieldset>
-              </div>
-              <Checkbox>
-                Securely save my information for 1-click checkout
-              </Checkbox>
-            </div>
-            <Button
-              type="button"
-              className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white mb-4"
-              label={"Add payment method"}
-            />
-          </form>
+          <Elements stripe={stripePromise}>
+            <AddCardForm />
+          </Elements>
           <p className="my-4 text-center">
             By confirming your subscription, you allow The Outdoor Inn Crowd
             Limited to charge your card for this payment and future payments in

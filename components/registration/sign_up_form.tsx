@@ -8,7 +8,6 @@ import { GoogleIcon } from "../icons/google";
 import { Checkbox } from "antd";
 import Link from "next/link";
 
-
 export const SignUpForm = () => {
 
     const router = useRouter()

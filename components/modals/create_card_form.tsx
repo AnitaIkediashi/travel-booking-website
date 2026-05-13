@@ -322,7 +322,7 @@ export const CreateCardForm = ({
                     </legend>
                     <input
                       type="text"
-                      placeholder="John Doe"
+                      placeholder="Type your name"
                       name="cardName"
                       className={inputClassName}
                       value={cardFormData.cardName}
