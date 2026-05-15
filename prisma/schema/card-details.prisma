@@ -1,10 +1,26 @@
 model CardDetails {
-    id                    String @id @default(uuid())
-    stripePaymentMethodId String @unique // The "Token" from Stripe
+    id                    String      @id @default(uuid())
+    stripePaymentMethodId String      @unique // The "Token" from Stripe
     cardType              String? // e.g., "visa", "mastercard"
-    last4                 String  // e.g., "4242"
+    last4                 String // e.g., "4242"
     expMonth              Int
     expYear               Int
     cardName              String
     country               String
+    userId                String
+    user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    @@index([userId])
+}
+
+model User {
+    id         String        @id @default(uuid())
+    name       String
+    email      String        @unique
+    image      String?
+    coverImage String?
+    phoneNo    String
+    address    String?
+    password   String
+    stripeCustomerId String?       @unique
+    cards   CardDetails[]
 }
