@@ -1,6 +1,6 @@
 model CardDetails {
-    id                    String      @id @default(uuid())
-    stripePaymentMethodId String      @unique // The "Token" from Stripe
+    id                    String  @id @default(uuid())
+    stripePaymentMethodId String  @unique // The "Token" from Stripe
     cardType              String? // e.g., "visa", "mastercard"
     last4                 String // e.g., "4242"
     expMonth              Int
@@ -8,8 +8,7 @@ model CardDetails {
     cardName              String
     country               String
     userId                String
-    user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
     @@index([userId])
 }
-
-

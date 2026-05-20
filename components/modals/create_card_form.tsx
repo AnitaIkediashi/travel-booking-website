@@ -200,17 +200,33 @@ export const CreateCardForm = ({
           cabin,
           trip,
           token,
-          paymentIntentId
+          paymentIntentId,
         };
+
+        // if (cardFormData.saveCard) {
+        //   const saveResult = await saveCardToDatabase(paymentIntent.id);
+
+        //   // CHECK if the card already exists
+        //   if (saveResult?.hasCardAlreadyCreated) {
+        //     toast.error("This card is already saved in your account.");
+        //     setIsLoading(false);
+        //     return; // STOP the function here so it doesn't redirect
+        //   }
+        // }
 
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
 
-          // CHECK if the card already exists
+          // Auth guard — server told us to redirect to login
+          if ("redirect" in saveResult && saveResult.redirect) {
+            router.push(saveResult.redirect);
+            return;
+          }
+
           if (saveResult?.hasCardAlreadyCreated) {
             toast.error("This card is already saved in your account.");
             setIsLoading(false);
-            return; // STOP the function here so it doesn't redirect
+            return;
           }
         }
 

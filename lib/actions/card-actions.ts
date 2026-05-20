@@ -4,6 +4,8 @@ import { z } from "zod";
 import { prisma } from "../prisma";
 import Stripe from "stripe";
 import { PriceInfoProps } from "@/types/card_type";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth";
 
 /**
  * 1. This file is intended to hold server actions related to card management, such as adding, updating, or deleting cards. These actions will interact with the database and handle the business logic for card operations.
@@ -80,36 +82,109 @@ export async function processPaymentIntent(
   }
 }
 
+// export async function saveCardToDatabase(paymentIntentId: string) {
+//   try {
+//     const paymentIntent = await stripe.paymentIntents.retrieve(
+//       paymentIntentId,
+//       {
+//         expand: ["payment_method"], // you want to fetch extra keywords such as the payment methods
+//       },
+//     );
+
+//     const pm = paymentIntent.payment_method as Stripe.PaymentMethod;
+
+//     // Check if the user opted to save and we have card details
+//     if (paymentIntent.metadata.saveCard === "true" && pm.card) {
+//       const cardName = paymentIntent.metadata.cardName;
+//       const last4 = pm.card.last4;
+//       const expMonth = pm.card.exp_month;
+//       const expYear = pm.card.exp_year;
+
+//       // 1. Check if a card with these exact details already exists for this user
+//       const existingCard = await prisma.cardDetails.findFirst({
+//         where: {
+//           cardName: cardName,
+//           last4: last4,
+//           expMonth: expMonth,
+//           expYear: expYear,
+//           // userid: currentUser.id (you would need to get the current user's ID from your auth context/session) - soon
+//         },
+//       });
+
+//       // 2. If it exists, return the specific flag to the UI
+//       if (existingCard) {
+//         return {
+//           success: false,
+//           message: "Card already exists",
+//           hasCardAlreadyCreated: true,
+//         };
+//       }
+
+//       // 3. Otherwise, proceed with creation
+//       await prisma.cardDetails.create({
+//         data: {
+//           stripePaymentMethodId: pm.id,
+//           cardType: pm.card.brand,
+//           last4: last4,
+//           expMonth: expMonth,
+//           expYear: expYear,
+//           cardName: cardName,
+//           country: paymentIntent.metadata.country,
+//         },
+//       });
+
+//       return { success: true };
+//     }
+
+//     return { success: false, message: "Save card option not selected" };
+//   } catch (error) {
+//     console.error("Migration Error:", error);
+//     return {
+//       success: false,
+//       message: "An error occurred while saving the card",
+//     };
+//   }
+// }
+
 export async function saveCardToDatabase(paymentIntentId: string) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return {
+      success: false,
+      redirect: "/signin",
+    };
+  }
+
+  const userId = session.user.id;
+
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(
       paymentIntentId,
       {
-        expand: ["payment_method"], // you want to fetch extra keywords such as the payment methods
+        expand: ["payment_method"],
       },
     );
 
     const pm = paymentIntent.payment_method as Stripe.PaymentMethod;
 
-    // Check if the user opted to save and we have card details
     if (paymentIntent.metadata.saveCard === "true" && pm.card) {
       const cardName = paymentIntent.metadata.cardName;
       const last4 = pm.card.last4;
       const expMonth = pm.card.exp_month;
       const expYear = pm.card.exp_year;
 
-      // 1. Check if a card with these exact details already exists for this user
+      // Duplicate check scoped to THIS user
       const existingCard = await prisma.cardDetails.findFirst({
         where: {
-          cardName: cardName,
-          last4: last4,
-          expMonth: expMonth,
-          expYear: expYear,
-          // userid: currentUser.id (you would need to get the current user's ID from your auth context/session) - soon
+          cardName,
+          last4,
+          expMonth,
+          expYear,
+          userId,
         },
       });
 
-      // 2. If it exists, return the specific flag to the UI
       if (existingCard) {
         return {
           success: false,
@@ -118,16 +193,16 @@ export async function saveCardToDatabase(paymentIntentId: string) {
         };
       }
 
-      // 3. Otherwise, proceed with creation
       await prisma.cardDetails.create({
         data: {
           stripePaymentMethodId: pm.id,
           cardType: pm.card.brand,
-          last4: last4,
-          expMonth: expMonth,
-          expYear: expYear,
-          cardName: cardName,
+          last4,
+          expMonth,
+          expYear,
+          cardName,
           country: paymentIntent.metadata.country,
+          userId,
         },
       });
 
