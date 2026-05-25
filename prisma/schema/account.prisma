@@ -22,7 +22,7 @@ model PasswordResetToken {
   id      String   @id @default(cuid())
   token   String   @unique // the hashed token you email the user
   userId  String
-  expires DateTime // short-lived, e.g. 1 hour
+  expires DateTime // short-lived, e.g. 5 mins
   used    Boolean  @default(false) // prevent reuse after first click
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
