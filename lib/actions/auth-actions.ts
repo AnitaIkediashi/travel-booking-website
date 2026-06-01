@@ -5,13 +5,9 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../prisma";
 import { z } from "zod";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
-
-// ─── Sign Up ─────────────────────────────────────────────────────────────────
 
 const signUpSchema = z
   .object({
