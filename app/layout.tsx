@@ -13,7 +13,7 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "Golobe Booking Website",
   description:
-    "Travel Guide and booking website for Golobe developed using a full-stack framework, featuring Next.js, Typescript, Prisma ORM, PostgreSQL, REST API, OAuth, NextAuth, Tailwind CSS, Zod, React Hook Form, Cloudinary, Context API, Ant Design, and optimized for SEO.",
+    "Travel Guide and booking website for Golobe developed using a full-stack framework, featuring Next.js, Typescript, Prisma ORM, PostgreSQL, REST API, OAuth, NextAuth, Tailwind CSS, Zod, React Hook Form, Stripe payment, Cloudinary, Context API, Ant Design, and optimized for SEO.",
 };
 
 export default async function RootLayout({
