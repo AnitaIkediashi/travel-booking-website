@@ -4,10 +4,14 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "../prisma";
 import { z } from "zod";
+import { Resend } from "resend";
+import { ResetPasswordEmail } from "@/components/registration/reset_password_email";
 
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 const signUpSchema = z
   .object({
@@ -57,7 +61,7 @@ export async function signUpUser(rawData: unknown) {
   return { success: true };
 }
 
-// ─── Forgot Password ──────────────────────────────────────────────────────────
+// Forgot Password 
 
 export async function forgotPassword(email: string) {
   // Always return the same generic response
@@ -89,16 +93,20 @@ export async function forgotPassword(email: string) {
     },
   });
 
-  // TODO: replace this with your email provider (Resend, Nodemailer, etc.)
   const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${rawToken}`;
   console.log("Password reset URL:", resetUrl);
+
+  resend.emails.send({
+    from: "noreply@golobe.com",
+    to: email,
+    subject: "Reset Your Password",
+    react: ResetPasswordEmail({ resetUrl }),
+  });
 
   return genericResponse;
 }
 
-// ─── Verify Reset Token ───────────────────────────────────────────────────────
-// Called when the user lands on /reset-password?token=...
-// to check the token is valid before showing the new password form
+//  Verify Reset Token 
 
 export async function verifyResetToken(rawToken: string) {
   const hashedToken = hashToken(rawToken);
@@ -122,7 +130,7 @@ export async function verifyResetToken(rawToken: string) {
   return { valid: true };
 }
 
-// ─── Reset Password ───────────────────────────────────────────────────────────
+// Reset Password 
 
 const resetSchema = z
   .object({
