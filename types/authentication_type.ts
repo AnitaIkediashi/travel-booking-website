@@ -3,5 +3,14 @@ export type StepVerificationProps = {
 };
 
 type StepVerificationSearchParams = {
-    step: string
-}
+  step: string;
+};
+
+export type SignUpFormPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  password: string;
+  confirmPassword: string;
+};

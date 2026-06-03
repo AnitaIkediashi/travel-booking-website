@@ -1,7 +1,7 @@
 "use server";
 
 import crypto from "crypto";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { prisma } from "../prisma";
 import { z } from "zod";
 import { Resend } from "resend";

@@ -4,7 +4,7 @@ model User {
     email               String               @unique
     image               String?
     coverImage          String?
-    phoneNo             String
+    phoneNo             String?
     address             String?
     password            String
     stripeCustomerId    String?              @unique
