@@ -111,10 +111,6 @@ export const SignUpForm = () => {
     }
   };
 
-  // function addPaymentOption() {
-  //   router.push("/signup?step=add-payment");
-  // }
-
   return (
     <>
       <div className="lg:w-[60%] w-full h-full flex flex-col justify-between gap-6">
