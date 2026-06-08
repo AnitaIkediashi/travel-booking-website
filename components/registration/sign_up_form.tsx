@@ -82,15 +82,17 @@ export const SignUpForm = () => {
     try {
       const formResponse = await signUpUser(signUpData);
 
-      if(!formResponse.success) {
-        if(formResponse.errors) {
+      if (!formResponse.success) {
+        if (formResponse.errors) {
           setErrors(
             formResponse.errors as ReturnType<
               typeof z.treeifyError<SignUpFormPayload>
             >,
           );
         } else {
-          toast.error(formResponse.message || "Sign up failed. Please try again.");
+          toast.error(
+            formResponse.message || "Sign up failed. Please try again.",
+          );
         }
         return;
       }
@@ -112,8 +114,8 @@ export const SignUpForm = () => {
   };
 
   return (
-    <>
-      <div className="lg:w-[60%] w-full h-full flex flex-col justify-between gap-6">
+    <div className="lg:w-[60%] w-full h-full ">
+      <div className="flex flex-col justify-between gap-6">
         <div>
           <Image
             src="/logos/logo_mint.svg"
@@ -314,6 +316,6 @@ export const SignUpForm = () => {
         </div>
       </div>
       <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
-    </>
+    </div>
   );
 };
