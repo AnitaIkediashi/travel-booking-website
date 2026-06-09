@@ -12,3 +12,13 @@ export type PriceInfoProps = {
   discount?: { amount: number | undefined };
   service_fee?: { amount: number | undefined };
 };
+
+export type SaveCardOnSignupPayload = {
+  stripePaymentMethodId: string;
+  cardType: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  cardName: string;
+  country: string;
+};

@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { prisma } from "../prisma";
 import Stripe from "stripe";
-import { PriceInfoProps } from "@/types/card_type";
+import { PriceInfoProps, SaveCardOnSignupPayload } from "@/types/card_type";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 
@@ -212,6 +212,58 @@ export async function saveCardToDatabase(paymentIntentId: string) {
     return { success: false, message: "Save card option not selected" };
   } catch (error) {
     console.error("Migration Error:", error);
+    return {
+      success: false,
+      message: "An error occurred while saving the card",
+    };
+  }
+}
+
+
+export async function saveCardOnSignup(cardData: SaveCardOnSignupPayload) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { success: false, redirect: "/signin" };
+  }
+
+  const userId = session.user.id;
+
+  try {
+    // Duplicate check
+    const existingCard = await prisma.cardDetails.findFirst({
+      where: {
+        last4: cardData.last4,
+        expMonth: cardData.expMonth,
+        expYear: cardData.expYear,
+        userId,
+      },
+    });
+
+    if (existingCard) {
+      return {
+        success: false,
+        message: "Card already exists",
+        hasCardAlreadyCreated: true,
+      };
+    }
+
+    await prisma.cardDetails.create({
+      data: {
+        stripePaymentMethodId: cardData.stripePaymentMethodId,
+        cardType: cardData.cardType,
+        last4: cardData.last4,
+        expMonth: cardData.expMonth,
+        expYear: cardData.expYear,
+        cardName: cardData.cardName,
+        country: cardData.country,
+        userId,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Save Card Error:", error);
     return {
       success: false,
       message: "An error occurred while saving the card",

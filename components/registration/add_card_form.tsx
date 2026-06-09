@@ -15,7 +15,8 @@ import countryList from "react-select-country-list";
 import { CardFormDataPayload } from "@/types/card_type";
 import z from "zod";
 import { useRouter } from "next/navigation";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import { saveCardOnSignup } from "@/lib/actions/card-actions";
 
 const stripeStyle = {
   base: {
@@ -92,9 +93,56 @@ export const AddCardForm = () => {
     setIsLoading(true);
     setErrors(null);
     try {
-      
+      const cardNumberElement = elements.getElement(CardNumberElement);
+
+      // 1. Tokenize the card — no charge, no intent
+      const { paymentMethod, error: stripeError } =
+        await stripe.createPaymentMethod({
+          type: "card",
+          card: cardNumberElement!,
+          billing_details: {
+            name: cardFormData.cardName,
+            address: { country: cardFormData.country },
+          },
+        });
+
+      if (stripeError) {
+        toast.error(stripeError.message);
+        return;
+      }
+
+      const saveResult = await saveCardOnSignup({
+        stripePaymentMethodId: paymentMethod.id,
+        cardType: paymentMethod.card!.brand,
+        last4: paymentMethod.card!.last4,
+        expMonth: paymentMethod.card!.exp_month,
+        expYear: paymentMethod.card!.exp_year,
+        cardName: cardFormData.cardName,
+        country: cardFormData.country,
+      });
+
+      if (saveResult.redirect) {
+        router.push(saveResult.redirect);
+        return;
+      }
+
+      if (saveResult.hasCardAlreadyCreated) {
+        toast.error("This card is already saved in your account.");
+        return;
+      }
+
+      if (!saveResult.success) {
+        toast.error(saveResult.message);
+        return;
+      }
+
+      toast.success("Card saved successfully!");
+      router.push("/signin"); // wherever after signup completes
     } catch (error) {
-      
+      console.error("Card setup failed", error);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
