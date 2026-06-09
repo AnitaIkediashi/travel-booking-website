@@ -1,6 +1,6 @@
 "use client";
 
-import { Checkbox, CheckboxChangeEvent, Select } from "antd";
+import { Select } from "antd";
 import { Button } from "../reusable/button";
 import { inputClassName } from "@/utils/inputClassName";
 import {
@@ -59,12 +59,12 @@ export const AddCardForm = () => {
     }));
   };
 
-  const handleCheckedInfo = (e: CheckboxChangeEvent) => {
-    setCardFormData((prev) => ({
-      ...prev,
-      saveCard: e.target.checked,
-    }));
-  };
+  // const handleCheckedInfo = (e: CheckboxChangeEvent) => {
+  //   setCardFormData((prev) => ({
+  //     ...prev,
+  //     saveCard: e.target.checked,
+  //   }));
+  // };
 
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -235,13 +235,13 @@ export const AddCardForm = () => {
               </span>
             )}
           </div>
-          <Checkbox
+          {/* <Checkbox
             name="saveCard"
             checked={cardFormData.saveCard}
             onChange={handleCheckedInfo}
           >
             Securely save my information for 1-click checkout
-          </Checkbox>
+          </Checkbox> */}
         </div>
         <Button
           type="submit"

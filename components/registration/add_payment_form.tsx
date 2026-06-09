@@ -29,13 +29,20 @@ export const AddPaymentForm = () => {
         />
       </div>
       <div className="flex flex-col gap-6 flex-1">
-        <Button
-          className="flex items-center gap-3 hover:font-semibold hover:underline hover:underline-offset-4 mb-4"
-          icon={<LeftArrowIcon />}
-          label="Back"
-          labelClassName="text-sm font-medium"
-          onClick={handleGoBack}
-        />
+        <div className="w-full flex items-center justify-between mb-4">
+          <Button
+            className="flex items-center gap-3 hover:font-semibold hover:underline hover:underline-offset-4 "
+            icon={<LeftArrowIcon />}
+            label="Back"
+            labelClassName="text-sm font-medium"
+            onClick={handleGoBack}
+          />
+          <Button
+            label="skip"
+            className="capitalize hover:font-semibold hover:underline hover:underline-offset-4 text-sm font-medium"
+            href="/signin"
+          />
+        </div>
         <div className="flex flex-col gap-y-4">
           <h2 className="capitalize font-bold text-[40px]">
             Add a payment method

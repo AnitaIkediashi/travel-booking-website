@@ -103,6 +103,7 @@ export const SignUpForm = () => {
       }
 
       if (formResponse.success) {
+        toast.success("Account created successfully!");
         router.push("/signup?step=add-payment");
       }
     } catch (error) {
