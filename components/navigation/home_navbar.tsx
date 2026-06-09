@@ -6,11 +6,12 @@ import { FlightIcon } from "../icons/flight";
 import logo from "@/public/logos/light/Logo_light.svg";
 import logoDark from "@/public/logos/logo_mint.svg";
 import { Button } from "../reusable/button";
-import { MobileMenu } from "./mobile_menu";
 import { useEffect, useState } from "react";
-import { MenuIcon } from "../icons/menu";
 import { SearchPlaces } from "../reusable/search_places";
 import Link from "next/link";
+import { useCurrentUser } from "@/lib/auth-context";
+import { Avatar } from "antd";
+import { AccountMenu } from "./account_menu";
 
 export type NavLinkProp = {
   label: string;
@@ -19,8 +20,21 @@ export type NavLinkProp = {
 };
 
 export const HomeNavbar = () => {
+  const { user, isAuthenticated } = useCurrentUser();
   const [showMenu, setShowMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const firstInitial = user?.name?.charAt(0).toUpperCase();
+  const lastInitial = user?.name?.includes(" ")
+    ? user?.name?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
+    : "";
+
+  const fullname = user?.name?.includes(" ")
+    ? user.name
+        .split(" ")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ")
+    : user?.name;
 
   const handleClick = () => {
     setShowMenu(!showMenu);
@@ -86,31 +100,54 @@ export const HomeNavbar = () => {
               <Link href="/">
                 <Image src={isScrolled ? logoDark : logo} alt="company logo" />
               </Link>
-              <div className="lg:flex items-center gap-8 hidden">
-                <Button
-                  label="login"
-                  className={`capitalize text-sm font-semibold ${
-                    isScrolled ? "text-blackish-green" : "text-white"
-                  }`}
-                />
-                <Button
-                  label="Sign up"
-                  className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg ${
-                    isScrolled ? "text-white bg-blackish-green" : "text-blackish-green bg-white"
-                  }`}
-                />
-              </div>
-              <div
-                className="cursor-pointer lg:hidden block"
-                onClick={handleClick}
-              >
-                <MenuIcon fillColor={isScrolled ? "#112211" : "#fff"} />
-              </div>
+              {isAuthenticated ? (
+                <>
+                  <div
+                    className="flex items-center gap-1 cursor-pointer"
+                    onClick={handleClick}
+                  >
+                    {user?.image ? (
+                      <Avatar src={user.image} />
+                    ) : (
+                      <Avatar
+                        style={{ backgroundColor: "#fde3cf", color: "#f56a00" }}
+                      >
+                        {firstInitial}
+                        {lastInitial}
+                      </Avatar>
+                    )}
+                    <p
+                      className={`font-semibold text-sm hidden lg:block ${isScrolled ? "text-blackish-green" : "text-white"}`}
+                    >
+                      {fullname}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="lg:flex items-center gap-8 hidden">
+                  <Button
+                    label="login"
+                    className={`capitalize text-sm font-semibold ${
+                      isScrolled ? "text-blackish-green" : "text-white"
+                    }`}
+                    href="/signin"
+                  />
+                  <Button
+                    label="Sign up"
+                    className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg hidden lg:block ${
+                      isScrolled
+                        ? "text-white bg-blackish-green"
+                        : "text-blackish-green bg-white"
+                    }`}
+                    href="/signup"
+                  />
+                </div>
+              )}
             </nav>
           </header>
-          <MobileMenu
+          <AccountMenu
             showMenu={showMenu}
-            topSize={isScrolled ? "top-[96px]" : "top-[69px]"}
+            topSize={isScrolled ? "top-[96px]" : "top-[94px]"}
           />
           <div className="flex flex-col items-center justify-center gap-1 text-white">
             <h3 className=" capitalize font-bold lg:text-[45px] sm:text-3xl text-2xl">

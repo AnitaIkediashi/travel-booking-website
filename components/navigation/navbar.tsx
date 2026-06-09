@@ -10,7 +10,7 @@ import { Button } from "../reusable/button";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { MenuIcon } from "../icons/menu";
-import { MobileMenu } from "./mobile_menu";
+import { AccountMenu } from "./account_menu";
 
 const NavLinksDark: NavLinkProp[] = [
   {
@@ -25,7 +25,6 @@ const NavLinksDark: NavLinkProp[] = [
   },
 ];
 
-
 export const Navbar = () => {
   const pathname = usePathname();
 
@@ -36,7 +35,9 @@ export const Navbar = () => {
 
   return (
     <>
-      <header className={`w-full h-[90px] bg-white shadow-light xl:px-[147px] lg:px-[121px] px-8 py-[27px] md:px-[76px] flex items-center justify-center font-montserrat fixed top-0 left-0 right-0 z-50 `}>
+      <header
+        className={`w-full h-[90px] bg-white shadow-light xl:px-[147px] lg:px-[121px] px-8 py-[27px] md:px-[76px] flex items-center justify-center font-montserrat fixed top-0 left-0 right-0 z-50 `}
+      >
         <nav className="w-full flex items-center justify-between">
           {/* links */}
           <div className="lg:flex items-center gap-8 hidden transition-all duration-200">
@@ -81,7 +82,7 @@ export const Navbar = () => {
           </div>
         </nav>
       </header>
-      <MobileMenu topSize="top-[90px]" showMenu={showMenu} />
+      <AccountMenu topSize="top-[90px]" showMenu={showMenu} />
     </>
   );
 };

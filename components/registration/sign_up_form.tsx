@@ -233,7 +233,7 @@ export const SignUpForm = () => {
                       className={inputClassName}
                     />
                     <div
-                      className="absolute w-8 h-8 -top-1 right-0 z-10 flex items-center justify-center"
+                      className="absolute w-8 h-8 -top-1 right-0 z-10 flex items-center justify-center cursor-pointer"
                       onClick={() => setSeePassword((prev) => !prev)}
                     >
                       {seePassword ? <EyeIcon /> : <EyeOffIcon />}

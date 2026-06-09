@@ -9,7 +9,7 @@ type MenuProps = {
   topSize: string
 };
 
-export const MobileMenu = ({showMenu, topSize}: MenuProps) => {
+export const AccountMenu = ({showMenu, topSize}: MenuProps) => {
   return (
     <ul
       className={`fixed ${topSize} lg:hidden bg-white md:w-[210px] w-44 rounded-lg flex flex-col gap-6 p-4 transition-all duration-300 ease-in-out z-50 font-montserrat ${
