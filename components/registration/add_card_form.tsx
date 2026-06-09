@@ -1,13 +1,21 @@
-import { Checkbox, Select } from "antd";
+"use client";
+
+import { Checkbox, CheckboxChangeEvent, Select } from "antd";
 import { Button } from "../reusable/button";
 import { inputClassName } from "@/utils/inputClassName";
 import {
   CardCvcElement,
   CardExpiryElement,
   CardNumberElement,
+  useElements,
+  useStripe,
 } from "@stripe/react-stripe-js";
-import { useMemo } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import countryList from "react-select-country-list";
+import { CardFormDataPayload } from "@/types/card_type";
+import z from "zod";
+import { useRouter } from "next/navigation";
+import { ToastContainer } from "react-toastify";
 
 const stripeStyle = {
   base: {
@@ -26,90 +34,175 @@ const stripeClasses = {
 };
 
 export const AddCardForm = () => {
+  const router = useRouter();
+  const stripe = useStripe();
+  const elements = useElements();
   const CountryOptions = useMemo(() => countryList().getData(), []);
+
+  const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
+    cardName: "",
+    country: "",
+    saveCard: false,
+  });
+
+  const [errors, setErrors] = useState<ReturnType<
+    typeof z.treeifyError<CardFormDataPayload>
+  > | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const countrySearch = (value: string) => {
+    setCardFormData((prev) => ({
+      ...prev,
+      country: value,
+    }));
+  };
+
+  const handleCheckedInfo = (e: CheckboxChangeEvent) => {
+    setCardFormData((prev) => ({
+      ...prev,
+      saveCard: e.target.checked,
+    }));
+  };
+
+  const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setCardFormData((prev) => ({ ...prev, [name]: value }));
+    const fieldName = name as keyof NonNullable<typeof errors>["properties"];
+
+    if (errors?.properties && fieldName in errors.properties) {
+      setErrors((prev) => {
+        if (!prev || !prev.properties) return prev;
+
+        const { [fieldName]: _, ...remainingProperties } = prev.properties;
+
+        return {
+          ...prev,
+          properties: remainingProperties,
+        };
+      });
+    }
+  };
+
+  const handleCardSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsLoading(true);
+    setErrors(null);
+    try {
+      
+    } catch (error) {
+      
+    }
+  };
+
   return (
-    <form action="">
-      <div className="flex flex-col gap-y-6 mb-8">
-        <div className="relative">
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-            <legend className="text-blackish-green text-sm capitalize">
-              card number
-            </legend>
-            <CardNumberElement
-              options={{
-                classes: stripeClasses,
-                style: stripeStyle,
-                showIcon: true,
-                disableLink: true,
-              }}
-            />
-          </fieldset>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="relative w-full md:w-1/2">
+    <>
+      <form action="" onSubmit={handleCardSubmit}>
+        <div className="flex flex-col gap-y-6 mb-8">
+          <div className="relative">
             <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
               <legend className="text-blackish-green text-sm capitalize">
-                exp. date
+                card number
               </legend>
-              <CardExpiryElement
+              <CardNumberElement
                 options={{
                   classes: stripeClasses,
                   style: stripeStyle,
+                  showIcon: true,
+                  disableLink: true,
                 }}
               />
             </fieldset>
           </div>
-          <div className="relative w-full md:w-1/2">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="relative w-full md:w-1/2">
+              <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
+                <legend className="text-blackish-green text-sm capitalize">
+                  exp. date
+                </legend>
+                <CardExpiryElement
+                  options={{
+                    classes: stripeClasses,
+                    style: stripeStyle,
+                  }}
+                />
+              </fieldset>
+            </div>
+            <div className="relative w-full md:w-1/2">
+              <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
+                <legend className="text-blackish-green text-sm uppercase">
+                  cvc
+                </legend>
+                <CardCvcElement
+                  options={{
+                    classes: stripeClasses,
+                    style: stripeStyle,
+                  }}
+                />
+              </fieldset>
+            </div>
+          </div>
+          <div className="relative">
             <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-              <legend className="text-blackish-green text-sm uppercase">
-                cvc
+              <legend className="text-blackish-green text-sm">
+                Name on Card
               </legend>
-              <CardCvcElement
-                options={{
-                  classes: stripeClasses,
-                  style: stripeStyle,
-                }}
+              <input
+                type="text"
+                placeholder="Type your name"
+                name="cardName"
+                className={inputClassName}
+                value={cardFormData.cardName}
+                onChange={handleCardInputChange}
               />
             </fieldset>
+            {errors?.properties?.cardName?.errors?.[0] && (
+              <span className="text-red-500 text-xs absolute -bottom-4">
+                {errors.properties.cardName.errors[0]}
+              </span>
+            )}
           </div>
+          <div className="relative">
+            <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
+              <legend className="text-blackish-green text-sm">
+                Country or Region
+              </legend>
+              <Select
+                options={CountryOptions}
+                value={cardFormData.country}
+                allowClear
+                showSearch={{
+                  optionFilterProp: "label",
+                }}
+                className="w-full text-blackish-green-10"
+                onChange={countrySearch}
+              />
+            </fieldset>
+            {errors?.properties?.country?.errors?.[0] && (
+              <span className="text-red-500 text-xs absolute -bottom-4">
+                {errors.properties.country.errors[0]}
+              </span>
+            )}
+          </div>
+          <Checkbox
+            name="saveCard"
+            checked={cardFormData.saveCard}
+            onChange={handleCheckedInfo}
+          >
+            Securely save my information for 1-click checkout
+          </Checkbox>
         </div>
-        <div className="relative">
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-            <legend className="text-blackish-green text-sm">
-              Name on Card
-            </legend>
-            <input
-              type="text"
-              placeholder="Type your name"
-              name="cardName"
-              className={inputClassName}
-            />
-          </fieldset>
-        </div>
-        <div className="relative">
-          <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
-            <legend className="text-blackish-green text-sm">
-              Country or Region
-            </legend>
-            <Select
-              options={CountryOptions}
-              // value={cardFormData.country}
-              allowClear
-              showSearch={{
-                optionFilterProp: "label",
-              }}
-              className="w-full text-blackish-green-10"
-              // onChange={countrySearch}
-            />
-          </fieldset>
-        </div>
-        <Checkbox>Securely save my information for 1-click checkout</Checkbox>
-      </div>
-      <Button
-        type="button"
-        className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white mb-4"
-        label={"Add payment method"}
-      />
-    </form>
+        <Button
+          type="submit"
+          className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white mb-4"
+          label={isLoading ? "Processing..." : "Add payment method"}
+          disabled={isLoading ? true : false}
+        />
+      </form>
+      <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
+    </>
   );
 };
