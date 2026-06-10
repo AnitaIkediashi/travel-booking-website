@@ -1,22 +1,22 @@
 
 import { FlightIcon } from "../icons/flight";
 import { BedIcon } from "../icons/bed";
-import { Button } from "../reusable/button";
 import Link from "next/link";
 
 type MenuProps = {
-  showMenu: boolean;
-  topSize: string
+  showAccountMenu: boolean;
+  topSize: string;
+  isScrolled: boolean;
 };
 
-export const AccountMenu = ({showMenu, topSize}: MenuProps) => {
+export const AccountMenu = ({showAccountMenu, topSize, isScrolled}: MenuProps) => {
   return (
     <ul
-      className={`fixed ${topSize} lg:hidden bg-white md:w-[210px] w-44 rounded-lg flex flex-col gap-6 p-4 transition-all duration-300 ease-in-out z-50 font-montserrat ${
-        showMenu
+      className={`fixed ${topSize} bg-white md:w-[210px] w-44 rounded-lg flex flex-col gap-6 p-4 transition-all duration-300 ease-in-out z-50 font-montserrat shadow-[0px_2px_10px_rgba(0,0,0,0.05)] ${
+        showAccountMenu
           ? "right-0 -translate-x-8  opacity-100"
           : "right-0 translate-x-0 opacity-0"
-      }`}
+      } before:absolute before:content-[''] before:w-3 before:h-3 before:bg-white before:rotate-45 before:z-10 before:-top-1.5 ${isScrolled ? "before:right-[88px]" : "md:before:right-[116px] before:right-[88px]"}`}
     >
       <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
         <FlightIcon fillColor="#112211" />
@@ -35,18 +35,6 @@ export const AccountMenu = ({showMenu, topSize}: MenuProps) => {
         >
           find stays
         </Link>
-      </li>
-      <li className="hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg transition-all duration-300 ease-in-out">
-        <Button
-          label="login"
-          className="capitalize text-blackish-green text-sm font-semibold"
-        />
-      </li>
-      <li>
-        <Button
-          label="Sign up"
-          className="text-white bg-blackish-green w-full text-sm font-semibold py-3 rounded-lg hover:bg-blackish-green/70 transition duration-300 ease-in-out"
-        />
       </li>
     </ul>
   );

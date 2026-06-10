@@ -12,6 +12,8 @@ import Link from "next/link";
 import { useCurrentUser } from "@/lib/auth-context";
 import { Avatar } from "antd";
 import { AccountMenu } from "./account_menu";
+import { MenuIcon } from "../icons/menu";
+import { OtherMenus } from "./other_menus";
 
 export type NavLinkProp = {
   label: string;
@@ -21,7 +23,8 @@ export type NavLinkProp = {
 
 export const HomeNavbar = () => {
   const { user, isAuthenticated } = useCurrentUser();
-  const [showMenu, setShowMenu] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showOtherMenu, setShowOtherMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   const firstInitial = user?.name?.charAt(0).toUpperCase();
@@ -37,7 +40,11 @@ export const HomeNavbar = () => {
     : user?.name;
 
   const handleClick = () => {
-    setShowMenu(!showMenu);
+    setShowAccountMenu(!showAccountMenu);
+  };
+
+  const handleClose = () => {
+    setShowOtherMenu(!showOtherMenu);
   };
 
   const NavLinks: NavLinkProp[] = [
@@ -67,6 +74,15 @@ export const HomeNavbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (showOtherMenu) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    return () => document.body.classList.remove("overflow-hidden");
+  }, [showOtherMenu]);
+
   return (
     <>
       <section className="md:mx-[30px] md:mt-[30px] mx-3 mt-4 font-montserrat">
@@ -75,7 +91,7 @@ export const HomeNavbar = () => {
             className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${
               isScrolled
                 ? "bg-white py-[30px] shadow-light px-8"
-                : "px-16 py-[54px]"
+                : "md:px-16 md:py-[54px] px-8 py-6"
             }`}
           >
             <nav
@@ -100,55 +116,68 @@ export const HomeNavbar = () => {
               <Link href="/">
                 <Image src={isScrolled ? logoDark : logo} alt="company logo" />
               </Link>
-              {isAuthenticated ? (
-                <>
-                  <div
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={handleClick}
-                  >
-                    {user?.image ? (
-                      <Avatar src={user.image} />
-                    ) : (
-                      <Avatar
-                        style={{ backgroundColor: "#fde3cf", color: "#f56a00" }}
-                      >
-                        {firstInitial}
-                        {lastInitial}
-                      </Avatar>
-                    )}
-                    <p
-                      className={`font-semibold text-sm hidden lg:block ${isScrolled ? "text-blackish-green" : "text-white"}`}
+              <div className="flex items-center gap-8">
+                {isAuthenticated ? (
+                  <>
+                    <div
+                      className="flex items-center gap-1 cursor-pointer"
+                      onClick={handleClick}
                     >
-                      {fullname}
-                    </p>
+                      {user?.image ? (
+                        <Avatar src={user.image} />
+                      ) : (
+                        <Avatar
+                          style={{
+                            backgroundColor: "#fde3cf",
+                            color: "#f56a00",
+                          }}
+                        >
+                          {firstInitial}
+                          {lastInitial}
+                        </Avatar>
+                      )}
+                      <p
+                        className={`font-semibold text-sm hidden lg:block ${isScrolled ? "text-blackish-green" : "text-white"}`}
+                      >
+                        {fullname}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="lg:flex items-center gap-8 hidden">
+                    <Button
+                      label="login"
+                      className={`capitalize text-sm font-semibold ${
+                        isScrolled ? "text-blackish-green" : "text-white"
+                      }`}
+                      href="/signin"
+                    />
+                    <Button
+                      label="Sign up"
+                      className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg hidden lg:block ${
+                        isScrolled
+                          ? "text-white bg-blackish-green"
+                          : "text-blackish-green bg-white"
+                      }`}
+                      href="/signup"
+                    />
                   </div>
-                </>
-              ) : (
-                <div className="lg:flex items-center gap-8 hidden">
-                  <Button
-                    label="login"
-                    className={`capitalize text-sm font-semibold ${
-                      isScrolled ? "text-blackish-green" : "text-white"
-                    }`}
-                    href="/signin"
-                  />
-                  <Button
-                    label="Sign up"
-                    className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg hidden lg:block ${
-                      isScrolled
-                        ? "text-white bg-blackish-green"
-                        : "text-blackish-green bg-white"
-                    }`}
-                    href="/signup"
-                  />
+                )}
+                <div
+                  className={`lg:hidden cursor-pointer w-11 h-11 flex items-center justify-center rounded-lg hover:bg-blackish-green/75`}
+                  onClick={handleClose}
+                >
+                  <MenuIcon fillColor={isScrolled ? "#000" : "#fff"} />
                 </div>
-              )}
+              </div>
             </nav>
           </header>
           <AccountMenu
-            showMenu={showMenu}
-            topSize={isScrolled ? "top-[96px]" : "top-[94px]"}
+            showAccountMenu={showAccountMenu}
+            topSize={isScrolled ? "top-[113px]" : "md:top-[102px] top-[82px]"}
+            isScrolled={isScrolled}
           />
+          <OtherMenus showOtherMenu={showOtherMenu} closeMenu={handleClose} />
           <div className="flex flex-col items-center justify-center gap-1 text-white">
             <h3 className=" capitalize font-bold lg:text-[45px] sm:text-3xl text-2xl">
               helping others
