@@ -6,9 +6,14 @@ import { CloseIcon } from "../icons/close";
 type OtherMenuProps = {
   showOtherMenu: boolean;
   closeMenu: () => void;
+  isAuthenticated: boolean;
 };
 
-export const OtherMenus = ({ showOtherMenu, closeMenu }: OtherMenuProps) => {
+export const OtherMenus = ({
+  showOtherMenu,
+  closeMenu,
+  isAuthenticated,
+}: OtherMenuProps) => {
   return (
     <div
       className={`fixed inset-0 bg-blackish-green/30 z-50 backdrop-blur-xs transition-opacity duration-300 ${showOtherMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} lg:hidden`}
@@ -22,7 +27,7 @@ export const OtherMenus = ({ showOtherMenu, closeMenu }: OtherMenuProps) => {
             <FlightIcon fillColor="#112211" />
             <Link
               href="/flight-flow/flight-search"
-              className="capitalize text-sm font-semibold text-blackish-green"
+              className="capitalize text-sm font-semibold"
             >
               find flight
             </Link>
@@ -31,11 +36,31 @@ export const OtherMenus = ({ showOtherMenu, closeMenu }: OtherMenuProps) => {
             <BedIcon fillColor="#112211" />
             <Link
               href="/hotel-flow/hotel-search"
-              className="capitalize text-sm font-semibold text-blackish-green"
+              className="capitalize text-sm font-semibold"
             >
               find stays
             </Link>
           </li>
+          {!isAuthenticated && (
+            <li className="lg:hidden group">
+              <Link
+                href="/signin"
+                className="capitalize text-sm font-semibold group-hover:bg-blackish-green/30 group-hover:py-3 group-hover:px-2 group-hover:rounded-lg transition-all duration-300 ease-in-out"
+              >
+                sign in
+              </Link>
+            </li>
+          )}
+          {!isAuthenticated && (
+            <li className="lg:hidden group">
+              <Link
+                href="/signup"
+                className="capitalize text-sm font-semibold group-hover:bg-blackish-green/30 group-hover:py-3 group-hover:px-2 group-hover:rounded-lg transition-all duration-300 ease-in-out"
+              >
+                sign up
+              </Link>
+            </li>
+          )}
         </ul>
         <div
           className="absolute top-4 right-4 cursor-pointer w-11 h-11 rounded-full hover:bg-blackish-green/30 flex items-center justify-center"

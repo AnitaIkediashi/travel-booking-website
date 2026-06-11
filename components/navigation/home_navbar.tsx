@@ -39,6 +39,9 @@ export const HomeNavbar = () => {
         .join(" ")
     : user?.name;
 
+  const avatarImg = user?.image;
+  const initials = `${firstInitial}${lastInitial}`;
+
   const handleClick = () => {
     setShowAccountMenu(!showAccountMenu);
   };
@@ -116,7 +119,7 @@ export const HomeNavbar = () => {
               <Link href="/">
                 <Image src={isScrolled ? logoDark : logo} alt="company logo" />
               </Link>
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-6">
                 {isAuthenticated ? (
                   <>
                     <div
@@ -154,7 +157,7 @@ export const HomeNavbar = () => {
                     />
                     <Button
                       label="Sign up"
-                      className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg hidden lg:block ${
+                      className={`text-sm font-semibold px-6 py-[15.5px] rounded-lg ${
                         isScrolled
                           ? "text-white bg-blackish-green"
                           : "text-blackish-green bg-white"
@@ -176,8 +179,15 @@ export const HomeNavbar = () => {
             showAccountMenu={showAccountMenu}
             topSize={isScrolled ? "top-[113px]" : "md:top-[102px] top-[82px]"}
             isScrolled={isScrolled}
+            avatarImg={avatarImg}
+            initials={initials}
+            fullname={fullname}
           />
-          <OtherMenus showOtherMenu={showOtherMenu} closeMenu={handleClose} />
+          <OtherMenus
+            isAuthenticated={isAuthenticated}
+            showOtherMenu={showOtherMenu}
+            closeMenu={handleClose}
+          />
           <div className="flex flex-col items-center justify-center gap-1 text-white">
             <h3 className=" capitalize font-bold lg:text-[45px] sm:text-3xl text-2xl">
               helping others

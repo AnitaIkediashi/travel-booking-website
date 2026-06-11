@@ -28,15 +28,15 @@ const NavLinksDark: NavLinkProp[] = [
 export const Navbar = () => {
   const pathname = usePathname();
 
-  const [showMenu, setShowMenu] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const handleClick = () => {
-    setShowMenu(!showMenu);
+    setShowAccountMenu(!showAccountMenu);
   };
 
   return (
     <>
       <header
-        className={`w-full h-[90px] bg-white shadow-light xl:px-[147px] lg:px-[121px] px-8 py-[27px] md:px-[76px] flex items-center justify-center font-montserrat fixed top-0 left-0 right-0 z-50 `}
+        className={`w-full h-[90px] bg-white shadow-light xl:px-[147px] lg:px-[121px] px-8 py-[27px] md:px-[76px] flex items-center justify-center font-montserrat absolute top-0 left-0 right-0 z-50 `}
       >
         <nav className="w-full flex items-center justify-between">
           {/* links */}
@@ -82,7 +82,7 @@ export const Navbar = () => {
           </div>
         </nav>
       </header>
-      <AccountMenu topSize="top-[90px]" showMenu={showMenu} />
+      <AccountMenu topSize="top-[90px]" showAccountMenu={showAccountMenu} />
     </>
   );
 };
