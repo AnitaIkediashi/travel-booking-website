@@ -7,10 +7,13 @@ import { NavLinkProp } from "./home_navbar";
 import Image from "next/image";
 import logo from "@/public/logos/logo_mint.svg";
 import { Button } from "../reusable/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { MenuIcon } from "../icons/menu";
 import { AccountMenu } from "./account_menu";
+import { useCurrentUser } from "@/lib/auth-context";
+import { Avatar } from "antd";
+import { OtherMenus } from "./other_menus";
 
 const NavLinksDark: NavLinkProp[] = [
   {
@@ -26,12 +29,58 @@ const NavLinksDark: NavLinkProp[] = [
 ];
 
 export const Navbar = () => {
+  const { user, isAuthenticated } = useCurrentUser();
   const pathname = usePathname();
 
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [showOtherMenu, setShowOtherMenu] = useState(false);
+
+  const firstInitial = user?.name?.charAt(0).toUpperCase();
+  const lastInitial = user?.name?.includes(" ")
+    ? user?.name?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
+    : "";
+
+  const fullname = user?.name?.includes(" ")
+    ? user.name
+        .split(" ")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ")
+    : user?.name;
+
+  const avatarImg = user?.image;
+  const initials = `${firstInitial}${lastInitial}`;
+
   const handleClick = () => {
     setShowAccountMenu(!showAccountMenu);
   };
+
+  const handleOpenOtherMenu = () => {
+    setShowOtherMenu(true);
+  };
+
+  const handleCloseOtherMenu = () => {
+    setShowOtherMenu(false);
+  };
+
+  useEffect(() => {
+    if (showOtherMenu) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    }
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
+  }, [showOtherMenu]);
 
   return (
     <>
@@ -67,22 +116,64 @@ export const Navbar = () => {
             <Image src={logo} alt="company logo" />
           </Link>
           {/* authentication */}
-          <div className="lg:flex items-center gap-8 hidden">
-            <Button
-              label="login"
-              className="capitalize text-blackish-green text-sm font-semibold"
-            />
-            <Button
-              label="Sign up"
-              className="text-sm font-semibold px-6 py-[15.5px] rounded-lg bg-blackish-green text-white"
-            />
-          </div>
-          <div className="cursor-pointer lg:hidden block" onClick={handleClick}>
-            <MenuIcon fillColor="#112211" />
+          <div className="flex items-center gap-6">
+            {isAuthenticated ? (
+              <>
+                <div
+                  className="flex items-center gap-1 cursor-pointer"
+                  onClick={handleClick}
+                >
+                  {user?.image ? (
+                    <Avatar src={user.image} />
+                  ) : (
+                    <Avatar
+                      style={{
+                        backgroundColor: "#fde3cf",
+                        color: "#f56a00",
+                      }}
+                    >
+                      {firstInitial}
+                      {lastInitial}
+                    </Avatar>
+                  )}
+                  <p className={`font-semibold text-sm hidden lg:block`}>
+                    {fullname}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="lg:flex items-center gap-8 hidden">
+                <Button
+                  label="login"
+                  className="capitalize text-blackish-green text-sm font-semibold"
+                />
+                <Button
+                  label="Sign up"
+                  className="text-sm font-semibold px-6 py-[15.5px] rounded-lg bg-blackish-green text-white"
+                />
+              </div>
+            )}
+            <div
+              className={`lg:hidden cursor-pointer w-11 h-11 flex items-center justify-center rounded-lg hover:bg-blackish-green/75`}
+              onClick={handleOpenOtherMenu}
+            >
+              <MenuIcon fillColor="#112211" />
+            </div>
           </div>
         </nav>
       </header>
-      <AccountMenu topSize="top-[90px]" showAccountMenu={showAccountMenu} />
+      <AccountMenu
+        topSize="top-[95px]"
+        showAccountMenu={showAccountMenu}
+        avatarImg={avatarImg}
+        initials={initials}
+        fullname={fullname}
+      />
+      <OtherMenus
+        isAuthenticated={isAuthenticated}
+        showOtherMenu={showOtherMenu}
+        closeMenu={handleCloseOtherMenu}
+      />
     </>
   );
 };

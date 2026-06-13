@@ -12,7 +12,7 @@ import { useState } from "react";
 type MenuProps = {
   showAccountMenu: boolean;
   topSize: string;
-  isScrolled: boolean;
+  isScrolled?: boolean;
   initials: string;
   avatarImg?: string | null | undefined;
   fullname: string | null | undefined;

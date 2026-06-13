@@ -46,8 +46,12 @@ export const HomeNavbar = () => {
     setShowAccountMenu(!showAccountMenu);
   };
 
-  const handleClose = () => {
-    setShowOtherMenu(!showOtherMenu);
+  const handleOpenOtherMenu = () => {
+    setShowOtherMenu(true);
+  };
+
+  const handleCloseOtherMenu = () => {
+    setShowOtherMenu(false);
   };
 
   const NavLinks: NavLinkProp[] = [
@@ -79,11 +83,22 @@ export const HomeNavbar = () => {
 
   useEffect(() => {
     if (showOtherMenu) {
-      document.body.classList.add("overflow-hidden");
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
     } else {
-      document.body.classList.remove("overflow-hidden");
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
-    return () => document.body.classList.remove("overflow-hidden");
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
   }, [showOtherMenu]);
 
   return (
@@ -91,7 +106,7 @@ export const HomeNavbar = () => {
       <section className="md:mx-[30px] md:mt-[30px] mx-3 mt-4 font-montserrat">
         <div className="bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.7)),url(/landing_page/home_bg.png)] bg-no-repeat bg-center bg-cover lg:h-[581px] h-[462px] rounded-3xl relative flex items-center justify-center">
           <header
-            className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
               isScrolled
                 ? "bg-white py-[30px] shadow-light px-8"
                 : "md:px-16 md:py-[54px] px-8 py-6"
@@ -168,9 +183,9 @@ export const HomeNavbar = () => {
                 )}
                 <div
                   className={`lg:hidden cursor-pointer w-11 h-11 flex items-center justify-center rounded-lg hover:bg-blackish-green/75`}
-                  onClick={handleClose}
+                  onClick={handleOpenOtherMenu}
                 >
-                  <MenuIcon fillColor={isScrolled ? "#000" : "#fff"} />
+                  <MenuIcon fillColor={isScrolled ? "#112211" : "#fff"} />
                 </div>
               </div>
             </nav>
@@ -186,7 +201,7 @@ export const HomeNavbar = () => {
           <OtherMenus
             isAuthenticated={isAuthenticated}
             showOtherMenu={showOtherMenu}
-            closeMenu={handleClose}
+            closeMenu={handleCloseOtherMenu}
           />
           <div className="flex flex-col items-center justify-center gap-1 text-white">
             <h3 className=" capitalize font-bold lg:text-[45px] sm:text-3xl text-2xl">

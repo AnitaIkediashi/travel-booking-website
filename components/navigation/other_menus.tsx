@@ -16,11 +16,12 @@ export const OtherMenus = ({
 }: OtherMenuProps) => {
   return (
     <div
-      className={`fixed inset-0 bg-blackish-green/30 z-50 backdrop-blur-xs transition-opacity duration-300 ${showOtherMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} lg:hidden`}
+      className={`fixed inset-0 bg-blackish-green/30 z-50 transition-opacity duration-300 ${showOtherMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} lg:hidden`}
       onClick={closeMenu}
     >
       <div
         className={`bg-white rounded-tl-3xl rounded-tr-3xl h-[70vh] absolute bottom-0 left-0 right-0 transition-transform duration-300 ease-out ${showOtherMenu ? "translate-y-0" : "translate-y-full"} flex items-center justify-center px-4`}
+        onClick={(e) => e.stopPropagation()}
       >
         <ul className="flex flex-col items-center gap-6 w-1/2">
           <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
@@ -42,29 +43,32 @@ export const OtherMenus = ({
             </Link>
           </li>
           {!isAuthenticated && (
-            <li className="lg:hidden group">
-              <Link
-                href="/signin"
-                className="capitalize text-sm font-semibold group-hover:bg-blackish-green/30 group-hover:py-3 group-hover:px-2 group-hover:rounded-lg transition-all duration-300 ease-in-out"
-              >
-                sign in
-              </Link>
-            </li>
-          )}
-          {!isAuthenticated && (
-            <li className="lg:hidden group">
-              <Link
-                href="/signup"
-                className="capitalize text-sm font-semibold group-hover:bg-blackish-green/30 group-hover:py-3 group-hover:px-2 group-hover:rounded-lg transition-all duration-300 ease-in-out"
-              >
-                sign up
-              </Link>
-            </li>
+            <>
+              <li className="flex items-center cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
+                <Link
+                  href="/signin"
+                  className="capitalize text-sm font-semibold"
+                >
+                  sign in
+                </Link>
+              </li>
+              <li className="flex items-center cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
+                <Link
+                  href="/signup"
+                  className="capitalize text-sm font-semibold"
+                >
+                  sign up
+                </Link>
+              </li>
+            </>
           )}
         </ul>
         <div
           className="absolute top-4 right-4 cursor-pointer w-11 h-11 rounded-full hover:bg-blackish-green/30 flex items-center justify-center"
-          onClick={closeMenu}
+          onClick={(e) => {
+            e.stopPropagation();
+            closeMenu();
+          }}
         >
           <CloseIcon />
         </div>
