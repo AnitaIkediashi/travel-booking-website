@@ -26,6 +26,8 @@ model Airport {
   arrival_segment   Segment[] @relation("ArrivalSegment") // 1:M relation with Segment
   departure_leg     Legs[]    @relation("DepartureLegs") // 1:M relation with Legs
   arrival_legs      Legs[]    @relation("ArrivalLegs") // 1:M relation with Legs
+
+  @@map("airports")
 }
 
 model Data {
@@ -43,6 +45,8 @@ model Data {
   duration                 Duration[] // 1:M relation
   flight_times             FlightTimes[] // 1:M relation
   flight_offers            FlightOffers[] // 1:M relation
+
+  @@map("data")
 }
 
 model DepartureInterval {
@@ -51,6 +55,7 @@ model DepartureInterval {
   start           String
   end             String
   departureFlight Data   @relation(fields: [interval_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related DepartureInterval records are also deleted
+  @@map("departure_interval")
 }
 
 model ShortLayoverConnection {
@@ -58,6 +63,7 @@ model ShortLayoverConnection {
   layover_id    String @unique // FK -- those without ? are required fields
   count         Int? // ? means optional field
   layoverFlight Data   @relation(fields: [layover_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related ShortLayoverConnection records are also deleted
+  @@map("short_Layover_connection")
 }
 
 model MinPrice {
@@ -70,6 +76,8 @@ model MinPrice {
   minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
   minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
   minPricePerStop      Stop?     @relation(fields: [min_price_stop_id], references: [id], onDelete: Cascade) // relation to Stop model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
+
+  @@map("min_price")
 }
 
 model Stop {
@@ -79,6 +87,8 @@ model Stop {
   count       Int?
   stopCount   Data      @relation(fields: [stop_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related Stop records are also deleted
   min_price   MinPrice? // 1:1 relation
+
+  @@map("stops")
 }
 
 model Airlines {
@@ -89,6 +99,8 @@ model Airlines {
   iata_code     String
   min_price     MinPrice?
   airlineFlight Data      @relation(fields: [airline_id], references: [id], onDelete: Cascade)
+
+  @@map("airlines")
 }
 
 model Duration {
@@ -97,6 +109,8 @@ model Duration {
   min            Int
   max            Int
   durationFlight Data   @relation(fields: [duration_id], references: [id], onDelete: Cascade)
+
+  @@map("duration")
 }
 
 model Baggage {
@@ -108,6 +122,8 @@ model Baggage {
   count         Int
   param_name    String
   baggageFlight Data    @relation(fields: [baggage_id], references: [id], onDelete: Cascade)
+
+  @@map("baggages")
 }
 
 model FlightTimes {
@@ -116,6 +132,8 @@ model FlightTimes {
   flight_times_data Data      @relation(fields: [flight_times_id], references: [id], onDelete: Cascade)
   arrival           Arrival[]
   depart            Depart[]
+
+  @@map("flight_times")
 }
 
 model Arrival {
@@ -124,6 +142,8 @@ model Arrival {
   start         String
   end           String
   arrival_times FlightTimes @relation(fields: [arrival_id], references: [id], onDelete: Cascade) // relation to FlightTimes model the onDelete: Cascade ensures that if a flightTimes record is deleted, all related Arrival records are also deleted
+
+  @@map("arrivals")
 }
 
 model Depart {
@@ -132,6 +152,8 @@ model Depart {
   start        String
   end          String
   depart_times FlightTimes @relation(fields: [depart_id], references: [id], onDelete: Cascade)
+
+  @@map("depart")
 }
 
 model FlightOffers {
@@ -146,6 +168,8 @@ model FlightOffers {
   seat_availability SeatAvailability?
   branded_fareinfo  BrandedFareInfo?
   FlightData        Data              @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+
+  @@map("flight_offers")
 }
 
 model Segment {
@@ -162,6 +186,9 @@ model Segment {
   segmentData            FlightOffers @relation(fields: [segment_id], references: [id], onDelete: Cascade)
 
   //index the departure_time for faster queries and faster cpu performance -- its like sorting in advance or like map the data based on departure_time
+
+  @@map("segments")
+
   @@index([departure_time])
 }
 
@@ -179,6 +206,8 @@ model Legs {
   carriers               Carriers[]
   flight_info            FlightInfo?
   legSegment             Segment     @relation(fields: [leg_id], references: [id], onDelete: Cascade)
+
+  @@map("legs")
 }
 
 model Carriers {
@@ -188,6 +217,8 @@ model Carriers {
   logo       String
   code       String
   legCarrier Legs   @relation(fields: [carrier_id], references: [id], onDelete: Cascade)
+
+  @@map("carriers")
 }
 
 model FlightInfo {
@@ -196,6 +227,8 @@ model FlightInfo {
   flight_number  String
   carrier_info   CarrierInfo?
   flightLeg      Legs         @relation(fields: [flight_info_id], references: [id], onDelete: Cascade)
+
+  @@map("flight_info")
 }
 
 model CarrierInfo {
@@ -203,6 +236,8 @@ model CarrierInfo {
   carrier_info_id   Int        @unique // FK
   operating_carrier String
   carrierFlight     FlightInfo @relation(fields: [carrier_info_id], references: [id], onDelete: Cascade)
+
+  @@map("carrier_info")
 }
 
 model PriceBreakdown {
@@ -213,6 +248,8 @@ model PriceBreakdown {
   discount       Discount?
   flightOffers   FlightOffers[]
   travelerPrices TravelerPrice[]
+
+  @@map("price_breakdown")
 }
 
 model TotalPrice {
@@ -221,6 +258,8 @@ model TotalPrice {
   currency_code       String
   amount              Int
   totalPricePerFlight PriceBreakdown @relation(fields: [total_price_id], references: [id], onDelete: Cascade)
+
+  @@map("total_price")
 }
 
 model BaseFare {
@@ -229,6 +268,8 @@ model BaseFare {
   currency_code      String
   amount             Int
   basePricePerFlight PriceBreakdown @relation(fields: [base_price_id], references: [id], onDelete: Cascade)
+
+  @@map("base_fare")
 }
 
 model Tax {
@@ -237,6 +278,8 @@ model Tax {
   currency_code String
   amount        Int
   taxPerFlight  PriceBreakdown @relation(fields: [tax_id], references: [id], onDelete: Cascade)
+
+  @@map("tax")
 }
 
 model Discount {
@@ -245,6 +288,8 @@ model Discount {
   currency_code     String
   amount            Int
   discountPerFlight PriceBreakdown @relation(fields: [discount_id], references: [id], onDelete: Cascade)
+
+  @@map("discount")
 }
 
 model TravelerPrice {
@@ -255,6 +300,8 @@ model TravelerPrice {
   traveler_type          String
   price_breakdown        PriceBreakdown? @relation(fields: [price_id], references: [id])
   travelerPricePerFlight FlightOffers    @relation(fields: [traveler_price_id], references: [id], onDelete: Cascade)
+
+  @@map("travel_price")
 }
 
 model SeatAvailability {
@@ -262,6 +309,8 @@ model SeatAvailability {
   seat_availability_id      String       @unique // FK
   seats_left                Int
   seatAvailabilityPerFlight FlightOffers @relation(fields: [seat_availability_id], references: [id], onDelete: Cascade)
+
+  @@map("seat_availability")
 }
 
 model BrandedFareInfo {
@@ -270,6 +319,8 @@ model BrandedFareInfo {
   cabin_class              String
   features                 Features[]
   brandedFareInfoPerFlight FlightOffers @relation(fields: [branded_fareinfo_id], references: [id], onDelete: Cascade)
+
+  @@map("branded_fare_info")
 }
 
 model Features {
@@ -279,4 +330,6 @@ model Features {
   category               String
   availability           String
   featureBrandedFareInfo BrandedFareInfo @relation(fields: [feature_id], references: [id], onDelete: Cascade)
+
+  @@map("features")
 }

@@ -10,5 +10,7 @@ model CardDetails {
     userId                String
     user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+    @@map("card_details")
+
     @@index([userId])
 }

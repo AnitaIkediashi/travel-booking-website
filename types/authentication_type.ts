@@ -3,7 +3,8 @@ export type StepVerificationProps = {
 };
 
 type StepVerificationSearchParams = {
-  step: string;
+  step?: string;
+  email?: string;
 };
 
 export type SignUpFormPayload = {
