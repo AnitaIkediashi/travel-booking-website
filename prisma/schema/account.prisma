@@ -29,3 +29,14 @@ model PasswordResetToken {
 
   @@map("password_reset_tokens")
 }
+
+model OtpToken {
+  id      String   @id @default(cuid())
+  email   String 
+  otp     String
+  expires DateTime
+  used    Boolean  @default(false)
+
+  @@index([email])
+  @@map("otp_tokens")
+}
