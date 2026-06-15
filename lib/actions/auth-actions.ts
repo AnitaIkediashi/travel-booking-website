@@ -7,11 +7,28 @@ import { z } from "zod";
 import { Resend } from "resend";
 import { ResetPasswordEmail } from "@/components/registration/reset_password_email";
 
+const resend = new Resend(process.env.RESEND_API_KEY!);
+
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+// generate random otp
+function generateOtp(length = 6) {
+  const chars =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let otp = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    otp += chars[randomIndex];
+  }
+
+  return otp;
+}
+
+
+
 
 const signUpSchema = z
   .object({
@@ -61,77 +78,95 @@ export async function signUpUser(rawData: unknown) {
   return { success: true };
 }
 
-// Forgot Password 
-
+// forgot password
 export async function forgotPassword(email: string) {
-  // Always return the same generic response
-  // so you never reveal whether an email exists in your DB
   const genericResponse = {
     success: true,
-    message: "If that email exists, a reset link has been sent.",
+    message: "If that email exists, a reset code has been sent.",
   };
 
   const user = await prisma.user.findUnique({ where: { email } });
 
-  // No user, or OAuth-only user (password is empty string)
   if (!user || !user.password) return genericResponse;
 
-  // Invalidate any existing unused tokens for this user
-  await prisma.passwordResetToken.deleteMany({
-    where: { userId: user.id, used: false },
+  // Invalidate any existing unused OTPs for this email
+  await prisma.otpToken.deleteMany({
+    where: { email, used: false },
   });
 
-  const rawToken = crypto.randomBytes(32).toString("hex");
-  const hashedToken = hashToken(rawToken);
-  const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour from now
+  const rawOtp = generateOtp(); // e.g "482910"
+  const hashedOtp = hashToken(rawOtp);
+  const expires = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
 
-  await prisma.passwordResetToken.create({
+  await prisma.otpToken.create({
     data: {
-      token: hashedToken,
-      userId: user.id,
+      email,
+      otp: hashedOtp,
       expires,
     },
   });
 
-  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${rawToken}`;
-  console.log("Password reset URL:", resetUrl);
-
-  resend.emails.send({
-    from: "noreply@golobe.com",
+  // Send OTP via email
+  const emailResult = await resend.emails.send({
+    // from: "noreply@golobe.com",
+    from: "onboarding@resend.dev",
     to: email,
-    subject: "Reset Your Password",
-    react: ResetPasswordEmail({ resetUrl }),
+    subject: "Your password reset code",
+    react: ResetPasswordEmail({ rawOtp }),
   });
+
+  console.log('email sent: ', emailResult)
 
   return genericResponse;
 }
 
-//  Verify Reset Token 
+// ─── Verify OTP 
+export async function verifyOtp(email: string, rawOtp: string) {
+  const hashedOtp = hashToken(rawOtp);
 
-export async function verifyResetToken(rawToken: string) {
-  const hashedToken = hashToken(rawToken);
-
-  const record = await prisma.passwordResetToken.findUnique({
-    where: { token: hashedToken },
+  const record = await prisma.otpToken.findFirst({
+    where: { email, otp: hashedOtp },
   });
 
   if (!record) {
-    return { valid: false, message: "Invalid or expired reset link." };
+    return { valid: false, message: "Invalid code. Please try again." };
   }
 
   if (record.used) {
-    return { valid: false, message: "This reset link has already been used." };
+    return { valid: false, message: "This code has already been used." };
   }
 
   if (record.expires < new Date()) {
-    return { valid: false, message: "This reset link has expired." };
+    return {
+      valid: false,
+      message: "This code has expired. Request a new one.",
+    };
   }
 
-  return { valid: true };
+  // Mark as used so it can't be reused
+  await prisma.otpToken.update({
+    where: { id: record.id },
+    data: { used: true },
+  });
+
+  // Generate a short-lived reset token to carry into the reset page
+  // This proves they verified the OTP without exposing the OTP itself
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const hashedResetToken = hashToken(resetToken);
+  const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
+
+  await prisma.passwordResetToken.create({
+    data: {
+      token: hashedResetToken,
+      userId: (await prisma.user.findUnique({ where: { email } }))!.id,
+      expires,
+    },
+  });
+
+  return { valid: true, resetToken }; // send rawToken to client
 }
 
-// Reset Password 
-
+// ─── Reset Password 
 const resetSchema = z
   .object({
     token: z.string().min(1),
@@ -157,14 +192,12 @@ export async function resetPassword(rawData: unknown) {
     where: { token: hashedToken },
   });
 
-  // Re-verify on the server — never trust that the UI already checked
   if (!record || record.used || record.expires < new Date()) {
     return { success: false, message: "Invalid or expired reset link." };
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  // Transaction: both writes succeed or neither does
   await prisma.$transaction([
     prisma.user.update({
       where: { id: record.userId },
