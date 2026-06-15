@@ -1,5 +1,6 @@
 import { ForgotPasswordWrapper } from "@/components/registration/forgot_password_wrapper"
 import { ImageCarouselWrapper } from "@/components/registration/image_carousel_wrapper"
+import { ResetPasswordForm } from "@/components/registration/reset_password_form"
 import { VerifyPasswordWrapper } from "@/components/registration/verify_password_wrapper"
 import { StepVerificationProps } from "@/types/authentication_type"
 
@@ -13,7 +14,8 @@ const ForgotPasswordPage = async ({searchParams}: StepVerificationProps) => {
         <div className="w-full flex gap-[104px] h-full">
           {request === "verify-password" ? (
             <VerifyPasswordWrapper />
-          ) : (
+          ) : request === "reset-password" ? (<ResetPasswordForm/>)
+           : (
             <ForgotPasswordWrapper />
           )}
           <ImageCarouselWrapper />

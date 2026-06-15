@@ -5,6 +5,7 @@ export type StepVerificationProps = {
 type StepVerificationSearchParams = {
   step?: string;
   email?: string;
+  token?: string;
 };
 
 export type SignUpFormPayload = {

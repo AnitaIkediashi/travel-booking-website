@@ -27,9 +27,6 @@ function generateOtp(length = 6) {
   return otp;
 }
 
-
-
-
 const signUpSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required"),
@@ -96,7 +93,7 @@ export async function forgotPassword(email: string) {
 
   const rawOtp = generateOtp(); // e.g "482910"
   const hashedOtp = hashToken(rawOtp);
-  const expires = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
+  const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
 
   await prisma.otpToken.create({
     data: {
@@ -107,15 +104,13 @@ export async function forgotPassword(email: string) {
   });
 
   // Send OTP via email
-  const emailResult = await resend.emails.send({
+  await resend.emails.send({
     // from: "noreply@golobe.com",
     from: "onboarding@resend.dev",
     to: email,
     subject: "Your password reset code",
     react: ResetPasswordEmail({ rawOtp }),
   });
-
-  console.log('email sent: ', emailResult)
 
   return genericResponse;
 }

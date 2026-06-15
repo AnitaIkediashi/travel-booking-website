@@ -1,21 +1,77 @@
-'use client'
-
+"use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "../reusable/button";
 import { LeftArrowIcon } from "../icons/left_arrow";
 import { inputClassName } from "@/utils/inputClassName";
+import { FormEvent, useState } from "react";
+import { forgotPassword, verifyOtp } from "@/lib/actions/auth-actions";
+import { toast, ToastContainer } from "react-toastify";
 
 export const VerifyPasswordForm = () => {
-    const router = useRouter();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = decodeURIComponent(searchParams.get("email") || "");
 
-  function resetPasswordClick() {
-      router.push('/forgot-password?step=reset-password')
+  const [otp, setOtp] = useState(""); // ← just a string now
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+
+  const handleFormSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (otp.length < 6) {
+      toast.error("Please enter the full 6-digit code.");
+      return;
     }
-  
-    return (
-      <div className="lg:w-[45%] w-full h-full flex flex-col justify-between gap-6">
+
+    if (!email) {
+      toast.error("Email not found. Please restart the process.");
+      router.push("/forgot-password");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await verifyOtp(email, otp);
+
+      if (!result.valid) {
+        toast.error(result.message);
+        setOtp(""); // clear on failure
+        return;
+      }
+
+      router.push(
+        `/forgot-password?step=reset-password&token=${result.resetToken}`,
+      );
+    } catch (error) {
+      console.error("OTP verification failed", error);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email) return;
+    setIsResending(true);
+
+    try {
+      await forgotPassword(email);
+      toast.success("A new code has been sent to your email.");
+      setOtp("");
+    } catch (error) {
+      toast.error("Failed to resend code. Please try again. "+error+"");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  return (
+    <div className="lg:w-[45%] w-full h-full">
+      <div className="w-full h-full flex flex-col justify-between gap-6">
         <div>
           <Image
             src="/logos/logo_mint.svg"
@@ -30,16 +86,17 @@ export const VerifyPasswordForm = () => {
             icon={<LeftArrowIcon />}
             label="Back to login"
             labelClassName="text-sm font-medium"
-            href={"/signin"}
+            href="/signin"
           />
           <div className="flex flex-col gap-y-4">
             <h2 className="capitalize font-bold text-[40px]">Verify code</h2>
             <p className="text-blackish-green/75">
-              An authentication code has been sent to your email.
+              An authentication code has been sent to{" "}
+              <span className="font-semibold">{email}</span>
             </p>
           </div>
           <div>
-            <form action="">
+            <form action="" onSubmit={handleFormSubmit}>
               <div className="flex flex-col gap-y-4 mb-8">
                 <div className="relative">
                   <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
@@ -48,25 +105,38 @@ export const VerifyPasswordForm = () => {
                     </legend>
                     <input
                       type="text"
-                      placeholder="Reset code"
+                      placeholder="Enter 6-digit code"
                       name="resetCode"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      maxLength={6} // ← prevents typing more than 6 chars
                       className={inputClassName}
                     />
                   </fieldset>
                 </div>
                 <p className="text-sm font-medium">
-                  Didn’t receive a code? <Button type="button" className="capitalize text-salmon-100 font-semibold hover:underline hover:underline-offset-4" label="resend" />
+                  Didn&apos;t receive a code?{" "}
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={isResending}
+                    className="capitalize text-salmon-100 font-semibold hover:underline hover:underline-offset-4 disabled:opacity-50"
+                  >
+                    {isResending ? "Sending..." : "Resend"}
+                  </button>
                 </p>
               </div>
               <Button
-                type="button"
+                type="submit"
                 className="bg-mint-green-100 capitalize text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white mb-4"
-                label={"verify"}
-                onClick={resetPasswordClick}
+                label={isLoading ? "Verifying..." : "Verify"}
+                disabled={isLoading}
               />
             </form>
           </div>
         </div>
       </div>
-    );
-}
+      <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
+    </div>
+  );
+};

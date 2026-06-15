@@ -145,6 +145,7 @@ export const SignUpForm = () => {
                         type="text"
                         placeholder="Type your first name"
                         name="firstName"
+                        autoCapitalize="words"
                         value={signUpData.firstName}
                         onChange={handleFormInput}
                         className={inputClassName}
@@ -165,6 +166,7 @@ export const SignUpForm = () => {
                         type="text"
                         placeholder="Type your last name"
                         name="lastName"
+                        autoCapitalize="words"
                         value={signUpData.lastName}
                         onChange={handleFormInput}
                         className={inputClassName}

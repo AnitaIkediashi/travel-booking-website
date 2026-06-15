@@ -9,9 +9,6 @@ export const ResetPasswordEmail = ({ rawOtp }: ResetPasswordEmailProps) => {
     <div
       style={{
         fontFamily: "sans-serif",
-        // maxWidth: "480px",
-        // margin: "0 auto",
-        // padding: "24px",
       }}
     >
       <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#112211" }}>
@@ -41,7 +38,7 @@ export const ResetPasswordEmail = ({ rawOtp }: ResetPasswordEmailProps) => {
         ))}
       </h1>
       <p style={{ color: "#112211" }}>
-        This code expires in <strong>15 minutes</strong>.
+        This code expires in <strong>10 minutes</strong>.
       </p>
       <p style={{ color: "#888", fontSize: "12px", marginTop: "24px" }}>
         If you didn&apos;t request this, ignore this email.

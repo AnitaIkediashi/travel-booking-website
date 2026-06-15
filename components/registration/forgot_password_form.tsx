@@ -54,6 +54,7 @@ export const ForgotPasswordForm = () => {
 
 
   if(submitted) {
+    return (
     <div className="lg:w-[45%] w-full h-full">
       <div className="w-full h-full flex flex-col justify-between gap-6">
         <div>
@@ -90,7 +91,7 @@ export const ForgotPasswordForm = () => {
         </div>
       </div>
       <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
-    </div>;
+    </div>);
   }
   return (
     <div className="lg:w-[45%] w-full h-full">
