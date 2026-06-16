@@ -14,6 +14,7 @@ export const VerifyPasswordForm = () => {
   const searchParams = useSearchParams();
   const email = decodeURIComponent(searchParams.get("email") || "");
 
+  const [countdown, setCountdown] = useState(0);
   const [otp, setOtp] = useState(""); // ← just a string now
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -62,8 +63,20 @@ export const VerifyPasswordForm = () => {
       await forgotPassword(email);
       toast.success("A new code has been sent to your email.");
       setOtp("");
+      // Start 60 second countdown
+      setCountdown(60);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (error) {
-      toast.error("Failed to resend code. Please try again. "+error+"");
+      toast.error("Failed to resend code. Please try again. ");
+      console.log(error)
     } finally {
       setIsResending(false);
     }
@@ -119,10 +132,14 @@ export const VerifyPasswordForm = () => {
                   <button
                     type="button"
                     onClick={handleResendOtp}
-                    disabled={isResending}
-                    className="capitalize text-salmon-100 font-semibold hover:underline hover:underline-offset-4 disabled:opacity-50"
+                    disabled={isResending || countdown > 0}
+                    className="text-salmon-100 font-semibold hover:underline hover:underline-offset-4 disabled:opacity-50"
                   >
-                    {isResending ? "Sending..." : "Resend"}
+                    {countdown > 0
+                      ? `Resend in ${countdown}s`
+                      : isResending
+                        ? "Sending..."
+                        : "Resend"}
                   </button>
                 </p>
               </div>

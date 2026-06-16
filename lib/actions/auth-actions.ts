@@ -86,14 +86,13 @@ export async function forgotPassword(email: string) {
 
   if (!user || !user.password) return genericResponse;
 
-  // Invalidate any existing unused OTPs for this email
   await prisma.otpToken.deleteMany({
     where: { email, used: false },
   });
 
-  const rawOtp = generateOtp(); // e.g "482910"
+  const rawOtp = generateOtp();
   const hashedOtp = hashToken(rawOtp);
-  const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
+  const expires = new Date(Date.now() + 1000 * 60 * 10);
 
   await prisma.otpToken.create({
     data: {
@@ -103,14 +102,33 @@ export async function forgotPassword(email: string) {
     },
   });
 
-  // Send OTP via email
-  await resend.emails.send({
-    // from: "noreply@golobe.com",
-    from: "onboarding@resend.dev",
-    to: email,
-    subject: "Your password reset code",
-    react: ResetPasswordEmail({ rawOtp }),
-  });
+  try {
+    const { data, error } = await resend.emails.send({
+      // from: "noreply@golobe.com",
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: "Your password reset code",
+      react: ResetPasswordEmail({ rawOtp }),
+    });
+
+    if (error) {
+      console.error("Email send failed:", error);
+      // Don't expose the real error to the client
+      // OTP is already saved in DB so user can retry
+      return {
+        success: false,
+        message: "Failed to send email. Please try again.",
+      };
+    }
+
+    console.log("Email sent:", data?.id);
+  } catch (error) {
+    console.error("Unexpected email error:", error);
+    return {
+      success: false,
+      message: "Failed to send email. Please try again.",
+    };
+  }
 
   return genericResponse;
 }
@@ -188,7 +206,7 @@ export async function resetPassword(rawData: unknown) {
   });
 
   if (!record || record.used || record.expires < new Date()) {
-    return { success: false, message: "Invalid or expired reset link." };
+    return { success: false, message: "Invalid or expired reset token." };
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
