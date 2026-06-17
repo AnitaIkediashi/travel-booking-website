@@ -206,3 +206,108 @@ export async function saveCardOnSignup(cardData: SaveCardOnSignupPayload) {
     };
   }
 }
+
+export async function getCardInfo() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { success: false, cards: [] };
+  }
+
+  try {
+    const cards = await prisma.cardDetails.findMany({
+      where: { userId: session.user.id },
+      orderBy: { id: "desc" }, // newest first
+    });
+
+    return { success: true, cards };
+  } catch (error) {
+    console.error("Get Card Error:", error);
+    return { success: false, cards: [] };
+  }
+}
+
+export async function processPaymentWithSavedCard(
+  savedCardId: string,
+  priceInfo: PriceInfoProps,
+) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return { success: false, redirect: "/signin" };
+  }
+
+  try {
+    // 1. Get the saved card from DB — verify it belongs to this user
+    const card = await prisma.cardDetails.findFirst({
+      where: {
+        id: savedCardId,
+        userId: session.user.id, // security — can't use another user's card
+      },
+    });
+
+    if (!card) {
+      return { success: false, message: "Card not found." };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { stripeCustomerId: true, email: true },
+    });
+
+    let stripeCustomerId = user?.stripeCustomerId;
+
+    if (!stripeCustomerId && user) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+      });
+      stripeCustomerId = customer.id;
+
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { stripeCustomerId: customer.id },
+      });
+    }
+
+    try {
+      await stripe.paymentMethods.attach(card.stripePaymentMethodId, {
+        customer: stripeCustomerId!,
+      });
+    } catch (attachErr) {
+      // If already attached, Stripe throws an error we can safely bypass
+      console.log("Card already attached or handling gracefully", attachErr);
+    }
+
+    const baseFare = priceInfo.base_fare?.amount || 0;
+    const tax = priceInfo.tax?.amount || 0;
+    const serviceFee = priceInfo.service_fee?.amount || 0;
+    const discount = priceInfo.discount?.amount || 0;
+
+    const totalAmount = baseFare + tax + serviceFee - discount;
+    const currency = (priceInfo.total?.currency_code ?? "usd").toLowerCase();
+
+    // 3. Create PaymentIntent with the saved card's stripePaymentMethodId
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(totalAmount * 100),
+      customer: stripeCustomerId!,
+      currency,
+      payment_method: card.stripePaymentMethodId, // ← saved card token
+      confirm: true, // ← confirm immediately, no client step needed
+      off_session: true, // ← charging without user present in Stripe UI
+      metadata: { 
+        cardName: card.cardName,
+        country: card.country,
+        userId: session.user.id,
+      },
+    });
+
+    return {
+      success: true,
+      paymentIntentId: paymentIntent.id,
+      status: paymentIntent.status,
+    };
+  } catch (error) {
+    console.error("Saved card payment error:", error);
+    return { success: false, message: "Payment failed. Please try again." };
+  }
+}

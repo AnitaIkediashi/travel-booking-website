@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { Avatar } from "antd";
 import { UserIcon } from "../icons/user";
@@ -7,7 +6,9 @@ import { CardIcon } from "../icons/card";
 import { Button } from "../reusable/button";
 import { ExitIcon } from "../icons/exit";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCurrentUser } from "@/lib/auth-context";
 
 type MenuProps = {
   showAccountMenu: boolean;
@@ -16,23 +17,34 @@ type MenuProps = {
   initials: string;
   avatarImg?: string | null | undefined;
   fullname: string | null | undefined;
+  setShowAccountMenu: Dispatch<SetStateAction<boolean>>;
 };
 
 export const AccountMenu = ({
   showAccountMenu,
+  setShowAccountMenu,
   topSize,
   isScrolled,
   initials,
   avatarImg,
   fullname,
 }: MenuProps) => {
+  const { isAuthenticated } = useCurrentUser();
+  const router = useRouter();
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
-  const handleLogout = () => {
+
+  const handleLogout = async () => {
     setIsLoggingOut(true);
-    signOut({ callbackUrl: "/signin" });
-    setIsLoggingOut(false);
+    try {
+      await signOut({ redirect: false });
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
+      setShowAccountMenu(false)
+    }
   };
 
   return (
@@ -40,7 +52,7 @@ export const AccountMenu = ({
       className={`fixed ${topSize} md:w-[329px] bg-white rounded-lg flex flex-col md:p-8 p-6 transition-all duration-300 ease-in-out z-50 font-montserrat shadow-[0px_2px_10px_rgba(0,0,0,0.05)] ${
         showAccountMenu
           ? "right-0 -translate-x-8  opacity-100"
-          : "right-0 translate-x-0 opacity-0"
+          : "-right-full translate-x-0 opacity-0"
       } before:absolute before:content-[''] before:w-3 before:h-3 before:bg-white before:rotate-45 before:z-10 before:-top-1.5 ${isScrolled ? "before:right-[88px]" : "md:before:right-[116px] before:right-[88px]"}`}
     >
       <div className="flex items-center gap-4 pb-6 border-b-[0.5px] border-b-blackish-green/25">
@@ -51,7 +63,9 @@ export const AccountMenu = ({
         )}
         <div>
           <p className="font-semibold text-sm md:text-base">{fullname}</p>
-          <small className="capitalize text-xs md:text-sm">online</small>
+          <small className="capitalize text-xs md:text-sm">
+            {isAuthenticated ? "online" : "offline"}
+          </small>
         </div>
       </div>
       <ul className="py-6 border-b-[0.5px] border-b-blackish-green/25">

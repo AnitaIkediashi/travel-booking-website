@@ -197,6 +197,7 @@ export const HomeNavbar = () => {
             avatarImg={avatarImg}
             initials={initials}
             fullname={fullname}
+            setShowAccountMenu={setShowAccountMenu}
           />
           <OtherMenus
             isAuthenticated={isAuthenticated}

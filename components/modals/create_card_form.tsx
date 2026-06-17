@@ -203,17 +203,6 @@ export const CreateCardForm = ({
           paymentIntentId,
         };
 
-        // if (cardFormData.saveCard) {
-        //   const saveResult = await saveCardToDatabase(paymentIntent.id);
-
-        //   // CHECK if the card already exists
-        //   if (saveResult?.hasCardAlreadyCreated) {
-        //     toast.error("This card is already saved in your account.");
-        //     setIsLoading(false);
-        //     return; // STOP the function here so it doesn't redirect
-        //   }
-        // }
-
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
 
@@ -249,8 +238,6 @@ export const CreateCardForm = ({
           onClose();
         }
 
-        // Append the payment_intent ID if your success page needs to fetch details
-        // router.push(`${successPath}?payment_intent=${paymentIntent.id}`);
       }
     } catch (error) {
       console.error("Submission failed", error);
@@ -340,6 +327,7 @@ export const CreateCardForm = ({
                       type="text"
                       placeholder="Type your name"
                       name="cardName"
+                      autoCapitalize="words"
                       className={inputClassName}
                       value={cardFormData.cardName}
                       onChange={handleCardInputChange}

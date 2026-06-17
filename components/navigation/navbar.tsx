@@ -165,6 +165,7 @@ export const Navbar = () => {
       <AccountMenu
         topSize="top-[95px]"
         showAccountMenu={showAccountMenu}
+        setShowAccountMenu={setShowAccountMenu}
         avatarImg={avatarImg}
         initials={initials}
         fullname={fullname}

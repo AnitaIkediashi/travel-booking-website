@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BedIcon } from "../icons/bed";
 import { FlightIcon } from "../icons/flight";
 import { CloseIcon } from "../icons/close";
+import { usePathname } from "next/navigation";
 
 type OtherMenuProps = {
   showOtherMenu: boolean;
@@ -14,6 +15,7 @@ export const OtherMenus = ({
   closeMenu,
   isAuthenticated,
 }: OtherMenuProps) => {
+  const pathname = usePathname();
   return (
     <div
       className={`fixed inset-0 bg-blackish-green/30 z-50 transition-opacity duration-300 ${showOtherMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} lg:hidden`}
@@ -24,20 +26,28 @@ export const OtherMenus = ({
         onClick={(e) => e.stopPropagation()}
       >
         <ul className="flex flex-col items-center gap-6 w-1/2">
-          <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
+          <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg relative">
             <FlightIcon fillColor="#112211" />
             <Link
               href="/flight-flow/flight-search"
-              className="capitalize text-sm font-semibold"
+              className={`capitalize text-sm font-semibold ${
+                pathname.startsWith("/flight-flow/flight-search")
+                  ? "after:content-[''] after:absolute after:w-full after:h-[5px] after:bg-mint-green-100 after:-bottom-2.5 after:left-0 "
+                  : ""
+              }`}
             >
               find flight
             </Link>
           </li>
-          <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
+          <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg relative">
             <BedIcon fillColor="#112211" />
             <Link
               href="/hotel-flow/hotel-search"
-              className="capitalize text-sm font-semibold"
+              className={`capitalize text-sm font-semibold ${
+                pathname.startsWith("/hotel-flow/hotel-search")
+                  ? "after:content-[''] after:absolute after:w-full after:h-[5px] after:bg-mint-green-100 after:-bottom-2.5 after:left-0 "
+                  : ""
+              }`}
             >
               find stays
             </Link>
