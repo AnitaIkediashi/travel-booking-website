@@ -175,7 +175,7 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
           </p>
           <div className="flex items-center gap-[15px]">
             <Button
-              className="h-12 w-12 flex items-center justify-center rounded border border-mint-green-100"
+              className="h-12 w-12 flex items-center justify-center rounded border border-mint-green-100 hover:bg-mint-green-50"
               icon={<ShareIcon />}
             />
             <Button

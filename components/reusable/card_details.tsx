@@ -157,11 +157,11 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
                       }}
                     >
                       {/* card info */}
-                      <div className="flex items-center gap-8">
+                      <div className="flex flex-col md:flex-row md:items-center md:gap-8 gap-3">
                         {/* card type, last 4 digits, expiry date */}
-                        <h2 className="text-xl font-bold">{card.cardType}</h2>
+                        <h2 className="md:text-xl text-lg font-bold uppercase">{card.cardType}</h2>
                         <div>
-                          <span className="font-bold mr-2">
+                          <span className="font-bold mr-2 text-sm md:text-base">
                             **** {card.last4}
                           </span>
                           <span className="text-sm">
@@ -185,7 +185,7 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
                   );
                 })
               ) : (
-                <p className="text-sm text-blackish-green/75">
+                <p className="text-sm text-blackish-green/75 font-medium">
                   No saved cards yet.
                 </p>
               )}

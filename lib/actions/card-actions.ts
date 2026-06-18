@@ -86,10 +86,7 @@ export async function saveCardToDatabase(paymentIntentId: string) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return {
-      success: false,
-      redirect: "/signin",
-    };
+    return { success: false, redirect: "/signin" };
   }
 
   const userId = session.user.id;
@@ -97,9 +94,7 @@ export async function saveCardToDatabase(paymentIntentId: string) {
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(
       paymentIntentId,
-      {
-        expand: ["payment_method"],
-      },
+      { expand: ["payment_method"] },
     );
 
     const pm = paymentIntent.payment_method as Stripe.PaymentMethod;
@@ -110,15 +105,9 @@ export async function saveCardToDatabase(paymentIntentId: string) {
       const expMonth = pm.card.exp_month;
       const expYear = pm.card.exp_year;
 
-      // Duplicate check scoped to THIS user
+      // Duplicate check
       const existingCard = await prisma.cardDetails.findFirst({
-        where: {
-          cardName,
-          last4,
-          expMonth,
-          expYear,
-          userId,
-        },
+        where: { cardName, last4, expMonth, expYear, userId },
       });
 
       if (existingCard) {
@@ -128,6 +117,34 @@ export async function saveCardToDatabase(paymentIntentId: string) {
           hasCardAlreadyCreated: true,
         };
       }
+
+      // ── Create or get Stripe customer HERE ──────────────────
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { stripeCustomerId: true, email: true },
+      });
+
+      let stripeCustomerId = user?.stripeCustomerId;
+
+      if (!stripeCustomerId && user) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { userId },
+        });
+
+        stripeCustomerId = customer.id;
+
+        await prisma.user.update({
+          where: { id: userId },
+          data: { stripeCustomerId: customer.id },
+        });
+      }
+
+      // Attach payment method to customer
+      await stripe.paymentMethods.attach(pm.id, {
+        customer: stripeCustomerId!,
+      });
+      // ────────────────────────────────────────────────────────
 
       await prisma.cardDetails.create({
         data: {
@@ -238,63 +255,39 @@ export async function processPaymentWithSavedCard(
   }
 
   try {
-    // 1. Get the saved card from DB — verify it belongs to this user
     const card = await prisma.cardDetails.findFirst({
-      where: {
-        id: savedCardId,
-        userId: session.user.id, // security — can't use another user's card
-      },
+      where: { id: savedCardId, userId: session.user.id },
     });
 
     if (!card) {
       return { success: false, message: "Card not found." };
     }
 
+    // stripeCustomerId should already exist — created when card was saved
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { stripeCustomerId: true, email: true },
+      select: { stripeCustomerId: true },
     });
 
-    let stripeCustomerId = user?.stripeCustomerId;
-
-    if (!stripeCustomerId && user) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-      });
-      stripeCustomerId = customer.id;
-
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { stripeCustomerId: customer.id },
-      });
-    }
-
-    try {
-      await stripe.paymentMethods.attach(card.stripePaymentMethodId, {
-        customer: stripeCustomerId!,
-      });
-    } catch (attachErr) {
-      // If already attached, Stripe throws an error we can safely bypass
-      console.log("Card already attached or handling gracefully", attachErr);
+    if (!user?.stripeCustomerId) {
+      return { success: false, message: "No Stripe customer found." };
     }
 
     const baseFare = priceInfo.base_fare?.amount || 0;
     const tax = priceInfo.tax?.amount || 0;
     const serviceFee = priceInfo.service_fee?.amount || 0;
     const discount = priceInfo.discount?.amount || 0;
-
     const totalAmount = baseFare + tax + serviceFee - discount;
     const currency = (priceInfo.total?.currency_code ?? "usd").toLowerCase();
 
-    // 3. Create PaymentIntent with the saved card's stripePaymentMethodId
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100),
-      customer: stripeCustomerId!,
       currency,
-      payment_method: card.stripePaymentMethodId, // ← saved card token
-      confirm: true, // ← confirm immediately, no client step needed
-      off_session: true, // ← charging without user present in Stripe UI
-      metadata: { 
+      customer: user.stripeCustomerId, // ← already exists ✓
+      payment_method: card.stripePaymentMethodId,
+      confirm: true,
+      off_session: true,
+      metadata: {
         cardName: card.cardName,
         country: card.country,
         userId: session.user.id,
