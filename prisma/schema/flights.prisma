@@ -11,7 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // --- only needed when i want to do migrations and generate that's why the error ---
+  // url      = env("DATABASE_URL") // --- only needed when i want to do migrations and generate that's why the error ---
 }
 
 //creating the tables/models i need for my app
@@ -55,6 +55,7 @@ model DepartureInterval {
   start           String
   end             String
   departureFlight Data   @relation(fields: [interval_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related DepartureInterval records are also deleted
+
   @@map("departure_interval")
 }
 
@@ -63,6 +64,7 @@ model ShortLayoverConnection {
   layover_id    String @unique // FK -- those without ? are required fields
   count         Int? // ? means optional field
   layoverFlight Data   @relation(fields: [layover_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related ShortLayoverConnection records are also deleted
+
   @@map("short_Layover_connection")
 }
 
@@ -167,6 +169,7 @@ model FlightOffers {
   traveler_price    TravelerPrice[]
   seat_availability SeatAvailability?
   branded_fareinfo  BrandedFareInfo?
+  seats             Seat[]
   FlightData        Data              @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
 
   @@map("flight_offers")
@@ -187,9 +190,8 @@ model Segment {
 
   //index the departure_time for faster queries and faster cpu performance -- its like sorting in advance or like map the data based on departure_time
 
-  @@map("segments")
-
   @@index([departure_time])
+  @@map("segments")
 }
 
 model Legs {
@@ -205,6 +207,7 @@ model Legs {
   arrival_airport        Airport     @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
   carriers               Carriers[]
   flight_info            FlightInfo?
+  gate                     Gate? 
   legSegment             Segment     @relation(fields: [leg_id], references: [id], onDelete: Cascade)
 
   @@map("legs")
@@ -332,4 +335,30 @@ model Features {
   featureBrandedFareInfo BrandedFareInfo @relation(fields: [feature_id], references: [id], onDelete: Cascade)
 
   @@map("features")
+}
+
+model Gate {
+  id           Int    @id @default(autoincrement())
+  gate_id      Int    @unique // FK -> Legs.id
+  gate_number  String
+  terminal     String
+  gateLeg      Legs   @relation(fields: [gate_id], references: [id], onDelete: Cascade)
+
+  @@map("gates")
+}
+
+model Seat {
+  id              Int          @id @default(autoincrement())
+  seat_id         String       // FK -> FlightOffers
+  seat_number     String       // e.g. "14A"
+  cabin_class     String
+  is_window       Boolean
+  is_aisle        Boolean
+  is_exit_row     Boolean
+  is_booked       Boolean      @default(false)
+  extra_fee       Int          @default(0) // derived from window/exit-row tiers
+  seatFlight      FlightOffers @relation(fields: [seat_id], references: [id], onDelete: Cascade)
+
+  @@unique([seat_id, seat_number])
+  @@map("seats")
 }

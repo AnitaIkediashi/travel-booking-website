@@ -43,7 +43,6 @@ export const AddCardForm = () => {
   const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
     cardName: "",
     country: "",
-    saveCard: false,
   });
 
   const [errors, setErrors] = useState<ReturnType<
@@ -58,13 +57,6 @@ export const AddCardForm = () => {
       country: value,
     }));
   };
-
-  // const handleCheckedInfo = (e: CheckboxChangeEvent) => {
-  //   setCardFormData((prev) => ({
-  //     ...prev,
-  //     saveCard: e.target.checked,
-  //   }));
-  // };
 
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -235,13 +227,6 @@ export const AddCardForm = () => {
               </span>
             )}
           </div>
-          {/* <Checkbox
-            name="saveCard"
-            checked={cardFormData.saveCard}
-            onChange={handleCheckedInfo}
-          >
-            Securely save my information for 1-click checkout
-          </Checkbox> */}
         </div>
         <Button
           type="submit"
