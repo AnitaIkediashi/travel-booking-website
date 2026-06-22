@@ -1,228 +1,42 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Airlines` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Airport` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Arrival` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Baggage` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `BaseFare` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `BrandedFareInfo` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `CardDetails` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `CarrierInfo` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Carriers` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Data` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Depart` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `DepartureInterval` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Discount` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Duration` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Features` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `FlightInfo` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `FlightOffers` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `FlightTimes` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Legs` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `MinPrice` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `PriceBreakdown` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `SeatAvailability` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Segment` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `ShortLayoverConnection` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Stop` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Tax` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `TotalPrice` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `TravelerPrice` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- DropForeignKey
-ALTER TABLE "Airlines" DROP CONSTRAINT "Airlines_airline_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Arrival" DROP CONSTRAINT "Arrival_arrival_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Baggage" DROP CONSTRAINT "Baggage_baggage_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "BaseFare" DROP CONSTRAINT "BaseFare_base_price_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "BrandedFareInfo" DROP CONSTRAINT "BrandedFareInfo_branded_fareinfo_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "CardDetails" DROP CONSTRAINT "CardDetails_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "CarrierInfo" DROP CONSTRAINT "CarrierInfo_carrier_info_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Carriers" DROP CONSTRAINT "Carriers_carrier_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Depart" DROP CONSTRAINT "Depart_depart_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "DepartureInterval" DROP CONSTRAINT "DepartureInterval_interval_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Discount" DROP CONSTRAINT "Discount_discount_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Duration" DROP CONSTRAINT "Duration_duration_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Features" DROP CONSTRAINT "Features_feature_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "FlightInfo" DROP CONSTRAINT "FlightInfo_flight_info_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "FlightOffers" DROP CONSTRAINT "FlightOffers_flight_offer_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "FlightOffers" DROP CONSTRAINT "FlightOffers_price_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "FlightTimes" DROP CONSTRAINT "FlightTimes_flight_times_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Legs" DROP CONSTRAINT "Legs_arrival_airport_code_fkey";
-
--- DropForeignKey
-ALTER TABLE "Legs" DROP CONSTRAINT "Legs_departure_airport_code_fkey";
-
--- DropForeignKey
-ALTER TABLE "Legs" DROP CONSTRAINT "Legs_leg_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "MinPrice" DROP CONSTRAINT "MinPrice_min_price_airline_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "MinPrice" DROP CONSTRAINT "MinPrice_min_price_data_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "MinPrice" DROP CONSTRAINT "MinPrice_min_price_stop_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "SeatAvailability" DROP CONSTRAINT "SeatAvailability_seat_availability_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Segment" DROP CONSTRAINT "Segment_arrival_airport_code_fkey";
-
--- DropForeignKey
-ALTER TABLE "Segment" DROP CONSTRAINT "Segment_departure_airport_code_fkey";
-
--- DropForeignKey
-ALTER TABLE "Segment" DROP CONSTRAINT "Segment_segment_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "ShortLayoverConnection" DROP CONSTRAINT "ShortLayoverConnection_layover_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Stop" DROP CONSTRAINT "Stop_stop_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "Tax" DROP CONSTRAINT "Tax_tax_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "TotalPrice" DROP CONSTRAINT "TotalPrice_total_price_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "TravelerPrice" DROP CONSTRAINT "TravelerPrice_price_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "TravelerPrice" DROP CONSTRAINT "TravelerPrice_traveler_price_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "accounts" DROP CONSTRAINT "accounts_user_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "password_reset_tokens" DROP CONSTRAINT "password_reset_tokens_userId_fkey";
-
--- DropTable
-DROP TABLE "Airlines";
-
--- DropTable
-DROP TABLE "Airport";
-
--- DropTable
-DROP TABLE "Arrival";
-
--- DropTable
-DROP TABLE "Baggage";
-
--- DropTable
-DROP TABLE "BaseFare";
-
--- DropTable
-DROP TABLE "BrandedFareInfo";
-
--- DropTable
-DROP TABLE "CardDetails";
-
--- DropTable
-DROP TABLE "CarrierInfo";
-
--- DropTable
-DROP TABLE "Carriers";
-
--- DropTable
-DROP TABLE "Data";
-
--- DropTable
-DROP TABLE "Depart";
-
--- DropTable
-DROP TABLE "DepartureInterval";
-
--- DropTable
-DROP TABLE "Discount";
-
--- DropTable
-DROP TABLE "Duration";
-
--- DropTable
-DROP TABLE "Features";
-
--- DropTable
-DROP TABLE "FlightInfo";
-
--- DropTable
-DROP TABLE "FlightOffers";
-
--- DropTable
-DROP TABLE "FlightTimes";
-
--- DropTable
-DROP TABLE "Legs";
-
--- DropTable
-DROP TABLE "MinPrice";
-
--- DropTable
-DROP TABLE "PriceBreakdown";
-
--- DropTable
-DROP TABLE "SeatAvailability";
-
--- DropTable
-DROP TABLE "Segment";
-
--- DropTable
-DROP TABLE "ShortLayoverConnection";
-
--- DropTable
-DROP TABLE "Stop";
-
--- DropTable
-DROP TABLE "Tax";
-
--- DropTable
-DROP TABLE "TotalPrice";
-
--- DropTable
-DROP TABLE "TravelerPrice";
-
--- DropTable
-DROP TABLE "User";
+-- CreateTable
+CREATE TABLE "accounts" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "provider_account_id" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+
+    CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "password_reset_tokens" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+    "used" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "password_reset_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "otp_tokens" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "otp" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+    "used" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "otp_tokens_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "card_details" (
@@ -398,6 +212,8 @@ CREATE TABLE "legs" (
     "arrival_time" TIMESTAMP(3) NOT NULL,
     "cabin_class" TEXT,
     "total_time" INTEGER NOT NULL,
+    "departure_gate_id" INTEGER,
+    "arrival_gate_id" INTEGER,
 
     CONSTRAINT "legs_pkey" PRIMARY KEY ("id")
 );
@@ -519,7 +335,31 @@ CREATE TABLE "features" (
 );
 
 -- CreateTable
-CREATE TABLE "user" (
+CREATE TABLE "gates" (
+    "id" SERIAL NOT NULL,
+    "gate_number" TEXT NOT NULL,
+    "terminal" TEXT NOT NULL,
+
+    CONSTRAINT "gates_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "seats" (
+    "id" SERIAL NOT NULL,
+    "seat_id" TEXT NOT NULL,
+    "seat_number" TEXT NOT NULL,
+    "cabin_class" TEXT NOT NULL,
+    "is_window" BOOLEAN NOT NULL,
+    "is_aisle" BOOLEAN NOT NULL,
+    "is_exit_row" BOOLEAN NOT NULL,
+    "is_booked" BOOLEAN NOT NULL DEFAULT false,
+    "extra_fee" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "seats_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT,
     "email" TEXT NOT NULL,
@@ -531,8 +371,17 @@ CREATE TABLE "user" (
     "password" TEXT,
     "stripeCustomerId" TEXT,
 
-    CONSTRAINT "user_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "accounts_provider_provider_account_id_key" ON "accounts"("provider", "provider_account_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "password_reset_tokens_token_key" ON "password_reset_tokens"("token");
+
+-- CreateIndex
+CREATE INDEX "otp_tokens_email_idx" ON "otp_tokens"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "card_details_stripePaymentMethodId_key" ON "card_details"("stripePaymentMethodId");
@@ -554,6 +403,12 @@ CREATE UNIQUE INDEX "min_price_min_price_stop_id_key" ON "min_price"("min_price_
 
 -- CreateIndex
 CREATE INDEX "segments_departure_time_idx" ON "segments"("departure_time");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "legs_departure_gate_id_key" ON "legs"("departure_gate_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "legs_arrival_gate_id_key" ON "legs"("arrival_gate_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "flight_info_flight_info_id_key" ON "flight_info"("flight_info_id");
@@ -580,19 +435,22 @@ CREATE UNIQUE INDEX "seat_availability_seat_availability_id_key" ON "seat_availa
 CREATE UNIQUE INDEX "branded_fare_info_branded_fareinfo_id_key" ON "branded_fare_info"("branded_fareinfo_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
+CREATE UNIQUE INDEX "seats_seat_id_seat_number_key" ON "seats"("seat_id", "seat_number");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_stripeCustomerId_key" ON "user"("stripeCustomerId");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
 
 -- AddForeignKey
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "card_details" ADD CONSTRAINT "card_details_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "card_details" ADD CONSTRAINT "card_details_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "departure_interval" ADD CONSTRAINT "departure_interval_interval_id_fkey" FOREIGN KEY ("interval_id") REFERENCES "data"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -652,6 +510,12 @@ ALTER TABLE "legs" ADD CONSTRAINT "legs_departure_airport_code_fkey" FOREIGN KEY
 ALTER TABLE "legs" ADD CONSTRAINT "legs_arrival_airport_code_fkey" FOREIGN KEY ("arrival_airport_code") REFERENCES "airports"("airport_code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "legs" ADD CONSTRAINT "legs_departure_gate_id_fkey" FOREIGN KEY ("departure_gate_id") REFERENCES "gates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "legs" ADD CONSTRAINT "legs_arrival_gate_id_fkey" FOREIGN KEY ("arrival_gate_id") REFERENCES "gates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "legs" ADD CONSTRAINT "legs_leg_id_fkey" FOREIGN KEY ("leg_id") REFERENCES "segments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -689,3 +553,6 @@ ALTER TABLE "branded_fare_info" ADD CONSTRAINT "branded_fare_info_branded_farein
 
 -- AddForeignKey
 ALTER TABLE "features" ADD CONSTRAINT "features_feature_id_fkey" FOREIGN KEY ("feature_id") REFERENCES "branded_fare_info"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "seats" ADD CONSTRAINT "seats_seat_id_fkey" FOREIGN KEY ("seat_id") REFERENCES "flight_offers"("id") ON DELETE CASCADE ON UPDATE CASCADE;

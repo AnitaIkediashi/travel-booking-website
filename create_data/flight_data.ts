@@ -13,12 +13,22 @@ type FakeLeg = {
   cabin_class: string;
 };
 
-type FakeAirport = {
-  airport_code: string;
-  airport_name: string;
-  city: string;
-  country: string;
-  image_url: string | null;
+// type FakeAirport = {
+//   airport_code: string;
+//   airport_name: string;
+//   city: string;
+//   country: string;
+//   image_url: string | null;
+// };
+
+type FakeSeat = {
+  seat_number: string;
+  cabin_class: string;
+  is_window: boolean;
+  is_aisle: boolean;
+  is_exit_row: boolean;
+  is_booked: boolean;
+  extra_fee: number;
 };
 
 /**
@@ -53,8 +63,15 @@ const CABIN_CONFIGS: Record<
   "First Class": { multiplier: 3.5, baggage: 3, seats: 4 },
 };
 
+const SEAT_LAYOUTS: Record<string, { rows: number; cols: string[] }> = {
+  Economy: { rows: 20, cols: ["A", "B", "C", "D", "E", "F"] },
+  "Premium Economy": { rows: 6, cols: ["A", "B", "C", "D"] },
+  Business: { rows: 4, cols: ["A", "C", "D", "F"] },
+  "First Class": { rows: 2, cols: ["A", "D"] },
+};
+
 function populateFakeAirports() {
-  return Array.from({ length: faker.number.int({ min: 3, max: 5 }) }, () => {
+  return Array.from({ length: faker.number.int({ min: 15, max: 25 }) }, () => {
     const airportName = faker.airline.airport().name;
     const airportCode = faker.airline.airport().iataCode;
     const imageUrl = faker.image.url({ width: 100, height: 100 });
@@ -201,6 +218,79 @@ function populateFakeTravelerPrice() {
   ];
 }
 
+function calculateSeatFee(isWindow: boolean, isExitRow: boolean): number {
+  if (isExitRow && isWindow) {
+    return faker.number.int({ min: 35, max: 50 });
+  }
+  if (isExitRow) {
+    return faker.number.int({ min: 25, max: 40 });
+  }
+  if (isWindow) {
+    return faker.number.int({ min: 10, max: 20 });
+  }
+  return 0;
+}
+
+function generateFakeSeats(cabinClass: string): FakeSeat[] {
+  const layout = SEAT_LAYOUTS[cabinClass];
+  const seats: FakeSeat[] = [];
+
+  const midpointLeft = Math.floor(layout.cols.length / 2) - 1;
+  const midpointRight = Math.floor(layout.cols.length / 2);
+
+  for (let row = 1; row <= layout.rows; row++) {
+    const isExitRow = row === 1 || row === Math.ceil(layout.rows / 2);
+
+    for (let colIndex = 0; colIndex < layout.cols.length; colIndex++) {
+      const col = layout.cols[colIndex];
+      const isWindow = colIndex === 0 || colIndex === layout.cols.length - 1;
+      const isAisle =
+        !isWindow && (colIndex === midpointLeft || colIndex === midpointRight);
+
+      seats.push({
+        seat_number: `${row}${col}`,
+        cabin_class: cabinClass,
+        is_window: isWindow,
+        is_aisle: isAisle,
+        is_exit_row: isExitRow,
+        is_booked: Math.random() < 0.35,
+        extra_fee: calculateSeatFee(isWindow, isExitRow),
+      });
+    }
+  }
+
+  return seats;
+}
+
+function generateFakeGate() {
+  return {
+    gate_number: `${faker.helpers.arrayElement(["A", "B", "C", "D"])}${faker.number.int({ min: 1, max: 30 })}`,
+    terminal: `Terminal ${faker.number.int({ min: 1, max: 5 })}`,
+  };
+}
+
+async function ensureAirportPool() {
+  const existingCount = await prisma.airport.count();
+  const MIN_AIRPORTS = 15; // a reasonable spread for route variety
+
+  if (existingCount >= MIN_AIRPORTS) return; // pool already seeded, skip
+
+  const fakeAirports = populateFakeAirports();
+  for (const airport of fakeAirports) {
+    await prisma.airport.upsert({
+      where: { airport_code: airport.code },
+      update: {},
+      create: {
+        airport_code: airport.code,
+        airport_name: airport.name,
+        city: airport.city,
+        country: airport.country,
+        image_url: airport.imageUrl,
+      },
+    });
+  }
+}
+
 /**
  * A database **transaction** refers to a sequence of read/write operations
  * that are guaranteed to either succeed or fail as a whole
@@ -213,6 +303,8 @@ async function clearDatabase() {
   // The order matters! Delete children before parents.
   // We use a transaction to ensure everything is cleared or nothing is.
   await prisma.$transaction([
+    prisma.seat.deleteMany(),
+    prisma.gate.deleteMany(),
     prisma.legs.deleteMany(),
     prisma.segment.deleteMany(),
     prisma.travelerPrice.deleteMany(),
@@ -296,10 +388,10 @@ async function clearStaleData() {
 // 60% of generated offers will be round-trips
 
 async function main() {
+  await ensureAirportPool();
   const isHealthyAndHasRoom = await clearStaleData();
   if (!isHealthyAndHasRoom) return;
 
-  const fakeAirports = populateFakeAirports();
   const currentFlightAirlines = populateFakeAirlines();
   const cabinClasses = [
     "Economy",
@@ -310,26 +402,8 @@ async function main() {
 
   console.info("Launching multi-day seed process...");
 
-  const createdAirports: FakeAirport[] = [];
-  for (const airport of fakeAirports) {
-    const created = await prisma.airport.upsert({
-      where: { airport_code: airport.code },
-      update: {
-        airport_name: airport.name,
-        city: airport.city,
-        country: airport.country,
-        image_url: airport.imageUrl,
-      },
-      create: {
-        airport_code: airport.code,
-        airport_name: airport.name,
-        city: airport.city,
-        country: airport.country,
-        image_url: airport.imageUrl,
-      },
-    });
-    createdAirports.push(created);
-  }
+  const createdAirports = await prisma.airport.findMany();
+
 
   const latestSegment = await prisma.segment.findFirst({
     orderBy: { departure_time: "desc" },
@@ -477,6 +551,11 @@ async function main() {
               stopCounts[inboundLegs.length - 1]++;
             }
 
+            const generatedSeats = generateFakeSeats(cabin);
+            const seatsLeftCount = generatedSeats.filter(
+              (s) => !s.is_booked,
+            ).length;
+
             const offer = await tx.flightOffers.create({
               data: {
                 flight_offer_id: createdData.id,
@@ -484,8 +563,19 @@ async function main() {
                 flight_key: faker.string.uuid(),
                 seat_availability: {
                   create: {
-                    seats_left: faker.number.int({ min: 1, max: config.seats }),
+                    seats_left: Math.max(seatsLeftCount, 1),
                   },
+                },
+                seats: {
+                  create: generatedSeats.map((seat) => ({
+                    seat_number: seat.seat_number,
+                    cabin_class: seat.cabin_class,
+                    is_window: seat.is_window,
+                    is_aisle: seat.is_aisle,
+                    is_exit_row: seat.is_exit_row,
+                    is_booked: seat.is_booked,
+                    extra_fee: seat.extra_fee,
+                  })),
                 },
                 branded_fareinfo: {
                   create: {
@@ -656,6 +746,17 @@ async function main() {
             if (mainAdultTotal < absoluteCheapestPrice)
               absoluteCheapestPrice = mainAdultTotal;
 
+            const carrierRows: {
+              carrier_id: number;
+              name: string;
+              logo: string;
+              code: string;
+            }[] = [];
+            const flightInfoRows: {
+              flight_info_id: number;
+              flight_number: string;
+            }[] = [];
+
             // 5. CARRIER & FLIGHT INFO
             for (const segment of offer.segments) {
               for (const leg of segment.legs) {
@@ -666,6 +767,21 @@ async function main() {
                 const currentLegArrival = new Date(leg.arrival_time).getTime();
                 const nextLegDeparture = new Date(leg.departure_time).getTime();
 
+                const depGate = await tx.gate.create({
+                  data: generateFakeGate(),
+                });
+                const arrGate = await tx.gate.create({
+                  data: generateFakeGate(),
+                });
+
+                await tx.legs.update({
+                  where: { id: leg.id },
+                  data: {
+                    departure_gate_id: depGate.id,
+                    arrival_gate_id: arrGate.id,
+                  },
+                });
+
                 const layoverMinutes =
                   (nextLegDeparture - currentLegArrival) / (1000 * 60);
 
@@ -674,21 +790,25 @@ async function main() {
                   shortLayoverCount++;
                 }
 
-                await tx.carriers.create({
-                  data: {
-                    carrier_id: leg.id,
-                    name: airline.name,
-                    logo: airline.logo,
-                    code: airline.iata_code,
-                  },
+                carrierRows.push({
+                  carrier_id: leg.id,
+                  name: airline.name,
+                  logo: airline.logo,
+                  code: airline.iata_code,
                 });
-                await tx.flightInfo.create({
-                  data: {
-                    flight_info_id: leg.id,
-                    flight_number: `${airline.iata_code}${digits}`,
-                  },
+
+                flightInfoRows.push({
+                  flight_info_id: leg.id,
+                  flight_number: `${airline.iata_code}${digits}`,
                 });
               }
+            }
+
+            if (carrierRows.length > 0) {
+              await tx.carriers.createMany({ data: carrierRows });
+            }
+            if (flightInfoRows.length > 0) {
+              await tx.flightInfo.createMany({ data: flightInfoRows });
             }
           }
         }
@@ -788,7 +908,7 @@ async function main() {
           });
         }
       },
-      { timeout: 90000 },
+      { timeout: 120000, maxWait: 10000 },
     );
   }
 }

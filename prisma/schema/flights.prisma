@@ -203,11 +203,14 @@ model Legs {
   arrival_time           DateTime
   cabin_class            String?
   total_time             Int
+  departure_gate_id      Int?        @unique
+  arrival_gate_id        Int?        @unique
   departure_airport      Airport     @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
   arrival_airport        Airport     @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
   carriers               Carriers[]
   flight_info            FlightInfo?
-  gate                     Gate? 
+  departure_gate         Gate?       @relation("DepartureGateOf", fields: [departure_gate_id], references: [id])
+  arrival_gate           Gate?       @relation("ArrivalGateOf", fields: [arrival_gate_id], references: [id])
   legSegment             Segment     @relation(fields: [leg_id], references: [id], onDelete: Cascade)
 
   @@map("legs")
@@ -338,26 +341,26 @@ model Features {
 }
 
 model Gate {
-  id           Int    @id @default(autoincrement())
-  gate_id      Int    @unique // FK -> Legs.id
-  gate_number  String
-  terminal     String
-  gateLeg      Legs   @relation(fields: [gate_id], references: [id], onDelete: Cascade)
+  id              Int    @id @default(autoincrement())
+  gate_number     String
+  terminal        String
+  departureForLeg Legs?  @relation("DepartureGateOf")
+  arrivalForLeg   Legs?  @relation("ArrivalGateOf")
 
   @@map("gates")
 }
 
 model Seat {
-  id              Int          @id @default(autoincrement())
-  seat_id         String       // FK -> FlightOffers
-  seat_number     String       // e.g. "14A"
-  cabin_class     String
-  is_window       Boolean
-  is_aisle        Boolean
-  is_exit_row     Boolean
-  is_booked       Boolean      @default(false)
-  extra_fee       Int          @default(0) // derived from window/exit-row tiers
-  seatFlight      FlightOffers @relation(fields: [seat_id], references: [id], onDelete: Cascade)
+  id          Int          @id @default(autoincrement())
+  seat_id     String // FK -> FlightOffers
+  seat_number String // e.g. "14A"
+  cabin_class String
+  is_window   Boolean
+  is_aisle    Boolean
+  is_exit_row Boolean
+  is_booked   Boolean      @default(false)
+  extra_fee   Int          @default(0) // derived from window/exit-row tiers
+  seatFlight  FlightOffers @relation(fields: [seat_id], references: [id], onDelete: Cascade)
 
   @@unique([seat_id, seat_number])
   @@map("seats")
