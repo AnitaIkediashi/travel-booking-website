@@ -40,6 +40,8 @@ type FakeSeat = {
  * inbound flights = round trip flights
  * 8. Airlines operating the flights
  * 9. Stops - depends on the total no of Legs of a segment (legs.length - 1)
+ * 10. Seat selection
+ * 11. Gate
  *
  * The flight day creates like 10 - 15 offers of different flight times for each cabin classes
  */
