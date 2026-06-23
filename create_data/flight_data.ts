@@ -13,14 +13,6 @@ type FakeLeg = {
   cabin_class: string;
 };
 
-// type FakeAirport = {
-//   airport_code: string;
-//   airport_name: string;
-//   city: string;
-//   country: string;
-//   image_url: string | null;
-// };
-
 type FakeSeat = {
   seat_number: string;
   cabin_class: string;
