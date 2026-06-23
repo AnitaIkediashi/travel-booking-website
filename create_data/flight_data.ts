@@ -366,7 +366,7 @@ async function clearStaleData() {
       });
 
       console.info(
-        "♻️ Deleted 200 soonest flights to make room for new generation.",
+        "♻️ Deleted 500 soonest flights to make room for new generation.",
       );
       return true; // Now returns true so main() can add new ones
     }
