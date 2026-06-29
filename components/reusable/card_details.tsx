@@ -95,12 +95,12 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
         const token = currentParams.get("token");
         const paymentIntentId = result.paymentIntentId
 
-        const selectedCard = cards.find((card) => card.id === selectedCardId);
-        const cardName = selectedCard ? selectedCard.cardName : "-";
+        // const selectedCard = cards.find((card) => card.id === selectedCardId);
+        // const cardName = selectedCard ? selectedCard.cardName : "-";
 
         const bookingPayLoad = {
           flowType,
-          cardName,
+          // cardName,
           from,
           to,
           depart,

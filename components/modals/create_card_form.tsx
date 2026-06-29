@@ -189,7 +189,7 @@ export const CreateCardForm = ({
 
         const bookingPayLoad = {
           flowType,
-          cardName: cardFormData.cardName,
+          // cardName: cardFormData.cardName,
           from,
           to,
           depart,

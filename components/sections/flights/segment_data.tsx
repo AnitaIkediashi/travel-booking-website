@@ -72,7 +72,7 @@ export const SegmentData = ({
 
 
   return (
-    <div className="w-full flex flex-row justify-between items-center md:items-start gap-4 md:gap-0 font-montserrat">
+    <div className="w-full flex flex-col md:flex-row md:justify-between md:items-start gap-4 md:gap-0 font-montserrat">
       <div className="md:w-[calc(100%-25%)] w-full md:py-6 md:pr-4 md:border-r border-r-blackish-green/25 flex flex-col gap-y-4 justify-center">
         {offers.segments?.map((segment, index) => {
           //get the data from the first leg to show the data for carrier
@@ -130,13 +130,18 @@ export const SegmentData = ({
               </div>
               <div className="flex md:hidden flex-col">
                 <small className="text-xs font-semibold">
-                  {formatDateTime(segment.departure_time).slice(0, -1)}
+                  {formatDateTime(segment.departure_time)}
                 </small>
                 <small className="text-xs opacity-40">
                   {segment.departure_airport_code}
                 </small>
               </div>
               <div className="md:hidden flex flex-col items-center gap-y-2">
+                {index === 0 && (
+                  <small className="text-[10px] font-medium opacity-78 block md:hidden">
+                    {stopLabel}
+                  </small>
+                )}
                 <hr className="min-w-16 bg-blackish-green opacity-50" />
                 <small className="text-[10px] opacity-78">
                   {getDuration(segment.departure_time, segment.arrival_time)}
@@ -144,7 +149,7 @@ export const SegmentData = ({
               </div>
               <div className="flex md:hidden flex-col">
                 <small className="text-xs font-semibold">
-                  {formatDateTime(segment.arrival_time).slice(0, -1)}
+                  {formatDateTime(segment.arrival_time)}
                 </small>
                 <small className="text-xs opacity-40">
                   {segment.arrival_airport_code}
@@ -154,7 +159,7 @@ export const SegmentData = ({
           );
         })}
       </div>
-      <div className="md:w-1/4 max-w-1/4 md:py-6 md:pl-4 flex flex-col justify-end">
+      <div className="md:w-1/4 md:max-w-1/4 md:py-6 md:pl-4 flex md:flex-col items-center md:items-start md:justify-end">
         <div className="mb-4 flex flex-col gap-y-1.5">
           <p className="text-salmon-100 font-bold md:text-2xl text-xl">
             ${offers.price_breakdown?.total?.amount ?? 0}

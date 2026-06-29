@@ -8,7 +8,7 @@ const classStyle =
 
 type FlightPayload = {
   flowType: "flight";
-  cardName: string;
+  // cardName: string;
   from: string;
   to: string;
   depart: string;
@@ -24,7 +24,7 @@ type FlightPayload = {
 
 type HotelPayload = {
   flowType: "hotel";
-  cardName: string;
+  // cardName: string;
   destination: string;
   checkInDate: string | null;
   checkOutDate: string | null;
@@ -57,6 +57,18 @@ const BookingSuccessPage = async ({
 
   if (bookingId.flowType === "flight") {
     const departDate = new Date(bookingId.depart);
+
+    // const payload = {
+    //   from: bookingId.from,
+    //   to: bookingId.to,
+    //   departDate: bookingId.depart,
+    //   returnDate: bookingId.return ?? "",
+    //   cabin: bookingId.cabin,
+    //   token: bookingId.token,
+    //   trip: bookingId.trip,
+    // };
+
+  
     if (departDate < today) {
       redirect("/flight-flow/flight-search/listing");
     }
@@ -75,7 +87,7 @@ const BookingSuccessPage = async ({
       <FlightBookingSuccess
         offers={flightData}
         totalTravelers={totalTravelers}
-        cardName={bookingId.cardName}
+        // cardName={bookingId.cardName}
         paymentIntentId={bookingId.paymentIntentId}
       />
     );

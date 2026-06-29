@@ -161,7 +161,7 @@ type SegmentProp = {
   legs?: Leg[];
 };
 
-type Leg = {
+export type Leg = {
   id?: number;
   leg_id?: number;
   departure_airport_code?: string;

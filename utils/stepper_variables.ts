@@ -1,0 +1,1 @@
+export const STEP_LABELS = ["Fill passenger information", "Select seats", "Checkout"];

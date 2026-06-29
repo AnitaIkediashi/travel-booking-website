@@ -40,7 +40,7 @@ type TicketInfoProps = {
   gateType: string;
   tripType: string;
   paymentIntentId: string;
-  cardName: string;
+  // cardName: string;
   totalTravelers: number;
   cabin: string | undefined;
   totalPrice: number | undefined;
@@ -225,9 +225,9 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
             style={{ backgroundColor: "#8dd3bb" }}
           >
             <div className="flex flex-col">
-              <p className="text-xl font-bold capitalize">
+              {/* <p className="text-xl font-bold capitalize">
                 {ticketInfo.cardName}
-              </p>
+              </p> */}
               <p className="text-sm capitalize">
                 {ticketInfo.totalTravelers}{" "}
                 {ticketInfo.totalTravelers === 1 ? "traveler" : "travelers"}

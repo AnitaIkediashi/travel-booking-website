@@ -6,6 +6,16 @@
  * you can use include on deeply nested relations as well.
  */
 
+// type SearchFlightProps = {
+//   from: string;
+//   to: string;
+//   departDate: string;
+//   returnDate: string | undefined;
+//   cabin: string;
+//   token: string;
+//   trip: string;
+// };
+
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FlightSearchParamsProps } from "@/types/flight_type";
@@ -413,3 +423,119 @@ export const fetchCountryName = async (airportCode: string | undefined) => {
     return null;
   }
 };
+
+// export const searchFlight = async ({
+//   from,
+//   to,
+//   departDate,
+//   returnDate,
+//   cabin,
+//   token,
+//   trip,
+// }: SearchFlightProps): Promise<boolean> => {
+//   // Added boolean return type
+//   try {
+//     // If validation fails, return false instead of undefined
+//     if (!from || !to || !departDate || !returnDate) return false;
+
+//     const departRange = getDateRangeStrings(departDate);
+//     const returnRange = getDateRangeStrings(returnDate);
+
+//     // Construct the conditions for the where clause
+//     const conditions: Prisma.DataWhereInput[] = [
+//       {
+//         flight_offers: {
+//           some: {
+//             branded_fareinfo: {
+//               cabin_class: {
+//                 equals:
+//                   cabin === "Premium"
+//                     ? "Premium Economy"
+//                     : cabin === "First"
+//                       ? "First Class"
+//                       : cabin,
+//                 mode: "insensitive",
+//               },
+//             },
+//           },
+//         },
+//       },
+//     ];
+
+//     const outboundFilter: Prisma.SegmentWhereInput = {
+//       departure_airport_code: {
+//         equals: from,
+//         mode: "insensitive",
+//       },
+//       arrival_airport_code: {
+//         equals: to,
+//         mode: "insensitive",
+//       },
+//       departure_time: departRange,
+//     };
+
+//     const inboundFilter: Prisma.SegmentWhereInput = {
+//       departure_airport_code: {
+//         equals: to,
+//         mode: "insensitive",
+//       },
+//       arrival_airport_code: {
+//         equals: from,
+//         mode: "insensitive",
+//       },
+//       departure_time: returnRange,
+//     };
+
+//     // Use the AND/NONE logic to differentiate trip types
+//     const tripTypeCondition: Prisma.FlightOffersWhereInput =
+//       trip === "round-trip"
+//         ? {
+//             AND: [
+//               { segments: { some: outboundFilter } },
+//               { segments: { some: inboundFilter } },
+//               {
+//                 token: {
+//                   endsWith: token,
+//                 },
+//               },
+//             ],
+//           }
+//         : {
+//             AND: [
+//               { segments: { some: outboundFilter } },
+//               {
+//                 segments: {
+//                   none: {
+//                     departure_airport_code: { equals: to, mode: "insensitive" },
+//                     arrival_airport_code: { equals: from, mode: "insensitive" },
+//                   },
+//                 },
+//               },
+//               {
+//                 token: {
+//                   equals: token,
+//                 },
+//               },
+//             ],
+//           };
+
+//     // Apply this to your 'conditions' array
+//     conditions.push({
+//       flight_offers: {
+//         some: tripTypeCondition,
+//       },
+//     });
+
+//     const existingData = await prisma.data.findFirst({
+//       where: { AND: conditions },
+//     });
+
+//     console.log('existing data>>>>>>> ', existingData)
+
+//     // 💡 Key Change: Returns true if data exists, false if it is null
+//     return !!existingData;
+//   } catch (error) {
+//     console.error("Error searching flight:", error);
+//     return false; // Return false if the database query fails
+//   }
+// };

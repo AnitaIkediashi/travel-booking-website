@@ -8,13 +8,13 @@ import { FlightTicket } from "./flight_ticket";
 export type FlightBookingSuccessProps = {
   offers: NewFlightOffer[] | undefined;
   totalTravelers: number;
-  cardName: string;
+  // cardName: string;
   paymentIntentId: string;
 };
 
 export const FlightBookingSuccess = async ({
   offers,
-  cardName,
+  // cardName,
   totalTravelers,
   paymentIntentId,
 }: FlightBookingSuccessProps) => {
@@ -81,7 +81,7 @@ export const FlightBookingSuccess = async ({
     gateType,
     tripType,
     paymentIntentId,
-    cardName,
+    // cardName,
     totalTravelers,
     cabin,
     totalPrice,
