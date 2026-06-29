@@ -19,6 +19,7 @@ import { useState } from "react";
 import { PassengerWrapper } from "./passenger_wrapper";
 import { SelectSeatsWrapper } from "./select_seats_wrapper";
 import { Stepper } from "@/components/reusable/stepper";
+import { FLIGHT_STEP_LABELS } from "@/utils/stepper_variables";
 
 type BookingStepsProps = {
   offer: NewFlightOffer;
@@ -105,7 +106,7 @@ export const FlightBookingSteps = ({
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
-        <Stepper current={currentStep} />
+        <Stepper current={currentStep} labels={FLIGHT_STEP_LABELS} />
         <div className="w-full flex lg:flex-row flex-col gap-10">
           <div className="xl:w-[60%] lg:w-[55%] w-full h-fit lg:order-1 order-2 flex flex-col gap-y-10">
             <BoxShadow className="shadow-large p-6">
@@ -201,7 +202,12 @@ export const FlightBookingSteps = ({
               </div>
             </BoxShadow>
             <BoxShadow className="shadow-large p-4">
-              {currentStep === 0 && <PassengerWrapper nextStep={() => goToStep(1)} />}
+              {currentStep === 0 && (
+                <PassengerWrapper
+                  nextStep={() => goToStep(1)}
+                  totalTravelers={totalTravelers}
+                />
+              )}
               {currentStep === 1 && (
                 <SelectSeatsWrapper nextStep={() => goToStep(2)} />
               )}

@@ -1,15 +1,15 @@
-import { STEP_LABELS } from "@/utils/stepper_variables";
 
 type StepperProps = {
     current: number
+    labels: string[]
 }
 
-export const Stepper = ({ current }: StepperProps) => {
+export const Stepper = ({ current, labels }: StepperProps) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full mb-8">
-      {STEP_LABELS.map((label, index) => (
+      {labels.map((label, index) => (
         <div
-          key={label}
+          key={index}
           className="flex flex-col md:flex-row items-start md:items-center flex-1 last:flex-none"
         >
           <div className="flex flex-col items-center">
@@ -29,7 +29,7 @@ export const Stepper = ({ current }: StepperProps) => {
               {label}
             </span>
           </div>
-          {index < STEP_LABELS.length - 1 && (
+          {index < labels.length - 1 && (
             <div
               className={`md:flex-1 md:mx-2 mx-[45px] self-auto my-4 md:my-0
                 w-0.5 h-8 md:w-auto md:h-0.5 ${
@@ -41,4 +41,4 @@ export const Stepper = ({ current }: StepperProps) => {
       ))}
     </div>
   );
-}
+};
