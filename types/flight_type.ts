@@ -42,7 +42,8 @@ export type FlightSearchParamsProps = {
   child?: number;
   infant?: number;
   cabin?: string;
-  token?: string
+  token?: string;
+  bookingId?: string;
 };
 
 

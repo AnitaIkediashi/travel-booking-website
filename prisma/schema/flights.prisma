@@ -171,6 +171,7 @@ model FlightOffers {
   branded_fareinfo  BrandedFareInfo?
   seats             Seat[]
   FlightData        Data              @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+  bookings          Booking[]
 
   @@map("flight_offers")
 }
@@ -361,7 +362,52 @@ model Seat {
   is_booked   Boolean      @default(false)
   extra_fee   Int          @default(0) // derived from window/exit-row tiers
   seatFlight  FlightOffers @relation(fields: [seat_id], references: [id], onDelete: Cascade)
+  booking_id  String?
+  booking     Booking?     @relation(fields: [booking_id], references: [id])
+  held_until  DateTime?
+  passenger   Passenger?
 
   @@unique([seat_id, seat_number])
+  @@index([booking_id])
   @@map("seats")
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  flight_offer_id String
+  flightOffer     FlightOffers  @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+  status          BookingStatus @default(IN_PROGRESS)
+  total_travelers Int
+  hold_expires_at DateTime? // set once seats are picked; null before that
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  passengers      Passenger[]
+  seats           Seat[]
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  IN_PROGRESS
+  HELD
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+model Passenger {
+  id            String   @id @default(uuid())
+  booking_id    String // FK -> Booking
+  booking       Booking  @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  first_name    String
+  last_name     String
+  gender        String
+  id_type       String // "passport" | "national_id"
+  id_number     String
+  nationality   String
+  date_of_birth DateTime
+  seat_id       Int?     @unique // FK -> Seat, nullable until seat step is done
+  seat          Seat?    @relation(fields: [seat_id], references: [id])
+
+  @@map("passengers")
 }
