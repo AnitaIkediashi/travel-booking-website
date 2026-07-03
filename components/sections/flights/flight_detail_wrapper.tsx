@@ -12,6 +12,7 @@ import {
   getDuration,
 } from "@/helpers/convertNumberToTime";
 import { fetchCountryName } from "@/helpers/query_flights";
+import { createBookingAction } from "@/lib/actions/flight-booking-actions";
 import { FlightSearchParamsProps, NewFlightOffer } from "@/types/flight_type";
 import Image from "next/image";
 
@@ -122,12 +123,21 @@ export const FlightDetailWrapper = async ({
             <p className="md:text-[32px] text-2xl font-bold text-salmon-100">
               ${totalPrice}
             </p>
-            <Button
-              type="button"
-              label="Book now"
-              className="w-[150px] h-12 rounded bg-mint-green-100 text-sm font-semibold flex items-center justify-center hover:bg-blackish-green hover:text-white"
-              href={bookingUrl}
-            />
+            <form action={createBookingAction}>
+              <input type="hidden" name="flightOfferId" value={offers[0].id} />
+              <input
+                type="hidden"
+                name="totalTravelers"
+                value={totalTravelers}
+              />
+              <input type="hidden" name="redirectUrl" value={bookingUrl} />
+              <Button
+                type="submit"
+                className="w-[150px] h-12 rounded bg-mint-green-100 text-sm font-semibold 
+               flex items-center justify-center hover:bg-blackish-green hover:text-white"
+                label="Book now"
+              />
+            </form>
           </div>
         </div>
         <div className="flex lg:flex-row flex-col gap-6">

@@ -6,9 +6,10 @@ import { FlightBookingSteps } from "./flight_booking_steps";
 type FlightBookingProps = {
   offers: NewFlightOffer[] | undefined;
   totalTravelers: number;
+  bookingId: string | undefined;
 };
 
-export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps) => {
+export const FlightBooking = async ({offers, totalTravelers, bookingId}: FlightBookingProps) => {
   if (!offers || offers.length === 0) return;
 
   const segments = offers[0].segments;
@@ -32,6 +33,7 @@ export const FlightBooking = async ({offers, totalTravelers}: FlightBookingProps
       offer={offers[0]}
       segments={segmentsWithCities}
       totalTravelers={totalTravelers}
+      bookingId={bookingId}
     />
   );
 }

@@ -396,18 +396,19 @@ enum BookingStatus {
 }
 
 model Passenger {
-  id            String   @id @default(uuid())
-  booking_id    String // FK -> Booking
-  booking       Booking  @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  first_name    String
-  last_name     String
-  gender        String
-  id_type       String // "passport" | "national_id"
-  id_number     String
-  nationality   String
-  date_of_birth DateTime
-  seat_id       Int?     @unique // FK -> Seat, nullable until seat step is done
-  seat          Seat?    @relation(fields: [seat_id], references: [id])
+  id              String   @id @default(uuid())
+  booking_id      String
+  booking         Booking  @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  first_name      String
+  last_name       String
+  gender          String
+  id_type         String // "passport" | "national_id"
+  id_number       String
+  nationality     String
+  date_of_birth   DateTime
+  seat_id         Int?     @unique // FK -> Seat, nullable until seat step is done
+  passenger_index Int
+  seat            Seat?    @relation(fields: [seat_id], references: [id])
 
   @@map("passengers")
 }

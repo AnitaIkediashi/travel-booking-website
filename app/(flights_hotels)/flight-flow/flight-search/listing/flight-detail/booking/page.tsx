@@ -19,6 +19,7 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     infant,
     token,
     trip,
+    bookingId
   } = searchProps;
 
   if (!depart) return []; // to check it depart exists or not
@@ -59,7 +60,11 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
   return (
     <BookingWrapper
       flightChild={
-        <FlightBooking offers={flightData} totalTravelers={totalTravelers} />
+        <FlightBooking
+          offers={flightData}
+          totalTravelers={totalTravelers}
+          bookingId={bookingId}
+        />
       }
       hotelChild={<HotelBooking />}
     />

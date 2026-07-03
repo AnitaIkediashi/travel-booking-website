@@ -25,6 +25,7 @@ type BookingStepsProps = {
   offer: NewFlightOffer;
   totalTravelers: number;
   segments: SegmentsPropsArray[];
+  bookingId: string | undefined;
 };
 
 type SegmentsPropsArray = {
@@ -44,6 +45,7 @@ export const FlightBookingSteps = ({
   offer,
   totalTravelers,
   segments,
+  bookingId
 }: BookingStepsProps) => {
    const [currentStep, setCurrentStep] = useState(0);
 
@@ -206,6 +208,7 @@ export const FlightBookingSteps = ({
                 <PassengerWrapper
                   nextStep={() => goToStep(1)}
                   totalTravelers={totalTravelers}
+                  bookingId={bookingId}
                 />
               )}
               {currentStep === 1 && (
