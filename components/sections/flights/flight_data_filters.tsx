@@ -12,6 +12,7 @@ import { Button } from "@/components/reusable/button";
 import { FilterIcon } from "@/components/icons/filter";
 import { Filters } from "./filters";
 import { StopFilter } from "./stop_filter";
+import dayjs from "dayjs";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -20,6 +21,8 @@ type FlightFilterProps = {
   childCount: number;
   infantCount: number;
   trip: string | null;
+  depart: dayjs.Dayjs | null;
+  return: dayjs.Dayjs | null;
 };
 
 /**
@@ -34,6 +37,8 @@ export const FlightDataFilters = ({
   infantCount,
   childCount,
   trip,
+  depart,
+  return: returnDate,
 }: FlightFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [timeRange, setTimeRange] = useState<[number, number] | null>(null);
@@ -266,12 +271,16 @@ export const FlightDataFilters = ({
     setOpenStopsFilter(!openStopsFilter);
   };
 
+  const currentDate = new Date();
+
+  currentDate.setHours(0, 0, 0, 0);
+
   // 1. Loading state
   if (isPending) {
     return <SkeletonSection />;
   }
   // 2. check for any empty data
-  if (data?.length === 0 || !data) {
+  if (data?.length === 0 || !data || !depart || (depart.toDate() < currentDate) || (trip === "round-trip" && returnDate && returnDate.toDate() < depart.toDate())) {
     return (
       <div className="w-full flex items-center justify-center flex-col gap-3">
         <Image

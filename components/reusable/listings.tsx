@@ -87,6 +87,8 @@ export const Listings = <T,>({ data }: ListingProps<T>) => {
             adultCount={adultCount}
             childCount={childCount}
             infantCount={infantCount}
+            depart={queryParams.depart}
+            return={queryParams.return}
           />
         ) : (
           <HotelDataFilters />

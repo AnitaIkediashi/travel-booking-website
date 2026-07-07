@@ -57,17 +57,6 @@ const BookingSuccessPage = async ({
 
   if (bookingId.flowType === "flight") {
     const departDate = new Date(bookingId.depart);
-
-    // const payload = {
-    //   from: bookingId.from,
-    //   to: bookingId.to,
-    //   departDate: bookingId.depart,
-    //   returnDate: bookingId.return ?? "",
-    //   cabin: bookingId.cabin,
-    //   token: bookingId.token,
-    //   trip: bookingId.trip,
-    // };
-
   
     if (departDate < today) {
       redirect("/flight-flow/flight-search/listing");
@@ -82,7 +71,7 @@ const BookingSuccessPage = async ({
     }
     const totalTravelers =
       bookingId.adults + bookingId.child + bookingId.infant;
-    const flightData = await queryFlightToken(bookingId);
+    const flightData = await queryFlightToken({ token: bookingId.token });
     return (
       <FlightBookingSuccess
         offers={flightData}

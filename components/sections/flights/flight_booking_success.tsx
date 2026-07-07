@@ -6,7 +6,7 @@ import { termsAndConditions } from "@/utils/terms_condition_content";
 import { FlightTicket } from "./flight_ticket";
 
 export type FlightBookingSuccessProps = {
-  offers: NewFlightOffer[] | undefined;
+  offers: NewFlightOffer | null;
   totalTravelers: number;
   // cardName: string;
   paymentIntentId: string;
@@ -18,9 +18,9 @@ export const FlightBookingSuccess = async ({
   totalTravelers,
   paymentIntentId,
 }: FlightBookingSuccessProps) => {
-  if (!offers || offers.length === 0) return;
+  if (!offers || Object.keys(offers).length === 0) return;
 
-  const segments = offers[0].segments;
+  const segments = offers.segments;
 
   const departAirportCode = segments[0].departure_airport_code;
 
@@ -30,10 +30,10 @@ export const FlightBookingSuccess = async ({
 
   const arrivalCityAndCountry = await fetchCountryName(arrivalAirportCode);
 
-  const priceInfoObj = offers[0].price_breakdown;
+  const priceInfoObj = offers.price_breakdown;
   const totalPrice = priceInfoObj?.total?.amount;
 
-  const cabin = offers[0].branded_fareinfo?.cabin_class;
+  const cabin = offers.branded_fareinfo?.cabin_class;
 
   const departTime = formatDateTime(segments[0].departure_time);
 
@@ -62,7 +62,7 @@ export const FlightBookingSuccess = async ({
   const gateType = "N/A";
 
   const tripType =
-    offers[0].trip_type === "round-trip" ? "Round trip" : "One way";
+    offers.trip_type === "round-trip" ? "Round trip" : "One way";
 
   const ticketInfo = {
     departAirportCode,

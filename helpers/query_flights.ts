@@ -391,18 +391,154 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
 };
 
 export const queryFlightToken = async (
-  queryParams: FlightSearchParamsProps,
+  // queryParams: FlightSearchParamsProps,
+  { token }: { token: string | undefined },
 ) => {
+  if (!token) return null;
   try {
-    const flightData = await queryFlightData(queryParams);
-    const filteredFlights = flightData?.flatMap((data) =>
-      data.flight_offers.filter((offer) => offer.token === queryParams.token),
-    );
-
-    return filteredFlights;
+    // const flightData = await queryFlightData(queryParams);
+    // console.log("flightData>>>> ", flightData);
+    // const filteredFlights = flightData?.flatMap((data) =>
+    //   data.flight_offers.filter((offer) => offer.token === queryParams.token),
+    // );
+    // return filteredFlights;
+    const flightOffer = await prisma.flightOffers.findFirst({
+      where: {
+        token: {
+          equals: token,
+        },
+      },
+      include: {
+        branded_fareinfo: {
+          omit: {
+            id: true,
+            branded_fareinfo_id: true,
+          },
+          include: {
+            features: {
+              omit: {
+                id: true,
+                feature_id: true,
+              },
+            },
+          },
+        },
+        seat_availability: {
+          omit: {
+            id: true,
+            seat_availability_id: true,
+          },
+        },
+        traveler_price: {
+          omit: {
+            traveler_reference: true,
+            id: true,
+            traveler_price_id: true,
+          },
+          include: {
+            price_breakdown: {
+              omit: {
+                id: true,
+              },
+              include: {
+                base_fare: {
+                  omit: {
+                    id: true,
+                    base_price_id: true,
+                  },
+                },
+                discount: {
+                  omit: {
+                    id: true,
+                    discount_id: true,
+                  },
+                },
+                tax: {
+                  omit: {
+                    id: true,
+                    tax_id: true,
+                  },
+                },
+                total: {
+                  omit: {
+                    id: true,
+                    total_price_id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        price_breakdown: {
+          omit: {
+            id: true,
+          },
+          include: {
+            base_fare: {
+              omit: {
+                id: true,
+                base_price_id: true,
+              },
+            },
+            discount: {
+              omit: {
+                id: true,
+                discount_id: true,
+              },
+            },
+            tax: {
+              omit: {
+                id: true,
+                tax_id: true,
+              },
+            },
+            total: {
+              omit: {
+                id: true,
+                total_price_id: true,
+              },
+            },
+          },
+        },
+        segments: {
+          omit: {
+            id: true,
+            segment_id: true,
+          },
+          orderBy: { departure_time: "asc" },
+          include: {
+            legs: {
+              omit: {
+                id: true,
+                leg_id: true,
+              },
+              orderBy: { departure_time: "asc" },
+              include: {
+                carriers: {
+                  omit: {
+                    id: true,
+                    carrier_id: true,
+                  },
+                },
+                flight_info: {
+                  omit: {
+                    id: true,
+                    flight_info_id: true,
+                  },
+                  include: {
+                    carrier_info: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    return flightOffer;
   } catch (error) {
     console.error("no such token available: ", error);
-    return [];
+    return null;
   }
 };
 
@@ -423,119 +559,3 @@ export const fetchCountryName = async (airportCode: string | undefined) => {
     return null;
   }
 };
-
-// export const searchFlight = async ({
-//   from,
-//   to,
-//   departDate,
-//   returnDate,
-//   cabin,
-//   token,
-//   trip,
-// }: SearchFlightProps): Promise<boolean> => {
-//   // Added boolean return type
-//   try {
-//     // If validation fails, return false instead of undefined
-//     if (!from || !to || !departDate || !returnDate) return false;
-
-//     const departRange = getDateRangeStrings(departDate);
-//     const returnRange = getDateRangeStrings(returnDate);
-
-//     // Construct the conditions for the where clause
-//     const conditions: Prisma.DataWhereInput[] = [
-//       {
-//         flight_offers: {
-//           some: {
-//             branded_fareinfo: {
-//               cabin_class: {
-//                 equals:
-//                   cabin === "Premium"
-//                     ? "Premium Economy"
-//                     : cabin === "First"
-//                       ? "First Class"
-//                       : cabin,
-//                 mode: "insensitive",
-//               },
-//             },
-//           },
-//         },
-//       },
-//     ];
-
-//     const outboundFilter: Prisma.SegmentWhereInput = {
-//       departure_airport_code: {
-//         equals: from,
-//         mode: "insensitive",
-//       },
-//       arrival_airport_code: {
-//         equals: to,
-//         mode: "insensitive",
-//       },
-//       departure_time: departRange,
-//     };
-
-//     const inboundFilter: Prisma.SegmentWhereInput = {
-//       departure_airport_code: {
-//         equals: to,
-//         mode: "insensitive",
-//       },
-//       arrival_airport_code: {
-//         equals: from,
-//         mode: "insensitive",
-//       },
-//       departure_time: returnRange,
-//     };
-
-//     // Use the AND/NONE logic to differentiate trip types
-//     const tripTypeCondition: Prisma.FlightOffersWhereInput =
-//       trip === "round-trip"
-//         ? {
-//             AND: [
-//               { segments: { some: outboundFilter } },
-//               { segments: { some: inboundFilter } },
-//               {
-//                 token: {
-//                   endsWith: token,
-//                 },
-//               },
-//             ],
-//           }
-//         : {
-//             AND: [
-//               { segments: { some: outboundFilter } },
-//               {
-//                 segments: {
-//                   none: {
-//                     departure_airport_code: { equals: to, mode: "insensitive" },
-//                     arrival_airport_code: { equals: from, mode: "insensitive" },
-//                   },
-//                 },
-//               },
-//               {
-//                 token: {
-//                   equals: token,
-//                 },
-//               },
-//             ],
-//           };
-
-//     // Apply this to your 'conditions' array
-//     conditions.push({
-//       flight_offers: {
-//         some: tripTypeCondition,
-//       },
-//     });
-
-//     const existingData = await prisma.data.findFirst({
-//       where: { AND: conditions },
-//     });
-
-//     console.log('existing data>>>>>>> ', existingData)
-
-//     // 💡 Key Change: Returns true if data exists, false if it is null
-//     return !!existingData;
-//   } catch (error) {
-//     console.error("Error searching flight:", error);
-//     return false; // Return false if the database query fails
-//   }
-// };

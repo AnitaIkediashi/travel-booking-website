@@ -6,6 +6,7 @@ import { prisma } from "../prisma";
 import { z } from "zod";
 import { Resend } from "resend";
 import { ResetPasswordEmail } from "@/components/registration/reset_password_email";
+import { signUpSchema } from "../zod_schema";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -27,19 +28,7 @@ function generateOtp(length = 6) {
   return otp;
 }
 
-const signUpSchema = z
-  .object({
-    firstName: z.string().trim().min(1, "First name is required"),
-    lastName: z.string().trim().min(1, "Last name is required"),
-    email: z.string().email("Invalid email address"),
-    phoneNo: z.string().min(1, "Phone number is required"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+
 
 export async function signUpUser(rawData: unknown) {
   const validated = signUpSchema.safeParse(rawData);

@@ -51,8 +51,8 @@ const FlightDetailPage = async ({searchParams}: FlightSearchParams) => {
     if (!isValidQuery) {
       redirect("/flight-flow/flight-search/listing");
     }
-
-  const data = await queryFlightToken(searchProps)
+    
+  const data = await queryFlightToken({ token })
   
   return (
     <FlightDetailWrapper offers={data} totalTravelers={totalTravelers} searchProps={searchProps} />

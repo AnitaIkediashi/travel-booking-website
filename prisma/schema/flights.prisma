@@ -162,7 +162,7 @@ model FlightOffers {
   id                String            @id @default(uuid()) // PK
   flight_offer_id   String // FK
   price_id          Int? // FK
-  token             String
+  token             String @unique
   flight_key        String
   segments          Segment[]
   price_breakdown   PriceBreakdown?   @relation(fields: [price_id], references: [id])

@@ -3,29 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-
-export const passengerSchema = z.object({
-  firstName: z.string().min(1, "First name is required").trim(),
-  lastName: z.string().min(1, "Last name is required").trim(),
-  gender: z.enum(["MALE", "FEMALE"], {
-    message: "Gender is required",
-  }),
-  idType: z.enum(["PASSPORT", "NATIONAL_ID"], {
-    message: "ID type is required",
-  }),
-  nationality: z.string().min(1, "Nationality is required").trim(),
-  idNumber: z.string().min(1, "ID number is required").trim(),
-  dateOfBirth: z
-    .string()
-    .min(1, "Date of birth is required")
-    .refine((val) => !isNaN(Date.parse(val)), "Invalid date of birth")
-    .refine(
-      (val) => new Date(val) < new Date(),
-      "Date of birth cannot be in the future",
-    ),
-});
-
-export type PassengerSchema = z.infer<typeof passengerSchema>;
+import { passengerSchema, PassengerSchema } from "../zod_schema";
 
 export async function createBookingAction(formData: FormData) {
   const flightOfferId = formData.get("flightOfferId") as string;
@@ -87,16 +65,16 @@ export async function savePassenger(
       where: { id: existingPassengerId },
       data,
     });
-    return { success: true, id: existingPassengerId }; // 👈 consistent shape
+    return { success: true, id: existingPassengerId }; 
   }
 
   const created = await prisma.passenger.create({ data });
-  return { success: true, id: created.id }; // 👈 consistent shape
+  return { success: true, id: created.id }; 
 }
 
 export async function getPassengersForBooking(bookingId: string | undefined) {
   return prisma.passenger.findMany({
     where: { booking_id: bookingId },
-    // orderBy: { created_at: "asc" },
+    orderBy: { passenger_index: "asc" },
   });
 }

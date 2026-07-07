@@ -2,6 +2,7 @@
 
 import { getPassengersForBooking, savePassenger } from "@/lib/actions/flight-booking-actions";
 import { useEffect, useState } from "react";
+import { PassengerForm } from "./passenger_form";
 
 type PassengerProps = {
   nextStep: () => void;
@@ -9,7 +10,7 @@ type PassengerProps = {
   bookingId: string | undefined;
 };
 
-type IdType = "PASSPORT" | "NATIONAL_ID";
+export type IdType = "PASSPORT" | "NATIONAL_ID";
 type Gender = "MALE" | "FEMALE";
 
 export type Passenger = {
@@ -124,5 +125,43 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
       </div>
     );
   }
-  return <div>passenger_wrapper</div>;
+  return (
+    <div className="flex flex-col items-center gap-6 w-full">
+      {/* sub-progress indicator */}
+      {totalTravelers > 1 && (
+        <div className="w-full max-w-lg flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">
+            Passenger {currentIndex + 1} of {totalTravelers}
+          </span>
+          <div className="flex gap-1.5">
+            {Array.from({ length: totalTravelers }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === currentIndex
+                    ? "w-6 bg-blackish-green"
+                    : i < currentIndex
+                      ? "w-3 bg-blackish-green/50"
+                      : "w-3 bg-gray-200"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <PassengerForm
+        key={currentIndex}
+        passenger={passengers[currentIndex]}
+        passengerNumber={currentIndex + 1}
+        isLastPassenger={currentIndex === totalTravelers - 1}
+        isSaving={isSaving}
+        onChange={updatePassenger}
+        onSubmit={handlePassengerSubmit}
+        onBack={
+          currentIndex > 0 ? () => setCurrentIndex((p) => p - 1) : undefined
+        }
+      />
+    </div>
+  );
 };

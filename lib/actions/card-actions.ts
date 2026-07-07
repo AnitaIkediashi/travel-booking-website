@@ -6,6 +6,7 @@ import Stripe from "stripe";
 import { PriceInfoProps, SaveCardOnSignupPayload } from "@/types/card_type";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
+import { cardSchema } from "../zod_schema";
 
 /**
  * 1. This file is intended to hold server actions related to card management, such as adding, updating, or deleting cards. These actions will interact with the database and handle the business logic for card operations.
@@ -19,18 +20,6 @@ import { authOptions } from "../auth";
  */
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!); // secret key for the server 'sk'
-
-// define the schema
-const cardSchema = z.object({
-  cardName: z
-    .string()
-    .trim()
-    .min(1, "Name is required")
-    .min(3, "Name is too short"),
-  country: z.string().min(1, "Select a country"),
-  saveCard: z.boolean().optional(),
-  cardType: z.string().optional(),
-});
 
 export async function processPaymentIntent(
   rawData: unknown,

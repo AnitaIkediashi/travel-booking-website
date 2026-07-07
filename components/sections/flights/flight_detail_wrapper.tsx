@@ -17,7 +17,7 @@ import { FlightSearchParamsProps, NewFlightOffer } from "@/types/flight_type";
 import Image from "next/image";
 
 type FlightDetailWrapperProps = {
-  offers: NewFlightOffer[] | undefined;
+  offers: NewFlightOffer | null;
   totalTravelers: number;
   searchProps: FlightSearchParamsProps;
 };
@@ -27,25 +27,25 @@ export const FlightDetailWrapper = async ({
   totalTravelers,
   searchProps,
 }: FlightDetailWrapperProps) => {
-  if (!offers || offers.length === 0) return;
+  if (!offers || Object.keys(offers).length === 0) return;
 
-  const departAirportCode = offers[0].segments[0].departure_airport_code;
+  const departAirportCode = offers.segments[0].departure_airport_code;
 
-  const arrivalAirportCode = offers[0].segments[0].arrival_airport_code;
+  const arrivalAirportCode = offers.segments[0].arrival_airport_code;
 
   const departCityAndCountry = await fetchCountryName(departAirportCode);
 
   const arrivalCityAndCountry = await fetchCountryName(arrivalAirportCode);
 
-  const totalPrice = offers[0].price_breakdown?.total?.amount;
+  const totalPrice = offers.price_breakdown?.total?.amount;
 
-  const cabin = offers[0].branded_fareinfo?.cabin_class;
+  const cabin = offers.branded_fareinfo?.cabin_class;
 
-  const features = offers[0].branded_fareinfo?.features;
+  const features = offers.branded_fareinfo?.features;
 
-  const segments = offers[0].segments;
+  const segments = offers.segments;
 
-  const featureSrc = (offers[0].branded_fareinfo?.features || [])
+  const featureSrc = (offers.branded_fareinfo?.features || [])
     .map((feature, index) => {
       const { feature_name: name, availability: avail } = feature;
       if (name === "WIFI" && avail === "INCLUDED")
@@ -116,7 +116,7 @@ export const FlightDetailWrapper = async ({
               </div>
             </div>
             <small className="text-sm text-blackish-green/50">
-              {offers[0].trip_type === "round-trip" ? "Round trip" : "One way"}
+              {offers.trip_type === "round-trip" ? "Round trip" : "One way"}
             </small>
           </div>
           <div className="flex flex-col gap-4">
@@ -124,7 +124,7 @@ export const FlightDetailWrapper = async ({
               ${totalPrice}
             </p>
             <form action={createBookingAction}>
-              <input type="hidden" name="flightOfferId" value={offers[0].id} />
+              <input type="hidden" name="flightOfferId" value={offers.id} />
               <input
                 type="hidden"
                 name="totalTravelers"
@@ -186,7 +186,7 @@ export const FlightDetailWrapper = async ({
             </div>
             <p className="text-sm">
               {" "}
-              Seats available: {offers[0].seat_availability?.seats_left}
+              Seats available: {offers.seat_availability?.seats_left}
             </p>
           </BoxShadow>
           <BoxShadow className="shadow-large p-6 xl:w-[40%] lg:w-[45%] w-full">
