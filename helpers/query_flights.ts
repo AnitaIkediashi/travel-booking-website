@@ -6,16 +6,6 @@
  * you can use include on deeply nested relations as well.
  */
 
-// type SearchFlightProps = {
-//   from: string;
-//   to: string;
-//   departDate: string;
-//   returnDate: string | undefined;
-//   cabin: string;
-//   token: string;
-//   trip: string;
-// };
-
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FlightSearchParamsProps } from "@/types/flight_type";

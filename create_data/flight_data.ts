@@ -43,7 +43,7 @@ type FakeSeat = {
  * 10. Seat selection
  * 11. Gate
  *
- * The flight day creates like 10 - 15 offers of different flight times for each cabin classes
+ * The flight day creates like 10 - 15 offers for each cabin classes, same airlines but different flight times
  */
 
 //helper function to calculate price multipliers and baggage allowance based on cabin class
