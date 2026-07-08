@@ -43,7 +43,12 @@ type FakeSeat = {
  * 10. Seat selection
  * 11. Gate
  *
- * The flight day creates like 10 - 15 offers for each cabin classes, same airlines but different flight times
+ * for each route, generate N distinct flight
+ * TIME INSTANCES (each with its own departure/arrival time, its own stop
+ * pattern/legs, its own flight number/airline). Cabin class then only
+ * varies price, seats, and baggage WITHIN each fixed time instance — mirroring
+ * how a real GDS returns multiple flight numbers per route/day, each bookable
+ * across cabins at that flight's fixed schedule.
  */
 
 //helper function to calculate price multipliers and baggage allowance based on cabin class
@@ -398,7 +403,6 @@ async function main() {
 
   const createdAirports = await prisma.airport.findMany();
 
-
   const latestSegment = await prisma.segment.findFirst({
     orderBy: { departure_time: "desc" },
     select: { departure_time: true },
@@ -460,352 +464,418 @@ async function main() {
         // FIX 1: Explicitly type durationStats to avoid 'any[]' error
         const durationStats: { min: number; max: number }[] = [];
 
-        const numSchedules = faker.number.int({ min: 10, max: 15 });
+        // ---------------------------------------------------------------
+        // numRoutes = how many distinct O&D pairs we generate for this day.
+        // ---------------------------------------------------------------
+        const numRoutes = faker.number.int({ min: 10, max: 15 });
 
         const stopCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
 
-        for (let i = 0; i < numSchedules; i++) {
-          const isRoundTrip = Math.random() < 0.6;
-
-          // Pick route
+        for (let r = 0; r < numRoutes; r++) {
+          // Pick the route ONCE — shared across every time instance below
           const [depAirport, arrAirport] = faker.helpers.arrayElements(
             createdAirports,
             2,
           );
           const allAvailableCodes = createdAirports.map((a) => a.airport_code);
 
-          const outbound = populateFakeSegments(
-            flightDate,
-            depAirport.airport_code,
-            arrAirport.airport_code,
+          // ---------------------------------------------------------------
+          // FIX: returnDate is now computed ONCE per route (not per
+          // instance). Every instance on this route that turns out to be
+          // round-trip will share this same return day, so a search for
+          // an exact depart+return date pair can surface ALL of that
+          // route's round-trip flight-time instances (multiple departure
+          // times), not just the one instance that happened to randomly
+          // roll the matching return date.
+          // ---------------------------------------------------------------
+          const routeReturnDate = new Date(flightDate);
+          routeReturnDate.setDate(
+            routeReturnDate.getDate() + faker.number.int({ min: 2, max: 10 }),
           );
-          let inbound = null;
 
-          if (isRoundTrip) {
-            const returnDate = new Date(flightDate);
-            returnDate.setDate(
-              returnDate.getDate() + faker.number.int({ min: 2, max: 10 }),
-            );
-            inbound = populateFakeSegments(
-              returnDate,
-              arrAirport.airport_code,
+          const numFlightInstances = faker.number.int({ min: 3, max: 6 });
+
+          for (let f = 0; f < numFlightInstances; f++) {
+            // ---------------------------------------------------------
+            // FIX: isRoundTrip is now decided PER INSTANCE, not once per
+            // route. Previously every instance on a route inherited the
+            // same coin flip, so a route was either "always round-trip"
+            // or "always one-way" for the whole day — meaning one-way
+            // searches would find zero results for any route that
+            // happened to roll round-trip (and vice versa). Deciding
+            // per instance gives a realistic mix of one-way and
+            // round-trip flight numbers on the same route/day, matching
+            // how a real GDS returns both trip types for a given route.
+            // ---------------------------------------------------------
+            const isRoundTrip = Math.random() < 0.6;
+
+            const outbound = populateFakeSegments(
+              flightDate,
               depAirport.airport_code,
+              arrAirport.airport_code,
             );
-          }
+            let inbound = null;
 
-          // Stats tracking
-          const outboundDuration = outbound.total_time;
-          durationStats.push({
-            min: outboundDuration,
-            max: outboundDuration + 15,
-          });
+            if (isRoundTrip) {
+              inbound = populateFakeSegments(
+                routeReturnDate,
+                arrAirport.airport_code,
+                depAirport.airport_code,
+              );
+            }
 
-          if (outboundDuration < globalMinDuration)
-            globalMinDuration = outboundDuration;
-          if (outboundDuration > globalMaxDuration)
-            globalMaxDuration = outboundDuration;
+            // Stats tracking
+            const outboundDuration = outbound.total_time;
+            durationStats.push({
+              min: outboundDuration,
+              max: outboundDuration + 15,
+            });
 
-          const depHour = outbound.departure_time.getUTCHours();
-          const timeMult = depHour >= 10 && depHour <= 17 ? 1.1 : 0.8;
+            if (outboundDuration < globalMinDuration)
+              globalMinDuration = outboundDuration;
+            if (outboundDuration > globalMaxDuration)
+              globalMaxDuration = outboundDuration;
 
-          for (const cabin of cabinClasses) {
-            const config = CABIN_CONFIGS[cabin];
-            const sharedTravelerData = populateFakeTravelerPrice();
-            const routeBaseAmount =
-              faker.number.int({ min: 100, max: 300 }) *
-              config.multiplier *
-              timeMult;
-            const finalBaseAmount = isRoundTrip
-              ? routeBaseAmount * 1.8
-              : routeBaseAmount;
+            const depHour = outbound.departure_time.getUTCHours();
+            const timeMult = depHour >= 10 && depHour <= 17 ? 1.1 : 0.8;
 
-            // Generate dynamic legs for outbound
-            const outboundLegs = populateFakeLegsData(
+            // One airline + flight number PER INSTANCE — shared by all cabins
+            const instanceAirline =
+              currentFlightAirlines[f % currentFlightAirlines.length];
+            const instanceFlightDigits = faker.airline.flightNumber({
+              length: 3,
+            });
+
+            // Stops/legs computed ONCE per instance — shared across cabins.
+            const outboundLegsBase = populateFakeLegsData(
               outbound.departure_time,
               outbound.arrival_time,
-              cabin,
+              "SHARED",
               depAirport.airport_code,
               arrAirport.airport_code,
               allAvailableCodes,
             );
+            stopCounts[outboundLegsBase.length - 1]++;
 
-            // Increment stop count based on number of legs
-            stopCounts[outboundLegs.length - 1]++;
-
-            let inboundLegs: FakeLeg[] = [];
+            let inboundLegsBase: FakeLeg[] = [];
             if (inbound) {
-              inboundLegs = populateFakeLegsData(
+              inboundLegsBase = populateFakeLegsData(
                 inbound.departure_time,
                 inbound.arrival_time,
-                cabin,
+                "SHARED",
                 arrAirport.airport_code,
                 depAirport.airport_code,
                 allAvailableCodes,
               );
-              stopCounts[inboundLegs.length - 1]++;
+              stopCounts[inboundLegsBase.length - 1]++;
             }
 
-            const generatedSeats = generateFakeSeats(cabin);
-            const seatsLeftCount = generatedSeats.filter(
-              (s) => !s.is_booked,
-            ).length;
+            for (const cabin of cabinClasses) {
+              const config = CABIN_CONFIGS[cabin];
+              const sharedTravelerData = populateFakeTravelerPrice();
+              const routeBaseAmount =
+                faker.number.int({ min: 100, max: 300 }) *
+                config.multiplier *
+                timeMult;
+              const finalBaseAmount = isRoundTrip
+                ? routeBaseAmount * 1.8
+                : routeBaseAmount;
 
-            const offer = await tx.flightOffers.create({
-              data: {
-                flight_offer_id: createdData.id,
-                token: faker.string.nanoid(60),
-                flight_key: faker.string.uuid(),
-                seat_availability: {
-                  create: {
-                    seats_left: Math.max(seatsLeftCount, 1),
-                  },
-                },
-                seats: {
-                  create: generatedSeats.map((seat) => ({
-                    seat_number: seat.seat_number,
-                    cabin_class: seat.cabin_class,
-                    is_window: seat.is_window,
-                    is_aisle: seat.is_aisle,
-                    is_exit_row: seat.is_exit_row,
-                    is_booked: seat.is_booked,
-                    extra_fee: seat.extra_fee,
-                  })),
-                },
-                branded_fareinfo: {
-                  create: {
-                    cabin_class: cabin,
-                    features: {
-                      create: [
-                        {
-                          feature_name: "WIFI",
-                          category: "AMENITIES",
-                          availability: ["Business", "First Class"].includes(
-                            cabin,
-                          )
-                            ? "INCLUDED"
-                            : "OPTIONAL",
-                        },
-                        {
-                          feature_name: "MEAL",
-                          category: "DINING",
-                          availability: "INCLUDED",
-                        },
-                        {
-                          feature_name: "SEAT TYPE",
-                          category: "SEAT & SPACE",
-                          availability:
-                            cabin === "Economy"
-                              ? "STANDARD"
-                              : cabin === "Premium Economy"
-                                ? "WIDE"
-                                : cabin === "Business"
-                                  ? "FULLY-RECLINED"
-                                  : "FULLY-RECLINED",
-                        },
-                        {
-                          feature_name: "CONNECTIVITY",
-                          category: "USB PORT & POWER OUTLET",
-                          availability: ["Business", "First Class"].includes(
-                            cabin,
-                          )
-                            ? "INCLUDED"
-                            : "OPTIONAL",
-                        },
-                        {
-                          feature_name: "SEATBACK SCREEN",
-                          category: "MEDIA",
-                          availability: ["Business", "First Class"].includes(
-                            cabin,
-                          )
-                            ? "INCLUDED"
-                            : "OPTIONAL",
-                        },
-                      ],
+              const outboundLegs: FakeLeg[] = outboundLegsBase.map((leg) => ({
+                ...leg,
+                cabin_class: cabin,
+              }));
+              const inboundLegs: FakeLeg[] = inboundLegsBase.map((leg) => ({
+                ...leg,
+                cabin_class: cabin,
+              }));
+
+              const generatedSeats = generateFakeSeats(cabin);
+              const seatsLeftCount = generatedSeats.filter(
+                (s) => !s.is_booked,
+              ).length;
+
+              const offer = await tx.flightOffers.create({
+                data: {
+                  flight_offer_id: createdData.id,
+                  token: faker.string.nanoid(60),
+                  flight_key: faker.string.uuid(),
+                  seat_availability: {
+                    create: {
+                      seats_left: Math.max(seatsLeftCount, 1),
                     },
                   },
-                },
-                segments: {
-                  create: [
-                    // Outbound flight
-                    {
-                      departure_airport_code: outbound.departure_airport_code,
-                      arrival_airport_code: outbound.arrival_airport_code,
-                      total_time: outbound.total_time,
-                      departure_time: outbound.departure_time_iso,
-                      arrival_time: outbound.arrival_time_iso,
-                      legs: {
-                        create: outboundLegs.map((leg) => ({
-                          departure_airport_code: leg.departure_code,
-                          arrival_airport_code: leg.arrival_code,
-                          departure_time: leg.departure_time,
-                          arrival_time: leg.arrival_time,
-                          cabin_class: leg.cabin_class,
-                          total_time: leg.total_time,
-                        })),
+                  seats: {
+                    create: generatedSeats.map((seat) => ({
+                      seat_number: seat.seat_number,
+                      cabin_class: seat.cabin_class,
+                      is_window: seat.is_window,
+                      is_aisle: seat.is_aisle,
+                      is_exit_row: seat.is_exit_row,
+                      is_booked: seat.is_booked,
+                      extra_fee: seat.extra_fee,
+                    })),
+                  },
+                  branded_fareinfo: {
+                    create: {
+                      cabin_class: cabin,
+                      features: {
+                        create: [
+                          {
+                            feature_name: "WIFI",
+                            category: "AMENITIES",
+                            availability: ["Business", "First Class"].includes(
+                              cabin,
+                            )
+                              ? "INCLUDED"
+                              : "OPTIONAL",
+                          },
+                          {
+                            feature_name: "MEAL",
+                            category: "DINING",
+                            availability: "INCLUDED",
+                          },
+                          {
+                            feature_name: "SEAT TYPE",
+                            category: "SEAT & SPACE",
+                            availability:
+                              cabin === "Economy"
+                                ? "STANDARD"
+                                : cabin === "Premium Economy"
+                                  ? "WIDE"
+                                  : cabin === "Business"
+                                    ? "FULLY-RECLINED"
+                                    : "FULLY-RECLINED",
+                          },
+                          {
+                            feature_name: "CONNECTIVITY",
+                            category: "USB PORT & POWER OUTLET",
+                            availability: ["Business", "First Class"].includes(
+                              cabin,
+                            )
+                              ? "INCLUDED"
+                              : "OPTIONAL",
+                          },
+                          {
+                            feature_name: "SEATBACK SCREEN",
+                            category: "MEDIA",
+                            availability: ["Business", "First Class"].includes(
+                              cabin,
+                            )
+                              ? "INCLUDED"
+                              : "OPTIONAL",
+                          },
+                        ],
                       },
                     },
-                    // Inbound flight
-                    ...(inbound
-                      ? [
-                          {
-                            departure_airport_code:
-                              inbound.departure_airport_code,
-                            arrival_airport_code: inbound.arrival_airport_code,
-                            total_time: inbound.total_time,
-                            departure_time: inbound.departure_time_iso,
-                            arrival_time: inbound.arrival_time_iso,
-                            legs: {
-                              create: inboundLegs.map((leg) => ({
-                                departure_airport_code: leg.departure_code,
-                                arrival_airport_code: leg.arrival_code,
-                                departure_time: leg.departure_time,
-                                arrival_time: leg.arrival_time,
-                                cabin_class: leg.cabin_class,
-                                total_time: leg.total_time,
-                              })),
+                  },
+                  segments: {
+                    create: [
+                      // Outbound flight
+                      {
+                        departure_airport_code: outbound.departure_airport_code,
+                        arrival_airport_code: outbound.arrival_airport_code,
+                        total_time: outbound.total_time,
+                        departure_time: outbound.departure_time_iso,
+                        arrival_time: outbound.arrival_time_iso,
+                        legs: {
+                          create: outboundLegs.map((leg) => ({
+                            departure_airport_code: leg.departure_code,
+                            arrival_airport_code: leg.arrival_code,
+                            departure_time: leg.departure_time,
+                            arrival_time: leg.arrival_time,
+                            cabin_class: leg.cabin_class,
+                            total_time: leg.total_time,
+                          })),
+                        },
+                      },
+                      // Inbound flight
+                      ...(inbound
+                        ? [
+                            {
+                              departure_airport_code:
+                                inbound.departure_airport_code,
+                              arrival_airport_code:
+                                inbound.arrival_airport_code,
+                              total_time: inbound.total_time,
+                              departure_time: inbound.departure_time_iso,
+                              arrival_time: inbound.arrival_time_iso,
+                              legs: {
+                                create: inboundLegs.map((leg) => ({
+                                  departure_airport_code: leg.departure_code,
+                                  arrival_airport_code: leg.arrival_code,
+                                  departure_time: leg.departure_time,
+                                  arrival_time: leg.arrival_time,
+                                  cabin_class: leg.cabin_class,
+                                  total_time: leg.total_time,
+                                })),
+                              },
                             },
-                          },
-                        ]
-                      : []),
-                  ],
+                          ]
+                        : []),
+                    ],
+                  },
+                  traveler_price: {
+                    create: sharedTravelerData.map((t) => ({
+                      traveler_reference: t.traveler_reference,
+                      traveler_type: t.traveler_type,
+                    })),
+                  },
                 },
-                traveler_price: {
-                  create: sharedTravelerData.map((t) => ({
-                    traveler_reference: t.traveler_reference,
-                    traveler_type: t.traveler_type,
-                  })),
+                include: {
+                  traveler_price: true,
+                  segments: { include: { legs: true } },
                 },
-              },
-              include: {
-                traveler_price: true,
-                segments: { include: { legs: true } },
-              },
-            });
+              });
 
-            // 4. PRICE BREAKDOWN LOGIC
-            let mainAdultTotal = 0;
-            let mainAdultBase = 0;
-            let mainAdultTax = 0;
+              // -----------------------------------------------------------
+              // 4. PRICE BREAKDOWN LOGIC
+              // OPTIMIZATION: the 3 travelers don't depend on each other,
+              // so create/update them concurrently instead of one-by-one.
+              // Cuts this step from ~6 sequential round trips to a single
+              // pipelined batch per offer.
+              // -----------------------------------------------------------
+              let mainAdultTotal = 0;
+              let mainAdultBase = 0;
+              let mainAdultTax = 0;
 
-            for (const tp of offer.traveler_price) {
-              const typeMult =
-                tp.traveler_type === "CHILD"
-                  ? 0.8
-                  : tp.traveler_type === "INFANT"
-                    ? 0.15
-                    : 1.0;
-              const base = Math.floor(finalBaseAmount * typeMult);
-              const tax = Math.floor(base * 0.15);
-              const total = base + tax;
+              await Promise.all(
+                offer.traveler_price.map(async (tp) => {
+                  const typeMult =
+                    tp.traveler_type === "CHILD"
+                      ? 0.8
+                      : tp.traveler_type === "INFANT"
+                        ? 0.15
+                        : 1.0;
+                  const base = Math.floor(finalBaseAmount * typeMult);
+                  const tax = Math.floor(base * 0.15);
+                  const total = base + tax;
 
-              if (tp.traveler_type === "ADULT") {
-                mainAdultTotal = total;
-                mainAdultBase = base;
-                mainAdultTax = tax;
-              }
+                  if (tp.traveler_type === "ADULT") {
+                    mainAdultTotal = total;
+                    mainAdultBase = base;
+                    mainAdultTax = tax;
+                  }
 
-              const tpPB = await tx.priceBreakdown.create({
+                  const tpPB = await tx.priceBreakdown.create({
+                    data: {
+                      total: {
+                        create: { currency_code: "USD", amount: total },
+                      },
+                      base_fare: {
+                        create: { currency_code: "USD", amount: base },
+                      },
+                      tax: { create: { currency_code: "USD", amount: tax } },
+                      discount: {
+                        create: { currency_code: "USD", amount: 0 },
+                      },
+                    },
+                  });
+
+                  await tx.travelerPrice.update({
+                    where: { id: tp.id },
+                    data: { price_id: tpPB.id },
+                  });
+                }),
+              );
+
+              const offerPB = await tx.priceBreakdown.create({
                 data: {
-                  total: { create: { currency_code: "USD", amount: total } },
-                  base_fare: { create: { currency_code: "USD", amount: base } },
-                  tax: { create: { currency_code: "USD", amount: tax } },
+                  total: {
+                    create: { currency_code: "USD", amount: mainAdultTotal },
+                  },
+                  base_fare: {
+                    create: { currency_code: "USD", amount: mainAdultBase },
+                  },
+                  tax: {
+                    create: { currency_code: "USD", amount: mainAdultTax },
+                  },
                   discount: { create: { currency_code: "USD", amount: 0 } },
                 },
               });
 
-              await tx.travelerPrice.update({
-                where: { id: tp.id },
-                data: { price_id: tpPB.id },
+              await tx.flightOffers.update({
+                where: { id: offer.id },
+                data: { price_id: offerPB.id },
               });
-            }
 
-            const offerPB = await tx.priceBreakdown.create({
-              data: {
-                total: {
-                  create: { currency_code: "USD", amount: mainAdultTotal },
-                },
-                base_fare: {
-                  create: { currency_code: "USD", amount: mainAdultBase },
-                },
-                tax: { create: { currency_code: "USD", amount: mainAdultTax } },
-                discount: { create: { currency_code: "USD", amount: 0 } },
-              },
-            });
+              if (mainAdultTotal < absoluteCheapestPrice)
+                absoluteCheapestPrice = mainAdultTotal;
 
-            await tx.flightOffers.update({
-              where: { id: offer.id },
-              data: { price_id: offerPB.id },
-            });
+              const carrierRows: {
+                carrier_id: number;
+                name: string;
+                logo: string;
+                code: string;
+              }[] = [];
+              const flightInfoRows: {
+                flight_info_id: number;
+                flight_number: string;
+              }[] = [];
 
-            if (mainAdultTotal < absoluteCheapestPrice)
-              absoluteCheapestPrice = mainAdultTotal;
+              // -----------------------------------------------------------
+              // 5. CARRIER, FLIGHT INFO & GATES
+              // OPTIMIZATION: gate creation + leg update for each leg is
+              // independent of every other leg, so run all legs
+              // concurrently instead of sequentially. carrierRows /
+              // flightInfoRows pushes are safe since each leg only
+              // touches its own array slot.
+              // -----------------------------------------------------------
+              const allLegs = offer.segments.flatMap((s) => s.legs);
 
-            const carrierRows: {
-              carrier_id: number;
-              name: string;
-              logo: string;
-              code: string;
-            }[] = [];
-            const flightInfoRows: {
-              flight_info_id: number;
-              flight_number: string;
-            }[] = [];
+              await Promise.all(
+                allLegs.map(async (leg) => {
+                  const currentLegArrival = new Date(
+                    leg.arrival_time,
+                  ).getTime();
+                  const nextLegDeparture = new Date(
+                    leg.departure_time,
+                  ).getTime();
 
-            // 5. CARRIER & FLIGHT INFO
-            for (const segment of offer.segments) {
-              for (const leg of segment.legs) {
-                const airline =
-                  currentFlightAirlines[i % currentFlightAirlines.length];
-                const digits = faker.airline.flightNumber({ length: 3 });
+                  const [depGate, arrGate] = await Promise.all([
+                    tx.gate.create({ data: generateFakeGate() }),
+                    tx.gate.create({ data: generateFakeGate() }),
+                  ]);
 
-                const currentLegArrival = new Date(leg.arrival_time).getTime();
-                const nextLegDeparture = new Date(leg.departure_time).getTime();
+                  await tx.legs.update({
+                    where: { id: leg.id },
+                    data: {
+                      departure_gate_id: depGate.id,
+                      arrival_gate_id: arrGate.id,
+                    },
+                  });
 
-                const depGate = await tx.gate.create({
-                  data: generateFakeGate(),
-                });
-                const arrGate = await tx.gate.create({
-                  data: generateFakeGate(),
-                });
+                  const layoverMinutes =
+                    (nextLegDeparture - currentLegArrival) / (1000 * 60);
 
-                await tx.legs.update({
-                  where: { id: leg.id },
-                  data: {
-                    departure_gate_id: depGate.id,
-                    arrival_gate_id: arrGate.id,
-                  },
-                });
+                  // If layover is less than 60 minutes, count as "Short Layover"
+                  if (layoverMinutes > 0 && layoverMinutes < 60) {
+                    shortLayoverCount++;
+                  }
 
-                const layoverMinutes =
-                  (nextLegDeparture - currentLegArrival) / (1000 * 60);
+                  carrierRows.push({
+                    carrier_id: leg.id,
+                    name: instanceAirline.name,
+                    logo: instanceAirline.logo,
+                    code: instanceAirline.iata_code,
+                  });
 
-                // If layover is less than 60 minutes, we count it as a "Short Layover"
-                if (layoverMinutes > 0 && layoverMinutes < 60) {
-                  shortLayoverCount++;
-                }
+                  flightInfoRows.push({
+                    flight_info_id: leg.id,
+                    flight_number: `${instanceAirline.iata_code}${instanceFlightDigits}`,
+                  });
+                }),
+              );
 
-                carrierRows.push({
-                  carrier_id: leg.id,
-                  name: airline.name,
-                  logo: airline.logo,
-                  code: airline.iata_code,
-                });
-
-                flightInfoRows.push({
-                  flight_info_id: leg.id,
-                  flight_number: `${airline.iata_code}${digits}`,
-                });
+              if (carrierRows.length > 0) {
+                await tx.carriers.createMany({ data: carrierRows });
               }
-            }
-
-            if (carrierRows.length > 0) {
-              await tx.carriers.createMany({ data: carrierRows });
-            }
-            if (flightInfoRows.length > 0) {
-              await tx.flightInfo.createMany({ data: flightInfoRows });
-            }
-          }
-        }
+              if (flightInfoRows.length > 0) {
+                await tx.flightInfo.createMany({ data: flightInfoRows });
+              }
+            } // end cabin loop
+          } // end flight-time-instance loop
+        } // end route loop
 
         // 6. FINALIZING METADATA
         await tx.data.update({
@@ -902,6 +972,11 @@ async function main() {
           });
         }
       },
+      // NOTE: after batching the per-offer round trips above, this
+      // transaction does far less sequential waiting than before. Try
+      // profiling a run and lowering this timeout to match the observed
+      // worst case (e.g. 45000-60000) instead of guessing a number —
+      // the timeout was never the cause of the slowness, just a ceiling.
       { timeout: 120000, maxWait: 10000 },
     );
   }
@@ -926,39 +1001,46 @@ async function runFlightDataCreateAutomation() {
   }
 }
 
-runFlightDataCreateAutomation();
+/**
+ * 0 * * * * ---> Schedule flight data creation automation to run every hour.
+ * The "Traffic Jam" Problem
+ * Without this lock, if your 4:00 PM task takes 65 minutes to finish, the
+ * 5:00 PM task will start while the first one is still writing to the
+ * database.
+ *
+ * This causes:
+ * Database Deadlocks: Two processes trying to update the same row at once.
+ * CPU Spikes: Your laptop struggling to run two heavy seeding processes
+ * simultaneously.
+ * Data Corruption: Potentially creating duplicate records because the
+ * second run doesn't realize the first run hasn't finished yet.
+ *
+ * IMPORTANT: there must be exactly ONE entry point into
+ * runFlightDataCreateAutomation() — always go through runWithLock(),
+ * never call runFlightDataCreateAutomation() directly, or the lock is
+ * bypassed and you're back to two concurrent seed runs.
+ */
+
+let isRunning = false;
+
+async function runWithLock() {
+  if (isRunning) {
+    console.warn("⚠️ Skipped: a run is already in progress.");
+    return;
+  }
+  isRunning = true;
+  try {
+    await runFlightDataCreateAutomation();
+  } finally {
+    isRunning = false;
+  }
+}
+
+runWithLock(); // sole entry point — initial run respects the lock too
 console.info(
   "⏳ Flight Data Automation is running. Waiting for the next scheduled hour...",
 );
 
-/**
- * 0 * * * * ---> Schedule flight data creation automation to run every hour.
- * The "Traffic Jam" Problem
-Without this lock, if your 4:00 PM task takes 65 minutes to finish, the 5:00 PM task will start while the first one is still writing to the database.
-
-This causes:
-
-Database Deadlocks: Two processes trying to update the same row at once.
-
-CPU Spikes: Your laptop struggling to run two heavy seeding processes simultaneously.
-
-Data Corruption: Potentially creating duplicate records because the second run doesn't realize the first run hasn't finished yet.
- */
-
-let isRunning = false; // that is why adding a lock to prevent overlapping runs
-
-cron.schedule("0 * * * *", async () => {
-  if (isRunning) {
-    console.warn("⚠️ Automation skipped: Previous run is still in progress.");
-    return;
-  }
-
-  isRunning = true;
-  try {
-    await runFlightDataCreateAutomation();
-  } catch (err) {
-    console.error("CRITICAL CRON ERROR:", err);
-  } finally {
-    isRunning = false; // Always release the lock
-  }
+cron.schedule("0 * * * *", () => {
+  runWithLock();
 });

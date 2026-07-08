@@ -46,8 +46,11 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   if (!depart) return []; // to check it depart exists or not
 
   const currentDate = new Date();
-
-  currentDate.setHours(0, 0, 0, 0);
+  // FIX: use setUTCHours to match how `depart`/`departDate` are parsed
+  // (bare "yyyy-mm-dd" strings are parsed as UTC midnight). Using local
+  // setHours() here could flag a valid "today" date as past depending on
+  // the server's timezone offset.
+  currentDate.setUTCHours(0, 0, 0, 0);
 
   const departDate = new Date(depart);
 
@@ -79,27 +82,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   try {
     const departRange = getDateRangeStrings(depart);
     const returnRange = getDateRangeStrings(returnDate);
-
-    // Construct the conditions for the where clause
-    const conditions: Prisma.DataWhereInput[] = [
-      {
-        flight_offers: {
-          some: {
-            branded_fareinfo: {
-              cabin_class: {
-                equals:
-                  cabin === "Premium"
-                    ? "Premium Economy"
-                    : cabin === "First"
-                      ? "First Class"
-                      : cabin,
-                mode: "insensitive",
-              },
-            },
-          },
-        },
-      },
-    ];
 
     const outboundFilter: Prisma.SegmentWhereInput = {
       departure_airport_code: {
@@ -148,38 +130,56 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             ],
           };
 
-    // Apply this to your 'conditions' array
-    conditions.push({
-      flight_offers: {
-        some: tripTypeCondition,
-      },
-    });
+    // -----------------------------------------------------------------
+    // FIX: previously, cabin-class and trip-type were checked via two
+    // SEPARATE `flight_offers: { some: ... } }` conditions ANDed at the
+    // top level. Prisma evaluates each `some` independently against the
+    // whole flight_offers collection — so that only guaranteed "some
+    // offer matches cabin" AND "some (possibly different) offer matches
+    // trip type", not that a SINGLE offer matches both. Since every
+    // route/instance generates all 4 cabin classes together, the cabin
+    // condition was almost always trivially satisfied by *some* offer
+    // regardless of route, making the outer where far looser than the
+    // inner include.flight_offers.where (which was already correct).
+    // That mismatch could produce Data rows whose flight_offers array
+    // comes back empty after the inner where narrows it down.
+    //
+    // Fix: build ONE combined condition and reuse it for both the outer
+    // `where` (which Data rows to fetch) and the inner include's `where`
+    // (which offers within that Data row to include) so they always
+    // agree on what counts as a match.
+    // -----------------------------------------------------------------
+    const offerMatchCondition: Prisma.FlightOffersWhereInput = {
+      AND: [
+        {
+          branded_fareinfo: {
+            cabin_class: {
+              equals:
+                cabin === "Premium"
+                  ? "Premium Economy"
+                  : cabin === "First"
+                    ? "First Class"
+                    : cabin,
+              mode: "insensitive",
+            },
+          },
+        },
+        tripTypeCondition,
+      ],
+    };
 
     const dataResponse = await prisma.data.findMany({
-      where: { AND: conditions },
+      where: {
+        flight_offers: {
+          some: offerMatchCondition,
+        },
+      },
       include: {
         flight_offers: {
           omit: {
             price_id: true,
           },
-          where: {
-            AND: [
-              {
-                branded_fareinfo: {
-                  cabin_class: {
-                    equals:
-                      cabin === "Premium"
-                        ? "Premium Economy"
-                        : cabin === "First"
-                          ? "First Class"
-                          : cabin,
-                    mode: "insensitive",
-                  },
-                },
-              },
-              tripTypeCondition, // <--- This ensures only round-trip offers are included
-            ],
-          },
+          where: offerMatchCondition, // same condition reused — outer and inner always agree
           include: {
             branded_fareinfo: {
               omit: {
