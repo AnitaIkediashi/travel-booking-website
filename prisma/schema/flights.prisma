@@ -39,7 +39,6 @@ model Data {
   short_layover_connection ShortLayoverConnection? // 1:1 relation
   min_price                MinPrice? // 1:1 relation
   baggage                  Baggage[] // 1:M relation
-  cabin_class              String
   stops                    Stop[] // 1:M relation and also a relational list
   airlines                 Airlines[] // 1:M relation
   duration                 Duration[] // 1:M relation

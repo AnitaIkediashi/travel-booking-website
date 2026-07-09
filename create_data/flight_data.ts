@@ -87,7 +87,11 @@ function populateFakeAirports() {
 }
 
 function populateFakeAirlines() {
-  return Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => {
+  // FIX: bumped from 1-3 to 6-12. The old range meant the ENTIRE 90-day
+  // dataset (every route, every day) could be served by as few as 1
+  // airline, since this pool is generated once and reused everywhere.
+  // A bigger pool gives routes something real to draw variety from.
+  return Array.from({ length: faker.number.int({ min: 6, max: 12 }) }, () => {
     const airlineName = faker.airline.airline().name;
     const airlineCode = faker.airline.airline().iataCode;
     const airlineImageUrl = faker.image.url({ width: 100, height: 100 });
@@ -295,31 +299,6 @@ async function ensureAirportPool() {
  * that are guaranteed to either succeed or fail as a whole
  */
 
-// // this to use to clear all data - soft reset
-async function clearDatabase() {
-  console.info("Emptying database...");
-
-  // The order matters! Delete children before parents.
-  // We use a transaction to ensure everything is cleared or nothing is.
-  await prisma.$transaction([
-    prisma.seat.deleteMany(),
-    prisma.gate.deleteMany(),
-    prisma.legs.deleteMany(),
-    prisma.segment.deleteMany(),
-    prisma.travelerPrice.deleteMany(),
-    prisma.priceBreakdown.deleteMany(),
-    prisma.flightOffers.deleteMany(),
-    prisma.stop.deleteMany(),
-    prisma.airlines.deleteMany(),
-    prisma.minPrice.deleteMany(),
-    prisma.flightTimes.deleteMany(),
-    prisma.data.deleteMany(), // The main parent
-    prisma.airport.deleteMany(),
-  ]);
-
-  console.info("Database cleared! ✨");
-}
-
 async function clearStaleData() {
   try {
     const now = new Date();
@@ -452,7 +431,6 @@ async function main() {
           data: {
             duration_min: 0,
             duration_max: 0,
-            cabin_class: "Mixed",
           },
         });
 
@@ -470,6 +448,13 @@ async function main() {
         const numRoutes = faker.number.int({ min: 10, max: 15 });
 
         const stopCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+        // Track which airlines from the global pool were actually used
+        // today, so the day's "airlines" summary reflects reality instead
+        // of always listing the entire pool regardless of usage.
+        const usedAirlinesToday = new Map<
+          string,
+          { name: string; iata_code: string; logo: string }
+        >();
 
         for (let r = 0; r < numRoutes; r++) {
           // Pick the route ONCE — shared across every time instance below
@@ -491,6 +476,22 @@ async function main() {
           const routeReturnDate = new Date(flightDate);
           routeReturnDate.setDate(
             routeReturnDate.getDate() + faker.number.int({ min: 2, max: 10 }),
+          );
+
+          // -----------------------------------------------------------
+          // FIX: each route now gets its OWN subset of 2-4 carriers
+          // (drawn from the wider global pool) instead of every route
+          // in the whole dataset sharing the exact same 1-3 airlines.
+          // This mirrors how a real route is served by a handful of
+          // competing carriers, while different routes can have
+          // different (overlapping) sets of who flies them.
+          // -----------------------------------------------------------
+          const routeAirlines = faker.helpers.arrayElements(
+            currentFlightAirlines,
+            Math.min(
+              currentFlightAirlines.length,
+              faker.number.int({ min: 2, max: 4 }),
+            ),
           );
 
           const numFlightInstances = faker.number.int({ min: 3, max: 6 });
@@ -539,9 +540,15 @@ async function main() {
             const depHour = outbound.departure_time.getUTCHours();
             const timeMult = depHour >= 10 && depHour <= 17 ? 1.1 : 0.8;
 
-            // One airline + flight number PER INSTANCE — shared by all cabins
-            const instanceAirline =
-              currentFlightAirlines[f % currentFlightAirlines.length];
+            // One airline + flight number PER INSTANCE — shared by all cabins.
+            // FIX: previously `currentFlightAirlines[f % length]` cycled
+            // deterministically through a tiny (1-3) global pool, so most
+            // instances landed on the same airline. Now picks randomly
+            // from this route's own carrier subset, giving a realistic
+            // mix of competing airlines across a route's flight-time
+            // instances, each with its own schedule/price/cabin mix.
+            const instanceAirline = faker.helpers.arrayElement(routeAirlines);
+            usedAirlinesToday.set(instanceAirline.iata_code, instanceAirline);
             const instanceFlightDigits = faker.airline.flightNumber({
               length: 3,
             });
@@ -966,7 +973,9 @@ async function main() {
           }
         }
 
-        for (const air of currentFlightAirlines) {
+        // FIX: only write airlines that were actually used on today's
+        // routes, instead of the entire global pool every day.
+        for (const air of usedAirlinesToday.values()) {
           await tx.airlines.create({
             data: { airline_id: createdData.id, ...air },
           });
