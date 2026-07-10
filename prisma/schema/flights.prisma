@@ -31,162 +31,75 @@ model Airport {
 }
 
 model Data {
-  id                       String                  @id @default(uuid()) // PK
-  createdAt                DateTime                @default(now())
-  departure_intervals      DepartureInterval[] // 1:M relation
-  duration_min             Int
-  duration_max             Int
-  short_layover_connection ShortLayoverConnection? // 1:1 relation
-  min_price                MinPrice? // 1:1 relation
-  baggage                  Baggage[] // 1:M relation
-  stops                    Stop[] // 1:M relation and also a relational list
-  airlines                 Airlines[] // 1:M relation
-  duration                 Duration[] // 1:M relation
-  flight_times             FlightTimes[] // 1:M relation
-  flight_offers            FlightOffers[] // 1:M relation
+  id            String         @id @default(uuid()) // PK
+  createdAt     DateTime       @default(now())
+  flight_offers FlightOffers[] // 1:M relation
 
   @@map("data")
 }
 
-model DepartureInterval {
-  id              Int    @id @default(autoincrement()) // PK
-  interval_id     String // FK
-  start           String
-  end             String
-  departureFlight Data   @relation(fields: [interval_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related DepartureInterval records are also deleted
-
-  @@map("departure_interval")
-}
-
-model ShortLayoverConnection {
-  id            Int    @id @default(autoincrement()) // PK
-  layover_id    String @unique // FK -- those without ? are required fields
-  count         Int? // ? means optional field
-  layoverFlight Data   @relation(fields: [layover_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related ShortLayoverConnection records are also deleted
-
-  @@map("short_Layover_connection")
-}
-
 model MinPrice {
-  id                   Int       @id @default(autoincrement()) // PK
-  min_price_data_id    String    @unique // FK
-  min_price_airline_id String?   @unique // FK
-  min_price_stop_id    Int?      @unique // FK
+  id                   Int          @id @default(autoincrement()) // PK
+  min_price_offer_id   String       @unique // FK
+  min_price_airline_id String?      @unique // FK
   currency_code        String?
   amount               Int
-  minPricePerFlight    Data      @relation(fields: [min_price_data_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
-  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
-  minPricePerStop      Stop?     @relation(fields: [min_price_stop_id], references: [id], onDelete: Cascade) // relation to Stop model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
+  minPricePerOffer     FlightOffers @relation(fields: [min_price_offer_id], references: [id], onDelete: Cascade)
+  minPricePerAirline   Airlines?    @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
 
   @@map("min_price")
 }
 
-model Stop {
-  id          Int       @id @default(autoincrement()) // PK
-  stop_id     String // FK
-  no_of_stops Int
-  count       Int?
-  stopCount   Data      @relation(fields: [stop_id], references: [id], onDelete: Cascade) // relation to Data model the onDelete: Cascade ensures that if a Data record is deleted, all related Stop records are also deleted
-  min_price   MinPrice? // 1:1 relation
-
-  @@map("stops")
-}
-
 model Airlines {
-  id            String    @id @default(uuid()) // PK
-  airline_id    String // FK
-  name          String
-  logo          String
-  iata_code     String
-  min_price     MinPrice?
-  airlineFlight Data      @relation(fields: [airline_id], references: [id], onDelete: Cascade)
+  id         String     @id @default(uuid()) // PK
+  airline_id String // FK
+  name       String
+  logo       String
+  iata_code  String @unique
+  min_price  MinPrice?
+  carriers   Carriers[]
 
   @@map("airlines")
 }
 
-model Duration {
-  id             Int    @id @default(autoincrement()) // PK
-  duration_id    String // FK
-  min            Int
-  max            Int
-  durationFlight Data   @relation(fields: [duration_id], references: [id], onDelete: Cascade)
-
-  @@map("duration")
-}
-
-model Baggage {
-  id            Int     @id @default(autoincrement()) // PK
-  baggage_id    String // FK
-  type          String
-  included      Boolean
-  weight        Int
-  count         Int
-  param_name    String
-  baggageFlight Data    @relation(fields: [baggage_id], references: [id], onDelete: Cascade)
-
-  @@map("baggages")
-}
-
-model FlightTimes {
-  id                String    @id @default(uuid()) // PK
-  flight_times_id   String // FK
-  flight_times_data Data      @relation(fields: [flight_times_id], references: [id], onDelete: Cascade)
-  arrival           Arrival[]
-  depart            Depart[]
-
-  @@map("flight_times")
-}
-
-model Arrival {
-  id            Int         @id @default(autoincrement()) // PK
-  arrival_id    String // FK
-  start         String
-  end           String
-  arrival_times FlightTimes @relation(fields: [arrival_id], references: [id], onDelete: Cascade) // relation to FlightTimes model the onDelete: Cascade ensures that if a flightTimes record is deleted, all related Arrival records are also deleted
-
-  @@map("arrivals")
-}
-
-model Depart {
-  id           Int         @id @default(autoincrement()) // PK
-  depart_id    String // FK
-  start        String
-  end          String
-  depart_times FlightTimes @relation(fields: [depart_id], references: [id], onDelete: Cascade)
-
-  @@map("depart")
-}
-
 model FlightOffers {
-  id                String            @id @default(uuid()) // PK
-  flight_offer_id   String // FK
-  price_id          Int? // FK
-  token             String @unique
-  flight_key        String
-  segments          Segment[]
-  price_breakdown   PriceBreakdown?   @relation(fields: [price_id], references: [id])
-  traveler_price    TravelerPrice[]
-  seat_availability SeatAvailability?
-  branded_fareinfo  BrandedFareInfo?
-  seats             Seat[]
-  FlightData        Data              @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
-  bookings          Booking[]
+  id               String           @id @default(uuid()) // PK
+  flight_offer_id  String // FK
+  price_id         Int? // FK
+  min_price        MinPrice?
+  total_time       Int
+  token            String           @unique
+  flight_key       String
+  segments         Segment[]
+  price_breakdown  PriceBreakdown?  @relation(fields: [price_id], references: [id])
+  traveler_price   TravelerPrice[]
+  branded_fareinfo BrandedFareInfo?
+  seats            Seat[]
+  FlightData       Data             @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+  bookings         Booking[]
 
   @@map("flight_offers")
 }
 
 model Segment {
-  id                     Int          @id @default(autoincrement()) // PK
+  id                     String            @id @default(uuid()) // PK
   segment_id             String // FK
   departure_airport_code String //FK
   arrival_airport_code   String //FK
-  departure_airports     Airport      @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code]) // the need for unique relation names arises because a single Airport is related to Segment twice (same goes for Legs model) -- Disambiguating relations
-  arrival_airports       Airport      @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
+  marketingCarrierId     Int
+  operatingCarrierId     Int?
+  cabin_class            String
+  seat_availability      SeatAvailability?
+  departure_airports     Airport           @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code]) // the need for unique relation names arises because a single Airport is related to Segment twice (same goes for Legs model) -- Disambiguating relations
+  arrival_airports       Airport           @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
   departure_time         DateTime
   arrival_time           DateTime
-  total_time             Int
+  duration               Int
+  flight_info            FlightInfo?
   legs                   Legs[]
-  segmentData            FlightOffers @relation(fields: [segment_id], references: [id], onDelete: Cascade)
+  marketingCarrier       Carriers          @relation("MarketingCarrier", fields: [marketingCarrierId], references: [id])
+  operatingCarrier       Carriers?         @relation("OperatingCarrier", fields: [operatingCarrierId], references: [id])
+  segmentData            FlightOffers      @relation(fields: [segment_id], references: [id], onDelete: Cascade)
 
   //index the departure_time for faster queries and faster cpu performance -- its like sorting in advance or like map the data based on departure_time
 
@@ -195,55 +108,48 @@ model Segment {
 }
 
 model Legs {
-  id                     Int         @id @default(autoincrement()) // PK
-  leg_id                 Int // FK
+  id                     Int      @id @default(autoincrement()) // PK
+  leg_id                 String // FK
   departure_airport_code String //FK
   arrival_airport_code   String //FK
   departure_time         DateTime
   arrival_time           DateTime
-  cabin_class            String?
-  total_time             Int
-  departure_gate_id      Int?        @unique
-  arrival_gate_id        Int?        @unique
-  departure_airport      Airport     @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
-  arrival_airport        Airport     @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
-  carriers               Carriers[]
-  flight_info            FlightInfo?
-  departure_gate         Gate?       @relation("DepartureGateOf", fields: [departure_gate_id], references: [id])
-  arrival_gate           Gate?       @relation("ArrivalGateOf", fields: [arrival_gate_id], references: [id])
-  legSegment             Segment     @relation(fields: [leg_id], references: [id], onDelete: Cascade)
+  duration               Int
+  departure_gate_id      Int?     @unique
+  arrival_gate_id        Int?     @unique
+  departure_airport      Airport  @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
+  arrival_airport        Airport  @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
+  departure_gate         Gate?    @relation("DepartureGateOf", fields: [departure_gate_id], references: [id])
+  arrival_gate           Gate?    @relation("ArrivalGateOf", fields: [arrival_gate_id], references: [id])
+  legSegment             Segment  @relation(fields: [leg_id], references: [id], onDelete: Cascade)
 
   @@map("legs")
 }
 
 model Carriers {
   id         Int    @id @default(autoincrement()) // PK
-  carrier_id Int // FK
+  carrier_id String // FK 
   name       String
   logo       String
   code       String
-  legCarrier Legs   @relation(fields: [carrier_id], references: [id], onDelete: Cascade)
 
-  @@map("carriers")
+  // Relations
+  airline Airlines @relation(fields: [code], references: [iata_code], onDelete: Cascade)
+
+  // A carrier can be used across multiple segments as a marketing or operating carrier
+  marketingSegments Segment[] @relation("MarketingCarrier")
+  operatingSegments Segment[] @relation("OperatingCarrier")
+
+  @@map("carrier")
 }
 
 model FlightInfo {
-  id             Int          @id @default(autoincrement()) // PK
-  flight_info_id Int          @unique // FK
+  id             Int     @id @default(autoincrement()) // PK
+  flight_info_id String  @unique // FK
   flight_number  String
-  carrier_info   CarrierInfo?
-  flightLeg      Legs         @relation(fields: [flight_info_id], references: [id], onDelete: Cascade)
+  flightSegment  Segment @relation(fields: [flight_info_id], references: [id], onDelete: Cascade)
 
   @@map("flight_info")
-}
-
-model CarrierInfo {
-  id                Int        @id @default(autoincrement()) // PK
-  carrier_info_id   Int        @unique // FK
-  operating_carrier String
-  carrierFlight     FlightInfo @relation(fields: [carrier_info_id], references: [id], onDelete: Cascade)
-
-  @@map("carrier_info")
 }
 
 model PriceBreakdown {
@@ -311,10 +217,10 @@ model TravelerPrice {
 }
 
 model SeatAvailability {
-  id                        Int          @id @default(autoincrement()) // PK
-  seat_availability_id      String       @unique // FK
-  seats_left                Int
-  seatAvailabilityPerFlight FlightOffers @relation(fields: [seat_availability_id], references: [id], onDelete: Cascade)
+  id                         Int      @id @default(autoincrement()) // PK
+  seat_availability_id       String   @unique // FK
+  seats_left                 Int
+  seatAvailabilityPerSegment Segment? @relation(fields: [seat_availability_id], references: [id], onDelete: Cascade)
 
   @@map("seat_availability")
 }
