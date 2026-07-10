@@ -40,11 +40,11 @@ model Data {
 
 model MinPrice {
   id                   Int          @id @default(autoincrement()) // PK
-  min_price_offer_id   String       @unique // FK
+  min_price_offer_id   String?       @unique // FK
   min_price_airline_id String?      @unique // FK
   currency_code        String?
   amount               Int
-  minPricePerOffer     FlightOffers @relation(fields: [min_price_offer_id], references: [id], onDelete: Cascade)
+  minPricePerOffer     FlightOffers? @relation(fields: [min_price_offer_id], references: [id], onDelete: Cascade)
   minPricePerAirline   Airlines?    @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
 
   @@map("min_price")
