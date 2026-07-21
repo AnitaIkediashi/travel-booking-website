@@ -37,23 +37,12 @@ model Data {
   @@map("data")
 }
 
-model MinPrice {
-  id                   Int       @id @default(autoincrement()) // PK
-  min_price_airline_id String?   @unique // FK
-  currency_code        String?
-  amount               Int
-  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
-
-  @@map("min_price")
-}
-
 model Airlines {
   id         String     @id @default(uuid()) // PK
   airline_id String // FK
   name       String
   logo       String
   iata_code  String     @unique
-  min_price  MinPrice?
   carriers   Carriers[]
 
   @@map("airlines")
