@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // url      = env("DATABASE_URL") // --- only needed when i want to do migrations and generate that's why the error ---
 }
 
 //creating the tables/models i need for my app
@@ -22,9 +21,9 @@ model Airport {
   image_url         String? // optional field
   city              String
   country           String
-  departure_segment Segment[] @relation("DepartureSegment") // using a unique name for relation because a single Airport is related to Segment twice same goes for Legs model -- 1:M relation with Segment
-  arrival_segment   Segment[] @relation("ArrivalSegment") // 1:M relation with Segment
-  departure_leg     Legs[]    @relation("DepartureLegs") // 1:M relation with Legs
+  departure_segments Segment[] @relation("DepartureSegment") // using a unique name for relation because a single Airport is related to Segment twice same goes for Legs model -- 1:M relation with Segment
+  arrival_segments   Segment[] @relation("ArrivalSegment") // 1:M relation with Segment
+  departure_legs     Legs[]    @relation("DepartureLegs") // 1:M relation with Legs
   arrival_legs      Legs[]    @relation("ArrivalLegs") // 1:M relation with Legs
 
   @@map("airports")
@@ -39,13 +38,11 @@ model Data {
 }
 
 model MinPrice {
-  id                   Int          @id @default(autoincrement()) // PK
-  min_price_offer_id   String?       @unique // FK
-  min_price_airline_id String?      @unique // FK
+  id                   Int       @id @default(autoincrement()) // PK
+  min_price_airline_id String?   @unique // FK
   currency_code        String?
   amount               Int
-  minPricePerOffer     FlightOffers? @relation(fields: [min_price_offer_id], references: [id], onDelete: Cascade)
-  minPricePerAirline   Airlines?    @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
+  minPricePerAirline   Airlines? @relation(fields: [min_price_airline_id], references: [id], onDelete: Cascade) // relation to Airlines model the onDelete: Cascade ensures that if a Data record is deleted, all related MinPrice records are also deleted
 
   @@map("min_price")
 }
@@ -55,24 +52,29 @@ model Airlines {
   airline_id String // FK
   name       String
   logo       String
-  iata_code  String @unique
+  iata_code  String     @unique
   min_price  MinPrice?
   carriers   Carriers[]
 
   @@map("airlines")
 }
 
+enum TripType {
+  ONE_WAY
+  ROUND_TRIP
+}
+
 model FlightOffers {
   id               String           @id @default(uuid()) // PK
   flight_offer_id  String // FK
   price_id         Int? // FK
-  min_price        MinPrice?
-  total_time       Int
+  total_duration   Int // sum of segments and layover times between
+  trip_type        TripType         @default(ONE_WAY) // be it One way or Round trip
   token            String           @unique
   flight_key       String
   segments         Segment[]
-  price_breakdown  PriceBreakdown?  @relation(fields: [price_id], references: [id])
-  traveler_price   TravelerPrice[]
+  price_breakdown  PriceBreakdown? // 1-to-1: Total price for this specific offer
+  traveler_price   TravelerPrice[] // 1-to-Many: Breakdown per passenger type (ADULT, CHILD, INFANT)
   branded_fareinfo BrandedFareInfo?
   seats            Seat[]
   FlightData       Data             @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
@@ -89,12 +91,13 @@ model Segment {
   marketingCarrierId     Int
   operatingCarrierId     Int?
   cabin_class            String
+  slice_index            Int               @default(0) // 0 = Outbound, 1 = Inbound
   seat_availability      SeatAvailability?
   departure_airports     Airport           @relation("DepartureSegment", fields: [departure_airport_code], references: [airport_code]) // the need for unique relation names arises because a single Airport is related to Segment twice (same goes for Legs model) -- Disambiguating relations
   arrival_airports       Airport           @relation("ArrivalSegment", fields: [arrival_airport_code], references: [airport_code])
   departure_time         DateTime
   arrival_time           DateTime
-  duration               Int
+  duration               Int // The total duration for that specific flight number, including ground time/layovers if the flight makes intermediate technical or passenger stops on the same flight number.
   flight_info            FlightInfo?
   legs                   Legs[]
   marketingCarrier       Carriers          @relation("MarketingCarrier", fields: [marketingCarrierId], references: [id])
@@ -104,6 +107,7 @@ model Segment {
   //index the departure_time for faster queries and faster cpu performance -- its like sorting in advance or like map the data based on departure_time
 
   @@index([departure_time])
+  @@index([departure_airport_code, arrival_airport_code])
   @@map("segments")
 }
 
@@ -114,9 +118,9 @@ model Legs {
   arrival_airport_code   String //FK
   departure_time         DateTime
   arrival_time           DateTime
-  duration               Int
-  departure_gate_id      Int?     @unique
-  arrival_gate_id        Int?     @unique
+  duration               Int //The actual air time of a single non-stop flight from takeoff to landing.
+  departure_gate_id      Int?     
+  arrival_gate_id        Int?     
   departure_airport      Airport  @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
   arrival_airport        Airport  @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
   departure_gate         Gate?    @relation("DepartureGateOf", fields: [departure_gate_id], references: [id])
@@ -153,67 +157,33 @@ model FlightInfo {
 }
 
 model PriceBreakdown {
-  id             Int             @id @default(autoincrement()) // PK
-  total          TotalPrice?
-  base_fare      BaseFare?
-  tax            Tax?
-  discount       Discount?
-  flightOffers   FlightOffers[]
-  travelerPrices TravelerPrice[]
+  id              Int    @id @default(autoincrement())
+  flight_offer_id String @unique // 1-to-1 strict link
+  currency_code   String @default("USD")
 
-  @@map("price_breakdown")
-}
+  total_amount    Decimal  @db.Decimal(10, 2)
+  base_amount     Decimal  @db.Decimal(10, 2)
+  tax_amount      Decimal  @db.Decimal(10, 2)
+  discount_amount Decimal? @default(0) @db.Decimal(10, 2)
 
-model TotalPrice {
-  id                  Int            @id @default(autoincrement()) // PK
-  total_price_id      Int            @unique // FK
-  currency_code       String
-  amount              Int
-  totalPricePerFlight PriceBreakdown @relation(fields: [total_price_id], references: [id], onDelete: Cascade)
+  flightOffer FlightOffers @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
 
-  @@map("total_price")
-}
-
-model BaseFare {
-  id                 Int            @id @default(autoincrement()) // PK
-  base_price_id      Int            @unique // FK
-  currency_code      String
-  amount             Int
-  basePricePerFlight PriceBreakdown @relation(fields: [base_price_id], references: [id], onDelete: Cascade)
-
-  @@map("base_fare")
-}
-
-model Tax {
-  id            Int            @id @default(autoincrement()) // PK
-  tax_id        Int            @unique // FK
-  currency_code String
-  amount        Int
-  taxPerFlight  PriceBreakdown @relation(fields: [tax_id], references: [id], onDelete: Cascade)
-
-  @@map("tax")
-}
-
-model Discount {
-  id                Int            @id @default(autoincrement()) // PK
-  discount_id       Int            @unique // FK
-  currency_code     String
-  amount            Int
-  discountPerFlight PriceBreakdown @relation(fields: [discount_id], references: [id], onDelete: Cascade)
-
-  @@map("discount")
+  @@map("price_breakdowns")
 }
 
 model TravelerPrice {
-  id                     Int             @id @default(autoincrement()) // PK
-  traveler_price_id      String // FK
-  price_id               Int? // FK
-  traveler_reference     String
-  traveler_type          String
-  price_breakdown        PriceBreakdown? @relation(fields: [price_id], references: [id])
-  travelerPricePerFlight FlightOffers    @relation(fields: [traveler_price_id], references: [id], onDelete: Cascade)
+  id              Int    @id @default(autoincrement())
+  flight_offer_id String
+  passenger_type  String // ADT, CHD, INF
+  quantity        Int // e.g. 2 Adults
 
-  @@map("travel_price")
+  base_fare     Decimal @db.Decimal(10, 2)
+  tax_amount    Decimal @db.Decimal(10, 2)
+  total_per_pax Decimal @db.Decimal(10, 2)
+
+  flightOffer FlightOffers @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+
+  @@map("passenger_fares")
 }
 
 model SeatAvailability {
@@ -250,8 +220,8 @@ model Gate {
   id              Int    @id @default(autoincrement())
   gate_number     String
   terminal        String
-  departureForLeg Legs?  @relation("DepartureGateOf")
-  arrivalForLeg   Legs?  @relation("ArrivalGateOf")
+  departureForLeg Legs[]  @relation("DepartureGateOf")
+  arrivalForLeg   Legs[]  @relation("ArrivalGateOf")
 
   @@map("gates")
 }
