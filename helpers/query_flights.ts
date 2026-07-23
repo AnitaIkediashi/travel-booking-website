@@ -1,11 +1,3 @@
-/**
- * Generated types - they are are TypeScript types that are derived from your models.
- * They are denoted using Prisma namespace, e.g., Prisma.UserCreateInput.
- * These types help ensure type safety when interacting with the database.
- * NOTE: using include method: to add related records in the query result.
- * you can use include on deeply nested relations as well.
- */
-
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { FlightSearchParamsProps } from "@/types/flight_type";
@@ -24,6 +16,87 @@ const getDateRangeStrings = (dateString: string | undefined) => {
     lt: end.toISOString(),
   };
 };
+
+const flightOfferDetailInclude = {
+  branded_fareinfo: {
+    omit: {
+      id: true,
+      branded_fareinfo_id: true,
+    },
+    include: {
+      features: {
+        omit: {
+          id: true,
+          feature_id: true,
+        },
+      },
+    },
+  },
+  traveler_price: {
+    omit: {
+      id: true,
+      flight_offer_id: true,
+    },
+  },
+  price_breakdown: {
+    omit: {
+      id: true,
+      flight_offer_id: true,
+    },
+  },
+  segments: {
+    omit: {
+      id: true,
+      segment_id: true,
+      marketingCarrierId: true,
+      operatingCarrierId: true,
+    },
+    orderBy: { departure_time: "asc" as const },
+    include: {
+      seat_availability: {
+        omit: {
+          id: true,
+          seat_availability_id: true,
+        },
+      },
+      flight_info: {
+        omit: {
+          id: true,
+          flight_info_id: true,
+        },
+      },
+      marketingCarrier: {
+        omit: {
+          id: true,
+          carrier_id: true,
+        },
+      },
+      operatingCarrier: {
+        omit: {
+          id: true,
+          carrier_id: true,
+        },
+      },
+      legs: {
+        omit: {
+          id: true,
+          leg_id: true,
+          departure_gate_id: true,
+          arrival_gate_id: true,
+        },
+        orderBy: { departure_time: "asc" as const },
+        include: {
+          departure_gate: {
+            omit: { id: true },
+          },
+          arrival_gate: {
+            omit: { id: true },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.FlightOffersInclude;
 
 export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   const {
@@ -83,6 +156,13 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
     const departRange = getDateRangeStrings(depart);
     const returnRange = getDateRangeStrings(returnDate);
 
+    const mappedCabin =
+      cabin === "Premium"
+        ? "Premium Economy"
+        : cabin === "First"
+          ? "First Class"
+          : cabin;
+
     const outboundFilter: Prisma.SegmentWhereInput = {
       departure_airport_code: {
         equals: from,
@@ -93,6 +173,11 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         mode: "insensitive",
       },
       departure_time: departRange,
+      cabin_class: {
+        equals: mappedCabin,
+        mode: "insensitive",
+      },
+      slice_index: 0, // 0 = Outbound
     };
 
     const inboundFilter: Prisma.SegmentWhereInput = {
@@ -105,61 +190,40 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         mode: "insensitive",
       },
       departure_time: returnRange,
+      cabin_class: {
+        equals: mappedCabin,
+        mode: "insensitive",
+      },
+      slice_index: 1, // 1 = Inbound
     };
 
-    // Use the AND/NONE logic to differentiate trip types
+    // trip_type is now a real enum on FlightOffers, so trip-type matching
+    // is checked directly against it instead of being inferred purely
+    // from which segments exist/don't exist.
     const tripTypeCondition: Prisma.FlightOffersWhereInput =
       trip === "round-trip"
         ? {
+            trip_type: "ROUND_TRIP",
             AND: [
               { segments: { some: outboundFilter } },
               { segments: { some: inboundFilter } },
             ],
           }
         : {
-            AND: [
-              { segments: { some: outboundFilter } },
-              {
-                segments: {
-                  none: {
-                    departure_airport_code: { equals: to, mode: "insensitive" },
-                    arrival_airport_code: { equals: from, mode: "insensitive" },
-                  },
-                },
-              },
-            ],
+            trip_type: "ONE_WAY",
+            segments: { some: outboundFilter },
           };
 
-    // -----------------------------------------------------------------
-    // FIX: previously, cabin-class and trip-type were checked via two
-    // SEPARATE `flight_offers: { some: ... } }` conditions ANDed at the
-    // top level. Prisma evaluates each `some` independently against the
-    // whole flight_offers collection — so that only guaranteed "some
-    // offer matches cabin" AND "some (possibly different) offer matches
-    // trip type", not that a SINGLE offer matches both. Since every
-    // route/instance generates all 4 cabin classes together, the cabin
-    // condition was almost always trivially satisfied by *some* offer
-    // regardless of route, making the outer where far looser than the
-    // inner include.flight_offers.where (which was already correct).
-    // That mismatch could produce Data rows whose flight_offers array
-    // comes back empty after the inner where narrows it down.
-    //
-    // Fix: build ONE combined condition and reuse it for both the outer
-    // `where` (which Data rows to fetch) and the inner include's `where`
-    // (which offers within that Data row to include) so they always
-    // agree on what counts as a match.
-    // -----------------------------------------------------------------
+    // Build ONE combined condition and reuse it for both the outer `where`
+    // (which Data rows to fetch) and the inner include's `where` (which
+    // offers within that Data row to include) so they always agree on
+    // what counts as a match.
     const offerMatchCondition: Prisma.FlightOffersWhereInput = {
       AND: [
         {
           branded_fareinfo: {
             cabin_class: {
-              equals:
-                cabin === "Premium"
-                  ? "Premium Economy"
-                  : cabin === "First"
-                    ? "First Class"
-                    : cabin,
+              equals: mappedCabin,
               mode: "insensitive",
             },
           },
@@ -178,139 +242,11 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         flight_offers: {
           omit: {
             price_id: true,
+            flight_offer_id: true,
           },
           where: offerMatchCondition, // same condition reused — outer and inner always agree
-          include: {
-            branded_fareinfo: {
-              omit: {
-                id: true,
-                branded_fareinfo_id: true,
-              },
-              include: {
-                features: {
-                  omit: {
-                    id: true,
-                    feature_id: true,
-                  },
-                },
-              },
-            },
-            seat_availability: {
-              omit: {
-                id: true,
-                seat_availability_id: true,
-              },
-            },
-            traveler_price: {
-              omit: {
-                traveler_reference: true,
-                id: true,
-                traveler_price_id: true,
-              },
-              include: {
-                price_breakdown: {
-                  omit: {
-                    id: true,
-                  },
-                  include: {
-                    base_fare: {
-                      omit: {
-                        id: true,
-                        base_price_id: true,
-                      },
-                    },
-                    discount: {
-                      omit: {
-                        id: true,
-                        discount_id: true,
-                      },
-                    },
-                    tax: {
-                      omit: {
-                        id: true,
-                        tax_id: true,
-                      },
-                    },
-                    total: {
-                      omit: {
-                        id: true,
-                        total_price_id: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            price_breakdown: {
-              omit: {
-                id: true,
-              },
-              include: {
-                base_fare: {
-                  omit: {
-                    id: true,
-                    base_price_id: true,
-                  },
-                },
-                discount: {
-                  omit: {
-                    id: true,
-                    discount_id: true,
-                  },
-                },
-                tax: {
-                  omit: {
-                    id: true,
-                    tax_id: true,
-                  },
-                },
-                total: {
-                  omit: {
-                    id: true,
-                    total_price_id: true,
-                  },
-                },
-              },
-            },
-            segments: {
-              omit: {
-                id: true,
-                segment_id: true,
-              },
-              orderBy: { departure_time: "asc" },
-              include: {
-                legs: {
-                  omit: {
-                    id: true,
-                    leg_id: true,
-                  },
-                  orderBy: { departure_time: "asc" },
-                  include: {
-                    carriers: {
-                      omit: {
-                        id: true,
-                        carrier_id: true,
-                      },
-                    },
-                    flight_info: {
-                      omit: {
-                        id: true,
-                        flight_info_id: true,
-                      },
-                      include: {
-                        carrier_info: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
+          include: flightOfferDetailInclude,
         },
-        stops: true,
-        airlines: true,
-        duration: true,
-        baggage: true,
       },
     });
 
@@ -322,7 +258,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         let offerWideTax = 0;
 
         const updatedTravelerPrices = offer.traveler_price.map((price) => {
-          const type = price.traveler_type;
+          const type = price.passenger_type;
           const count =
             type === "INFANT"
               ? infantCount
@@ -330,9 +266,9 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
                 ? childCount
                 : adultCount;
 
-          const base = (price.price_breakdown?.base_fare?.amount ?? 0) * count;
-          const tax = (price.price_breakdown?.tax?.amount ?? 0) * count;
-          const total = (price.price_breakdown?.total?.amount ?? 0) * count;
+          const base = Number(price.base_fare) * count;
+          const tax = Number(price.tax_amount) * count;
+          const total = Number(price.total_per_pax) * count;
 
           // Accumulate the global offer total
           offerWideBase += base;
@@ -341,39 +277,41 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
 
           return {
             ...price,
-            price_breakdown: {
-              ...price.price_breakdown,
-              base_fare: { ...price.price_breakdown?.base_fare, amount: base },
-              tax: { ...price.price_breakdown?.tax, amount: tax },
-              total: { ...price.price_breakdown?.total, amount: total },
-            },
+            base_fare: base,
+            tax_amount: tax,
+            total_per_pax: total,
           };
         });
 
         return {
           ...offer,
           traveler_price: updatedTravelerPrices,
-          // OVERWRITE the main price_breakdown with the calculated sum
+          // OVERWRITE the main price_breakdown with the calculated sum.
+          // discount_amount isn't recalculated (there's no per-passenger
+          // discount logic here), but it still needs converting out of
+          // Prisma.Decimal into a plain number like the other three fields,
+          // or it'd be the odd one out — a Decimal instance that doesn't
+          // survive a JSON/server-to-client boundary the way a number does.
           price_breakdown: {
             ...offer.price_breakdown,
-            base_fare: {
-              ...offer.price_breakdown?.base_fare,
-              amount: offerWideBase,
-            },
-            tax: { ...offer.price_breakdown?.tax, amount: offerWideTax },
-            total: { ...offer.price_breakdown?.total, amount: offerWideTotal },
+            base_amount: offerWideBase,
+            tax_amount: offerWideTax,
+            total_amount: offerWideTotal,
+            discount_amount: offer.price_breakdown?.discount_amount
+              ? Number(offer.price_breakdown.discount_amount)
+              : 0,
           },
         };
       });
 
-      // 4. Return the full data item with all flight offers updated
+      // Return the full data item with all flight offers updated
       return {
         ...item,
         flight_offers: updatedFlightOffers,
       };
     });
-    // console.log("final data", JSON.stringify(finalData.slice(0,1), null, 2))
-    console.log("final data", finalData)
+
+    // console.log('flight data>> ', JSON.stringify(finalData, null, 2))
     return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);
@@ -381,152 +319,48 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   }
 };
 
-export const queryFlightToken = async (
-  // queryParams: FlightSearchParamsProps,
-  { token }: { token: string | undefined },
-) => {
+export const queryFlightToken = async ({
+  token,
+}: {
+  token: string | undefined;
+}) => {
   if (!token) return null;
   try {
-    // const flightData = await queryFlightData(queryParams);
-    // console.log("flightData>>>> ", flightData);
-    // const filteredFlights = flightData?.flatMap((data) =>
-    //   data.flight_offers.filter((offer) => offer.token === queryParams.token),
-    // );
-    // return filteredFlights;
     const flightOffer = await prisma.flightOffers.findFirst({
       where: {
         token: {
           equals: token,
         },
       },
-      include: {
-        branded_fareinfo: {
-          omit: {
-            id: true,
-            branded_fareinfo_id: true,
-          },
-          include: {
-            features: {
-              omit: {
-                id: true,
-                feature_id: true,
-              },
-            },
-          },
-        },
-        seat_availability: {
-          omit: {
-            id: true,
-            seat_availability_id: true,
-          },
-        },
-        traveler_price: {
-          omit: {
-            traveler_reference: true,
-            id: true,
-            traveler_price_id: true,
-          },
-          include: {
-            price_breakdown: {
-              omit: {
-                id: true,
-              },
-              include: {
-                base_fare: {
-                  omit: {
-                    id: true,
-                    base_price_id: true,
-                  },
-                },
-                discount: {
-                  omit: {
-                    id: true,
-                    discount_id: true,
-                  },
-                },
-                tax: {
-                  omit: {
-                    id: true,
-                    tax_id: true,
-                  },
-                },
-                total: {
-                  omit: {
-                    id: true,
-                    total_price_id: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        price_breakdown: {
-          omit: {
-            id: true,
-          },
-          include: {
-            base_fare: {
-              omit: {
-                id: true,
-                base_price_id: true,
-              },
-            },
-            discount: {
-              omit: {
-                id: true,
-                discount_id: true,
-              },
-            },
-            tax: {
-              omit: {
-                id: true,
-                tax_id: true,
-              },
-            },
-            total: {
-              omit: {
-                id: true,
-                total_price_id: true,
-              },
-            },
-          },
-        },
-        segments: {
-          omit: {
-            id: true,
-            segment_id: true,
-          },
-          orderBy: { departure_time: "asc" },
-          include: {
-            legs: {
-              omit: {
-                id: true,
-                leg_id: true,
-              },
-              orderBy: { departure_time: "asc" },
-              include: {
-                carriers: {
-                  omit: {
-                    id: true,
-                    carrier_id: true,
-                  },
-                },
-                flight_info: {
-                  omit: {
-                    id: true,
-                    flight_info_id: true,
-                  },
-                  include: {
-                    carrier_info: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      include: flightOfferDetailInclude,
     });
-    return flightOffer;
+
+    if (!flightOffer) return null;
+
+    // Same reasoning as in queryFlightData: Decimal fields come back from
+    // Prisma as Prisma.Decimal instances, which don't serialize cleanly
+    // across a server/client boundary. Convert them to plain numbers here
+    // so the shape matches NewFlightOffer/PriceBreakdown/TravelerPrice.
+    return {
+      ...flightOffer,
+      traveler_price: flightOffer.traveler_price.map((price) => ({
+        ...price,
+        base_fare: Number(price.base_fare),
+        tax_amount: Number(price.tax_amount),
+        total_per_pax: Number(price.total_per_pax),
+      })),
+      price_breakdown: flightOffer.price_breakdown
+        ? {
+            ...flightOffer.price_breakdown,
+            total_amount: Number(flightOffer.price_breakdown.total_amount),
+            base_amount: Number(flightOffer.price_breakdown.base_amount),
+            tax_amount: Number(flightOffer.price_breakdown.tax_amount),
+            discount_amount: flightOffer.price_breakdown.discount_amount
+              ? Number(flightOffer.price_breakdown.discount_amount)
+              : 0,
+          }
+        : null,
+    };
   } catch (error) {
     console.error("no such token available: ", error);
     return null;

@@ -30,6 +30,39 @@ type FlightFilterProps = {
  * typeof refers to the type of the value has
  */
 
+// SCHEMA CHANGE NOTES:
+// - Data no longer has `airlines` / `stops` relations (those models were
+//   removed), so airline codes and stop counts are now derived from
+//   flight_offers -> segments instead of read off the flight/day directly.
+// - Carriers moved from Legs to Segment (marketingCarrier/operatingCarrier),
+//   so anything reading `leg.carriers` now reads `segment.marketingCarrier`
+//   / `segment.operatingCarrier`.
+// - PriceBreakdown is flattened: `price_breakdown.total.amount` is now
+//   `price_breakdown.total_amount`.
+// - Segment.total_time was renamed to Segment.duration.
+
+// Pulls the marketing carrier code out of an offer's segments — filtering
+// is done by marketing carrier (the airline the passenger actually books
+// with), not the operating carrier (a codeshare detail).
+const getOfferAirlineCodes = (offer: FlightOffer): string[] =>
+  (offer.segments ?? [])
+    .map((s) => s.marketingCarrier?.code)
+    .filter((code): code is string => !!code);
+
+// Stops = total legs across an offer's segments, minus one leg per segment
+// (a direct segment has 1 leg = 0 stops, a 1-stop segment has 2 legs, etc).
+const getOfferStopCount = (offer: FlightOffer): number => {
+  const totalLegs =
+    offer.segments?.reduce(
+      (acc, segment) => acc + (segment.legs?.length ?? 0),
+      0,
+    ) ?? 0;
+  return Math.max(0, totalLegs - 1);
+};
+
+const getOfferTotalDuration = (offer: FlightOffer): number =>
+  offer.segments?.reduce((sum, s) => sum + (s.duration ?? 0), 0) ?? 0;
+
 export const FlightDataFilters = ({
   isPending,
   data,
@@ -56,22 +89,29 @@ export const FlightDataFilters = ({
    */
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>(() => {
     if (!data || data.length === 0) return [];
-    return data.flatMap(
-      (flight) =>
-        (flight.airlines
-          ?.map((a) => a.iata_code)
-          .filter(Boolean) as string[]) ?? [],
-    ); // Loop through all flights and their airlines, extract iata codes, filter out falsy values, and flatten the result into a single array
+    // Derived from segments' carriers now, since Data no longer carries a
+    // flat `airlines` relation.
+    return Array.from(
+      new Set(
+        data.flatMap((flight) =>
+          (flight.flight_offers ?? []).flatMap((offer) =>
+            getOfferAirlineCodes(offer),
+          ),
+        ),
+      ),
+    );
   }); // track which airlines are selected as an array
 
   const [selectedStops, setSelectedStops] = useState<number[]>(() => {
     if (!data || data.length === 0) return [];
-    return data.flatMap(
-      (item) =>
-        item.stops
-          ?.map((stop) => stop.no_of_stops)
-          .filter((val): val is number => val !== null && val !== undefined) ??
-        [],
+    // Derived from each offer's segment/leg counts now, since Data no
+    // longer carries a precomputed `stops` relation.
+    return Array.from(
+      new Set(
+        data.flatMap((flight) =>
+          (flight.flight_offers ?? []).map((offer) => getOfferStopCount(offer)),
+        ),
+      ),
     );
   });
 
@@ -99,10 +139,17 @@ export const FlightDataFilters = ({
   );
 
   const airlines = useMemo(() => {
-    const unique = new Map(); // A Map is a collection of key-value pairs
+    const unique = new Map<string, string>(); // code -> name
     data?.forEach((flight) => {
-      flight.airlines?.forEach((a) => {
-        if (a.iata_code) unique.set(a.iata_code, a.name); // add or update
+      flight.flight_offers?.forEach((offer) => {
+        offer.segments?.forEach((s) => {
+          if (s.marketingCarrier?.code) {
+            unique.set(
+              s.marketingCarrier.code,
+              s.marketingCarrier.name ?? s.marketingCarrier.code,
+            );
+          }
+        });
       });
     });
 
@@ -116,69 +163,41 @@ export const FlightDataFilters = ({
       data
         .map((flight) => {
           // Filter the offers WITHIN this flight
-          const validOffers = (flight.flight_offers ?? [])
-            .filter((offer) => {
-              // A. Price Range check
-              const price = offer.price_breakdown?.total?.amount ?? 0;
-              if (
-                priceRange &&
-                (price < priceRange[0] || price > priceRange[1])
-              )
-                return false;
+          const validOffers = (flight.flight_offers ?? []).filter((offer) => {
+            // A. Price Range check
+            const price = offer.price_breakdown?.total_amount ?? 0;
+            if (priceRange && (price < priceRange[0] || price > priceRange[1]))
+              return false;
 
-              // C. Airline check
-              // We check if the airline in this offer is one of the selected ones
-              const offerAirlines =
-                offer.segments
-                  ?.flatMap(
-                    (s) =>
-                      s.legs?.flatMap(
-                        (l) => l.carriers?.map((c) => c.code) ?? [],
-                      ) ?? [],
-                  )
-                  // This filter cleans out 'undefined' and tells TS they are now definitely strings
-                  .filter((code): code is string => !!code) ?? [];
+            // C. Airline check
+            // We check if the airline in this offer is one of the selected ones
+            const offerAirlines = getOfferAirlineCodes(offer);
 
-              if (
-                selectedAirlines.length > 0 &&
-                !offerAirlines.some((code) => selectedAirlines.includes(code))
-              )
-                return false;
+            if (
+              selectedAirlines.length > 0 &&
+              !offerAirlines.some((code) => selectedAirlines.includes(code))
+            )
+              return false;
 
-              // D. Duration check
-              const totalDuration =
-                offer.segments?.reduce(
-                  (sum, s) => sum + (s.total_time ?? 0),
-                  0,
-                ) ?? 0;
+            // D. Duration check
+            const totalDuration = getOfferTotalDuration(offer);
 
-              if (
-                timeRange &&
-                (totalDuration < timeRange[0] || totalDuration > timeRange[1])
-              )
-                return false;
+            if (
+              timeRange &&
+              (totalDuration < timeRange[0] || totalDuration > timeRange[1])
+            )
+              return false;
 
-              // E. stop check
-              const totalLegs =
-                offer.segments?.reduce(
-                  (acc, segment) => acc + (segment.legs?.length ?? 0),
-                  0,
-                ) ?? 0;
+            // E. stop check
+            const actualStops = getOfferStopCount(offer);
 
-              // Stops = Legs - 1 (e.g., 1 leg is 0 stops, 2 legs is 1 stop)
-              const actualStops = Math.max(0, totalLegs - 1);
-
-              if (
-                selectedStops.length > 0 &&
-                !selectedStops.includes(actualStops)
-              )
-                return false;
-              return true;
-            })
-            .map((offer) => ({
-              ...offer,
-              trip_type: trip,
-            }));
+            if (
+              selectedStops.length > 0 &&
+              !selectedStops.includes(actualStops)
+            )
+              return false;
+            return true;
+          });
           return { ...flight, flight_offers: validOffers };
         })
         /**
@@ -195,22 +214,15 @@ export const FlightDataFilters = ({
           const getMinPrice = (f: FlightDataProps) =>
             Math.min(
               ...(f.flight_offers?.map(
-                (o) => o.price_breakdown?.total?.amount ?? Infinity,
+                (o) => o.price_breakdown?.total_amount ?? Infinity,
               ) ?? [Infinity]),
             );
 
           const getMinTime = (f: FlightDataProps) =>
             Math.min(
-              ...(f.flight_offers?.map((o) => {
-                // 1. Sum up all segments (Outbound + Inbound/Layovers) for this specific offer
-                const totalOfferTime = o.segments?.reduce(
-                  (acc, segment) => acc + (segment.total_time ?? 0),
-                  0,
-                );
-
-                // 2. Return that total, or Infinity if no segments exist (to push it to the bottom)
-                return totalOfferTime || Infinity;
-              }) ?? [Infinity]),
+              ...(f.flight_offers?.map(
+                (o) => getOfferTotalDuration(o) || Infinity,
+              ) ?? [Infinity]),
             );
 
           if (sortBy === "cheapest") {
@@ -226,15 +238,8 @@ export const FlightDataFilters = ({
             const getBestScore = (f: FlightDataProps) =>
               Math.min(
                 ...(f.flight_offers?.map((o) => {
-                  const totalPrice = o.price_breakdown?.total?.amount ?? 0;
-
-                  // Sum all segments for the total duration
-                  const totalDuration =
-                    o.segments?.reduce(
-                      (sum, s) => sum + (s.total_time ?? 0),
-                      0,
-                    ) ?? 0;
-
+                  const totalPrice = o.price_breakdown?.total_amount ?? 0;
+                  const totalDuration = getOfferTotalDuration(o);
                   // Logic: Price + Duration (Lower score is better)
                   return totalPrice + totalDuration;
                 }) ?? [Infinity]),
@@ -251,7 +256,6 @@ export const FlightDataFilters = ({
     sortBy,
     selectedAirlines,
     data,
-    trip,
     selectedStops,
   ]);
 
@@ -280,7 +284,15 @@ export const FlightDataFilters = ({
     return <SkeletonSection />;
   }
   // 2. check for any empty data
-  if (data?.length === 0 || !data || !depart || (depart.toDate() < currentDate) || (trip === "round-trip" && returnDate && returnDate.toDate() < depart.toDate())) {
+  if (
+    data?.length === 0 ||
+    !data ||
+    !depart ||
+    depart.toDate() < currentDate ||
+    (trip === "round-trip" &&
+      returnDate &&
+      returnDate.toDate() < depart.toDate())
+  ) {
     return (
       <div className="w-full flex items-center justify-center flex-col gap-3">
         <Image
@@ -302,41 +314,34 @@ export const FlightDataFilters = ({
 
   // sort by cheapest price
   const cheapestOffer = [...allOffers].sort((a, b) => {
-    const priceA = a.price_breakdown?.total?.amount;
-    const priceB = b.price_breakdown?.total?.amount;
+    const priceA = a.price_breakdown?.total_amount;
+    const priceB = b.price_breakdown?.total_amount;
     if (priceA === undefined && priceB === undefined) return 0;
     if (priceA === undefined) return 1;
     if (priceB === undefined) return -1;
     return priceA - priceB;
   })[0];
 
-  const getTotalFlightTime = (offer: FlightOffer) => {
-    return (
-      offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ??
-      Infinity
-    );
-  };
-
   // sort by best - combination of price and duration
   const bestOffer = [...allOffers].sort((a, b) => {
     const scoreA =
-      (a.price_breakdown?.total?.amount ?? 0) + getTotalFlightTime(a);
+      (a.price_breakdown?.total_amount ?? 0) + getOfferTotalDuration(a);
     const scoreB =
-      (b.price_breakdown?.total?.amount ?? 0) + getTotalFlightTime(b);
+      (b.price_breakdown?.total_amount ?? 0) + getOfferTotalDuration(b);
 
     return scoreA - scoreB;
   })[0];
 
   // sort by quickest - total min time for both outbound and inbound
   const quickestOffer = [...allOffers].sort((a, b) => {
-    const durA = getTotalFlightTime(a);
-    const durB = getTotalFlightTime(b);
+    const durA = getOfferTotalDuration(a);
+    const durB = getOfferTotalDuration(b);
 
     if (durA === durB) {
       // If duration is the same, pick the cheaper one as the "winner"
       return (
-        (a.price_breakdown?.total?.amount ?? 0) -
-        (b.price_breakdown?.total?.amount ?? 0)
+        (a.price_breakdown?.total_amount ?? 0) -
+        (b.price_breakdown?.total_amount ?? 0)
       );
     }
     return durA - durB;
@@ -344,13 +349,10 @@ export const FlightDataFilters = ({
 
   const prices =
     allOffers
-      ?.map((offer) => offer.price_breakdown?.total?.amount)
+      ?.map((offer) => offer.price_breakdown?.total_amount)
       .filter((p): p is number => typeof p === "number") ?? []; // is keyword - is used to create user-defined type guards, which help the compiler narrow down the type of a variable within a specific scope.
 
-  const allDurations = allOffers.map(
-    (offer) =>
-      offer.segments?.reduce((sum, s) => sum + (s.total_time ?? 0), 0) ?? 0,
-  );
+  const allDurations = allOffers.map((offer) => getOfferTotalDuration(offer));
 
   const minDuration = allDurations.length > 0 ? Math.min(...allDurations) : 0;
   const maxDuration =
@@ -468,9 +470,9 @@ export const FlightDataFilters = ({
       <FlightDisplayData
         sortBy={sortBy}
         handleSortByChange={handleSortByChange}
-        cheapest={cheapestOffer.price_breakdown?.total?.amount}
-        best={bestOffer.price_breakdown?.total?.amount}
-        quickest={quickestOffer.price_breakdown?.total?.amount}
+        cheapest={cheapestOffer?.price_breakdown?.total_amount}
+        best={bestOffer?.price_breakdown?.total_amount}
+        quickest={quickestOffer?.price_breakdown?.total_amount}
         filteredSortedData={filteredSortedData}
         isPendingFilter={isPendingFilter}
         adultCount={adultCount}

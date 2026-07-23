@@ -39,7 +39,6 @@ model Data {
 
 model Airlines {
   id         String     @id @default(uuid()) // PK
-  airline_id String // FK
   name       String
   logo       String
   iata_code  String     @unique

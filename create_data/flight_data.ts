@@ -95,7 +95,6 @@ function populateFakeAirports() {
 }
 
 function populateFakeAirlines(): FakeAirlineSeed[] {
-  // Bumped from 1-3 to 6-12: a bigger pool gives routes something real to
   // draw carrier variety from. This pool is now seeded once (see
   // ensureAirlinePool) rather than regenerated every run, since
   // Airlines.iata_code is unique and Carriers hold a real FK into it.
@@ -307,7 +306,6 @@ async function ensureAirlinePool() {
       where: { iata_code: airline.iata_code },
       update: {},
       create: {
-        airline_id: faker.string.uuid(), // descriptive only — no enforced relation on this field
         name: airline.name,
         iata_code: airline.iata_code,
         logo: airline.logo,
@@ -660,7 +658,7 @@ async function main() {
                 (s) => !s.is_booked,
               ).length;
 
-              const offer = await tx.flightOffers.create({
+              await tx.flightOffers.create({
                 data: {
                   flight_offer_id: createdData.id,
                   token: faker.string.nanoid(60),
@@ -802,9 +800,7 @@ async function main() {
                     ],
                   },
                 },
-              });
-
-              void offer; // offer id not needed further; kept for clarity/debuggability
+              });          
             } // end cabin loop
           } // end flight-time-instance loop
         } // end route loop

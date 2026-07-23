@@ -11,9 +11,13 @@ import { ValidateFlightsInputEntriesModal } from "@/components/modals/validate_f
 import { Button } from "@/components/reusable/button";
 import { MagnifyingGlass } from "@/components/icons/magnifying_glass";
 import { useRouter } from "next/navigation";
-import { dateFormat, disabledDate, InitialState, RangePicker } from "@/components/reusable/search_flights";
+import {
+  dateFormat,
+  disabledDate,
+  InitialState,
+  RangePicker,
+} from "@/components/reusable/search_flights";
 import { inputClassName } from "@/utils/inputClassName";
-
 
 type QueryParams = {
   queryParams?: QueryParamsProps;
@@ -32,7 +36,10 @@ type QueryParamsProps = {
   cabin: string | null;
 };
 
-export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams) => {
+export const ListSearchFlights = ({
+  queryParams,
+  startTransition,
+}: QueryParams) => {
   const [initialValues, setInitialValues] = useState<InitialState>({
     fromValue: queryParams?.from || "",
     toValue: queryParams?.to || "",
@@ -47,8 +54,6 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
   });
   const router = useRouter();
 
-  const [swapInput, setSwapInput] = useState(false);
-
   const [activeField, setActiveField] = useState<
     "fromValue" | "toValue" | null
   >(null);
@@ -60,7 +65,6 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
   const [airports, setAirports] = useState<AirportProps[]>([]); // store the airports suggestions
 
   const [showValidateModal, setShowValidateModal] = useState(false);
-
 
   const handleAirportsClick = (airport_code: string) => {
     if (!activeField) return;
@@ -90,7 +94,7 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
         setShowAirportsSuggestions(false);
       }
     },
-    300
+    300,
   ); // hoisting
 
   const handleDropDownClick = () => {
@@ -138,7 +142,7 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
   };
 
   const handleDateRangeChange = (
-    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null,
   ) => {
     setInitialValues((prevValues) => {
       return {
@@ -212,30 +216,38 @@ export const ListSearchFlights = ({ queryParams, startTransition }: QueryParams)
     });
   };
 
+  // Both inputs are now permanently bound to their own field
+  // (fromValue / toValue). Swapping is handled by actually swapping the
+  // values in state (see handleSwap) rather than by relabeling which input
+  // displays which field — the old approach only ever changed the visual
+  // position, never the underlying from/to data, which is why the URL
+  // never reflected a swap.
   const inputA = (
     <input
-      key={swapInput ? "to" : "from"} // A unique key to force re-render when swapped because of react's reconciliation
-      name={swapInput ? "toValue" : "fromValue"}
+      name="fromValue"
       type="text"
       size={12}
-      value={swapInput ? initialValues.toValue : initialValues.fromValue}
+      value={initialValues.fromValue}
       className={inputClassName}
       onChange={handleLocationChange}
     />
   );
   const inputB = (
     <input
-      key={swapInput ? "from" : "to"} // A unique key to force re-render when swapped because of react's reconciliation
-      name={swapInput ? "fromValue" : "toValue"}
+      name="toValue"
       type="text"
       size={12}
-      value={swapInput ? initialValues.fromValue : initialValues.toValue}
+      value={initialValues.toValue}
       className={inputClassName}
       onChange={handleLocationChange}
     />
   );
   const handleSwap = () => {
-    setSwapInput((prev) => !prev);
+    setInitialValues((prevValues) => ({
+      ...prevValues,
+      fromValue: prevValues.toValue,
+      toValue: prevValues.fromValue,
+    }));
   };
 
   const tripOptions = [

@@ -28,7 +28,7 @@ export const dateFormat = "DD MMM YY "; // From antd documentation
 export const disabledDate = (current: dayjs.Dayjs) => {
   // Can not select days before today
   return current < dayjs().startOf("day");
-}
+};
 
 export type InitialState = {
   fromValue: string;
@@ -43,8 +43,7 @@ export type InitialState = {
   cabinClass: string;
 };
 
-export const SearchFlights = ({from}: FlightSearchParamsProps) => {
-  const [swapInput, setSwapInput] = useState(false);
+export const SearchFlights = ({ from }: FlightSearchParamsProps) => {
   const [initialValues, setInitialValues] = useState<InitialState>({
     fromValue: from || "",
     toValue: "",
@@ -74,7 +73,6 @@ export const SearchFlights = ({from}: FlightSearchParamsProps) => {
 
   const router = useRouter();
 
-
   const handleAirportsClick = (airport_code: string) => {
     if (!activeField) return;
     setInitialValues((prevValues) => ({
@@ -84,34 +82,42 @@ export const SearchFlights = ({from}: FlightSearchParamsProps) => {
     // clean up
     setShowAirportsSuggestions(false);
     setAirports([]);
-  }
+  };
 
   const debounceHandleLocationChange = useDebouncedCallback(
     async (query: string) => {
       if (query.trim() === "") {
         setAirports([]);
-        setShowAirportsSuggestions(false)
-        return
+        setShowAirportsSuggestions(false);
+        return;
       }
       try {
         const response = await fetch(`/api/flights/airports?query=${query}`);
         const data = await response.json();
         setAirports(data);
-        setShowAirportsSuggestions(true)
+        setShowAirportsSuggestions(true);
       } catch (error) {
         console.error("Error fetching location suggestions:", error);
-        setShowAirportsSuggestions(false)
+        setShowAirportsSuggestions(false);
       }
     },
-    300
+    300,
   ); // hoisting
 
   const handleDropDownClick = () => {
     setShowDropDown(!showDropDown);
   };
 
+  // Swap the actual fromValue/toValue in state, rather than just relabeling
+  // which input displays which field. The old `swapInput` toggle approach
+  // only changed the visual position — fromValue/toValue never actually
+  // exchanged, so the URL built in handleShowFlights never reflected a swap.
   const handleSwap = () => {
-    setSwapInput((prev) => !prev);
+    setInitialValues((prevValues) => ({
+      ...prevValues,
+      fromValue: prevValues.toValue,
+      toValue: prevValues.fromValue,
+    }));
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +161,7 @@ export const SearchFlights = ({from}: FlightSearchParamsProps) => {
   };
 
   const handleDateRangeChange = (
-    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+    dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null,
   ) => {
     setInitialValues((prevValues) => {
       return {
@@ -229,24 +235,24 @@ export const SearchFlights = ({from}: FlightSearchParamsProps) => {
     });
   };
 
+  // Both inputs are now permanently bound to their own field (fromValue /
+  // toValue) — see handleSwap for how the actual swap happens.
   const inputA = (
     <input
-      key={swapInput ? "to" : "from"} // A unique key to force re-render when swapped because of react's reconciliation
-      name={swapInput ? "toValue" : "fromValue"}
+      name="fromValue"
       type="text"
       size={12}
-      value={swapInput ? initialValues.toValue : initialValues.fromValue}
+      value={initialValues.fromValue}
       className={inputClassName}
       onChange={handleLocationChange}
     />
   );
   const inputB = (
     <input
-      key={swapInput ? "from" : "to"} // A unique key to force re-render when swapped because of react's reconciliation
-      name={swapInput ? "fromValue" : "toValue"}
+      name="toValue"
       type="text"
       size={12}
-      value={swapInput ? initialValues.fromValue : initialValues.toValue}
+      value={initialValues.toValue}
       className={inputClassName}
       onChange={handleLocationChange}
     />
@@ -262,23 +268,33 @@ export const SearchFlights = ({from}: FlightSearchParamsProps) => {
 
   function validateEntries() {
     // check for from and to entries if empty
-    if(initialValues.fromValue.trim() === "" || initialValues.toValue.trim() === "") {
+    if (
+      initialValues.fromValue.trim() === "" ||
+      initialValues.toValue.trim() === ""
+    ) {
       return false; // stop here
     }
 
-    if(initialValues.trip === "") {
+    if (initialValues.trip === "") {
       return false;
     }
 
-    if(initialValues.trip === "" && !initialValues.entryDate && !initialValues.startDate) {
+    if (
+      initialValues.trip === "" &&
+      !initialValues.entryDate &&
+      !initialValues.startDate
+    ) {
       return false;
     }
 
-    if(initialValues.trip === "one-way" && !initialValues.entryDate) {
+    if (initialValues.trip === "one-way" && !initialValues.entryDate) {
       return false;
     }
 
-    if(initialValues.trip === "round-trip" && (!initialValues.startDate || !initialValues.endDate)) {
+    if (
+      initialValues.trip === "round-trip" &&
+      (!initialValues.startDate || !initialValues.endDate)
+    ) {
       return false;
     }
     return true; // else continue
@@ -290,8 +306,10 @@ export const SearchFlights = ({from}: FlightSearchParamsProps) => {
       // proceed to show flights
       setShowValidateModal(false);
       startTransition(() => {
-        if(initialValues.trip === "one-way") {
-          router.push(`/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format('YYYY-MM-DD')}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`);
+        if (initialValues.trip === "one-way") {
+          router.push(
+            `/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,
+          );
         } else {
           router.push(
             `/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format("YYYY-MM-DD")}&return=${initialValues.endDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,

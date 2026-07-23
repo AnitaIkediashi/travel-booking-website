@@ -1,16 +1,11 @@
+export type TripType = "ONE_WAY" | "ROUND_TRIP";
+
 export type AirportProps = {
   airport_name: string;
   airport_code: string;
   imageUrl: string;
   city: string;
   country: string;
-};
-
-export type CarrierDataProps = {
-  carrier_id: number;
-  name: string;
-  logo: string;
-  code: string;
 };
 
 export type LocationProps = {
@@ -46,138 +41,63 @@ export type FlightSearchParamsProps = {
   bookingId?: string;
 };
 
-
 export type FlightDataProps = {
   id: string;
-  duration_min?: number;
-  duration_max?: number;
-  cabin_class?: string;
-  min_price?: MinPrice | null;
-  short_layover_connection?: ShortLayoverConnection | null;
-  baggage?: Baggage[];
-  departure_intervals?: DepartureInterval[];
-  stops?: Stop[];
-  airlines?: Airline[];
-  duration?: Duration[];
-  flight_times?: FlightTime[];
-  flight_offers?: FlightOffer[] | undefined;
-};
-
-type DepartureInterval = {
-  id?: number
-  interval_id?: string
-  start?: string
-  end?: string
-}
-
-type ShortLayoverConnection = {
-  id?: number;
-  layover_id?: string;
-  count?: number | null;
-};
-
-type MinPrice = {
-  id?: number;
-  min_price_data_id?: string;
-  min_price_airline_id?: string | null;
-  min_price_stop_id?: number | null;
-  currency_code?: string | null;
-  amount?: number;
-};
-
-export type Stop = {
-  id?: number;
-  stop_id?: string;
-  no_of_stops?: number;
-  count?: number | null;
-};
-
-type Airline = {
-  id?: string;
-  airline_id?: string;
-  name?: string;
-  logo?: string;
-  iata_code?: string;
-};
-
-type Duration = {
-  id?: number;
-  duration_id?: string;
-  min?: number;
-  max?: number;
-};
-
-type Baggage = {
-  id?: number;
-  baggage_id?: string;
-  type?: string;
-  included?: boolean;
-  weight?: number | null;
-  param_name?: string | null;
-}; 
-
-type FlightTime = {
-  id?: string;
-  flight_times_id?: string;
-  arrival?: Arrival[];
-  depart?: Depart[];
-};
-
-type Arrival = {
-  id?: number;
-  arrival_id?: string;
-  start?: string;
-  end?: string;
-};
-
-type Depart = {
-  id?: number;
-  depart_id?: string;
-  start?: string;
-  end?: string;
+  createdAt?: Date;
+  flight_offers?: FlightOffer[];
 };
 
 export type FlightOffer = {
   id?: string;
   flight_offer_id?: string;
   price_id?: number | null;
+  total_duration?: number;
+  trip_type?: TripType | null;
   token?: string;
   flight_key?: string;
   segments?: SegmentProp[];
   price_breakdown?: PriceBreakdown | null;
   traveler_price?: TravelerPrice[];
-  seat_availability?: SeatAvailability | null;
   branded_fareinfo?: BrandedFareInfo | null;
-  trip_type?: string | null;
 };
 
 type SegmentProp = {
-  id?: number;
+  id?: string;
   segment_id?: string;
   departure_airport_code?: string;
   arrival_airport_code?: string;
   departure_time?: Date;
   arrival_time?: Date;
-  total_time?: number;
+  duration?: number;
+  cabin_class?: string;
+  slice_index?: number; // 0 = Outbound, 1 = Inbound
   legs?: Leg[];
+  seat_availability?: SeatAvailability | null;
+  flight_info?: FlightInfo | null;
+  marketingCarrier?: Carrier;
+  operatingCarrier?: Carrier | null;
 };
 
 export type Leg = {
   id?: number;
-  leg_id?: number;
+  leg_id?: string;
   departure_airport_code?: string;
   arrival_airport_code?: string;
   departure_time?: Date;
   arrival_time?: Date;
-  cabin_class?: string | null;
-  total_time?: number;
-  carriers?: Carrier[];
-  flight_info?: FlightInfo | null;
+  duration?: number;
+  departure_gate?: Gate | null;
+  arrival_gate?: Gate | null;
+};
+
+type Gate = {
+  gate_number?: string;
+  terminal?: string;
 };
 
 type Carrier = {
   id?: number;
-  carrier_id?: number;
+  carrier_id?: string;
   name?: string;
   logo?: string;
   code?: string;
@@ -185,59 +105,26 @@ type Carrier = {
 
 type FlightInfo = {
   id?: number;
-  flight_info_id?: number;
+  flight_info_id?: string;
   flight_number?: string;
-  carrier_info?: CarrierInfo | null;
-};
-
-type CarrierInfo = {
-  id?: number;
-  carrier_info_id?: number;
-  operating_carrier?: string;
 };
 
 type PriceBreakdown = {
   id?: number;
-  total?: TotalPrice | null;
-  base_fare?: BaseFare | null;
-  tax?: Tax | null;
-  discount?: Discount | null;
-};
-
-type TotalPrice = {
-  id?: number;
-  total_price_id?: number;
-  currency_code?: string;
-  amount?: number;
-};
-
-type BaseFare = {
-  id?: number;
-  base_price_id?: number;
-  currency_code?: string;
-  amount?: number;
-};
-
-type Tax = {
-  id?: number;
-  tax_id?: number;
-  currency_code?: string;
-  amount?: number;
-};
-
-type Discount = {
-  id?: number;
-  discount_id?: number;
-  currency_code?: string;
-  amount?: number;
+  currency_code?: string | undefined;
+  total_amount?: number;
+  base_amount?: number;
+  tax_amount?: number;
+  discount_amount?: number | null;
 };
 
 type TravelerPrice = {
   id?: number;
-  traveler_price_id?: string;
-  price_id?: number | null;
-  traveler_reference?: string;
-  traveler_type?: string;
+  passenger_type?: string;
+  quantity?: number;
+  base_fare?: number;
+  tax_amount?: number;
+  total_per_pax?: number;
 };
 
 type SeatAvailability = {
@@ -265,11 +152,11 @@ export type NewFlightOffer = {
   id: string;
   flight_offer_id: string;
   token: string;
-  trip_type?: string | null;
+  total_duration: number;
+  trip_type?: TripType | null;
   flight_key: string;
   segments: SegmentProp[];
   branded_fareinfo: BrandedFareInfo | null;
-  seat_availability: SeatAvailability | null;
   traveler_price: TravelerPrice[];
   price_breakdown: PriceBreakdown | null;
 };
