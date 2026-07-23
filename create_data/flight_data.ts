@@ -44,9 +44,8 @@ type FakeAirlineSeed = {
  * outbound flights - one way flights
  * inbound flights = round trip flights
  * 8. Airlines operating the flights
- * 9. Stops - depends on the total no of Legs of a segment (legs.length - 1)
- * 10. Seat selection
- * 11. Gate
+ * 9. Seat selection
+ * 10. Gate
  *
  * for each route, generate N distinct flight
  * TIME INSTANCES (each with its own departure/arrival time, its own stop
@@ -55,24 +54,6 @@ type FakeAirlineSeed = {
  * how a real GDS returns multiple flight numbers per route/day, each bookable
  * across cabins at that flight's fixed schedule.
  *
- * SCHEMA CHANGE NOTES (why this version looks different from the old one):
- * - Data no longer stores duration_min/duration_max, and there is no more
- *   Baggage / ShortLayoverConnection / Duration / DepartureInterval /
- *   FlightTimes / Depart / Arrival / Stop model to write day-level summary
- *   stats into. All of that bookkeeping has been removed.
- * - MinPrice has been removed from the schema entirely — no cheapest-price
- *   tracking is written anywhere in this script anymore.
- * - Airlines/Carriers are now real, referentially-enforced rows: Carriers.code
- *   is a required FK into Airlines.iata_code, and Segment.marketingCarrierId
- *   is a required FK into Carriers.id. That means Airlines must be a STABLE
- *   pool seeded once (iata_code is @unique, so it can't be regenerated every
- *   run), and Carriers must be created BEFORE the Segment that references them.
- * - FlightInfo and SeatAvailability now hang off Segment (one per segment),
- *   not off Legs / FlightOffers.
- * - Legs no longer carries cabin_class (Segment does), and Legs.total_time
- *   was renamed to duration.
- * - PriceBreakdown and TravelerPrice now store plain Decimal amounts
- *   directly on the row instead of nested Price sub-records.
  */
 
 const MIN_AIRPORTS = 15; // a reasonable spread for route variety
