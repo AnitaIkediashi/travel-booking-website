@@ -51,6 +51,7 @@ const getOfferAirlineCodes = (offer: FlightOffer): string[] =>
 
 // Stops = total legs across an offer's segments, minus one leg per segment
 // (a direct segment has 1 leg = 0 stops, a 1-stop segment has 2 legs, etc).
+
 const getOfferStopCount = (offer: FlightOffer): number => {
   const totalLegs =
     offer.segments?.reduce(
@@ -458,6 +459,12 @@ export const FlightDataFilters = ({
           onClose={handleOpenAirlinesFilter}
           onChange={handleAirlineChange}
           selectedAirlines={selectedAirlines}
+        />
+        <StopFilter
+          openFilter={openStopsFilter}
+          onClose={handleOpenStopsFilter}
+          onChange={handleStopChange}
+          selectedStops={selectedStops}
         />
       </Filters>
       <Button

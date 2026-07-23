@@ -453,7 +453,7 @@ async function main() {
         // ---------------------------------------------------------------
         // numRoutes = how many distinct O&D pairs we generate for this day.
         // ---------------------------------------------------------------
-        const numRoutes = faker.number.int({ min: 10, max: 15 });
+        const numRoutes = faker.number.int({ min: 20, max: 30 });
 
         for (let r = 0; r < numRoutes; r++) {
           // Pick the route ONCE — shared across every time instance below
@@ -483,7 +483,7 @@ async function main() {
             ),
           );
 
-          const numFlightInstances = faker.number.int({ min: 3, max: 6 });
+          const numFlightInstances = faker.number.int({ min: 10, max: 15 });
 
           for (let f = 0; f < numFlightInstances; f++) {
             // isRoundTrip is decided PER INSTANCE, giving a realistic mix

@@ -3,6 +3,8 @@ import { Button } from "@/components/reusable/button";
 import { formatDateTime, getDate, getDuration } from "@/helpers/convertNumberToTime";
 import { FlightOffer } from "@/types/flight_type";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
 type segmentDataProps = {
   offers: FlightOffer;
@@ -11,14 +13,16 @@ type segmentDataProps = {
   infantCount: number;
 };
 
-
-
 export const SegmentData = ({
   offers,
   adultCount,
   infantCount,
   childCount,
 }: segmentDataProps) => {
+
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition();
+  
   if (!offers) return [];
   
   const hasMultipleSegments = (offers?.segments?.length ?? 0) > 1;
@@ -39,7 +43,7 @@ export const SegmentData = ({
     reassignedArrivalCode = arrivalCode;
   }
 
-  const tripType = offers.trip_type;
+  const tripType = offers.trip_type === 'ROUND_TRIP' ? 'Round Trip' : 'One way';
 
   const departDate = getDate(offers.segments?.[0].departure_time);
 
@@ -70,16 +74,21 @@ export const SegmentData = ({
     segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
   }
 
+  const handleNavigate = () => {
+    startTransition(() => {
+      router.push(segmentDetailUrl);
+    });
+  };
+
 
   return (
-    <div className="w-full flex flex-col md:flex-row md:justify-between md:items-start gap-4 md:gap-0 font-montserrat">
+    <div className="w-full flex flex-col md:flex-row md:justify-between md:items-stretch gap-4 md:gap-0 font-montserrat">
       <div className="md:w-[calc(100%-25%)] w-full md:py-6 md:pr-4 md:border-r border-r-blackish-green/25 flex flex-col gap-y-4 justify-center">
         {offers.segments?.map((segment, index) => {
           //get the data from the first leg to show the data for carrier
-          const firstLeg = segment.legs?.[0];
-          const carrier = firstLeg?.carriers?.[0];
+          const carrier = segment.marketingCarrier;
 
-          if (!firstLeg || !carrier) return null;
+          if (!carrier) return null;
 
           return (
             <div
@@ -159,26 +168,26 @@ export const SegmentData = ({
           );
         })}
       </div>
-      <div className="md:w-1/4 md:max-w-1/4 md:py-6 md:pl-4 flex md:flex-col items-center md:items-start md:justify-end">
+      <div className="md:w-1/4 md:max-w-1/4 md:py-6 md:pl-4 flex md:flex-col items-center md:items-start md:justify-end gap-x-6 md:gap-x-0">
         <div className="mb-4 flex flex-col gap-y-1.5">
           <p className="text-salmon-100 font-bold md:text-2xl text-xl">
-            ${offers.price_breakdown?.total?.amount ?? 0}
+            ${offers.price_breakdown?.total_amount ?? 0}
           </p>
           <small className="text-xs font-medium- opacity-75">
-            {offers.segments?.[0].legs?.[0]?.cabin_class}
+            {offers.segments?.[0].cabin_class}
           </small>
         </div>
         <Button
           type="button"
           className="capitalize h-12 w-full bg-mint-green-100 text-sm font-semibold hidden md:flex items-center justify-center rounded hover:bg-blackish-green hover:text-white"
-          label="view deal"
-          href={segmentDetailUrl}
+          label={isPending ? "loading..." : "view deal"}
+          onClick={handleNavigate}
         />
         <Button
           type="button"
           className="capitalize h-10 w-full bg-mint-green-100 text-sm font-semibold flex md:hidden items-center justify-center rounded hover:bg-blackish-green hover:text-white"
-          label="view"
-          href={segmentDetailUrl}
+          label={isPending ? "loading..." : "view"}
+          onClick={handleNavigate}
         />
       </div>
     </div>
