@@ -95,7 +95,7 @@ type Gate = {
   terminal?: string;
 };
 
-type Carrier = {
+export type Carrier = {
   id?: number;
   carrier_id?: string;
   name?: string;
@@ -103,7 +103,7 @@ type Carrier = {
   code?: string;
 };
 
-type FlightInfo = {
+export type FlightInfo = {
   id?: number;
   flight_info_id?: string;
   flight_number?: string;

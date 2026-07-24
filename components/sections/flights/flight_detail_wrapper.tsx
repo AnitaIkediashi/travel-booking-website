@@ -5,7 +5,7 @@ import { StandardSeatTypeIcon } from "@/components/icons/standard_seat_type";
 import { WideSeatTypeIcon } from "@/components/icons/wide_seat_type";
 import { WifiIcon } from "@/components/icons/wifi";
 import { BoxShadow } from "@/components/reusable/box_shadow";
-import { Button } from "@/components/reusable/button";
+import { SubmitButton } from "@/components/reusable/submit-button";
 import {
   formatDateTime,
   formateToReadableDate,
@@ -37,7 +37,7 @@ export const FlightDetailWrapper = async ({
 
   const arrivalCityAndCountry = await fetchCountryName(arrivalAirportCode);
 
-  const totalPrice = offers.price_breakdown?.total?.amount;
+  const totalPrice = offers.price_breakdown?.total_amount;
 
   const cabin = offers.branded_fareinfo?.cabin_class;
 
@@ -116,7 +116,7 @@ export const FlightDetailWrapper = async ({
               </div>
             </div>
             <small className="text-sm text-blackish-green/50">
-              {offers.trip_type === "round-trip" ? "Round trip" : "One way"}
+              {offers.trip_type === "ROUND_TRIP" ? "Round trip" : "One way"}
             </small>
           </div>
           <div className="flex flex-col gap-4">
@@ -131,12 +131,7 @@ export const FlightDetailWrapper = async ({
                 value={totalTravelers}
               />
               <input type="hidden" name="redirectUrl" value={bookingUrl} />
-              <Button
-                type="submit"
-                className="w-[150px] h-12 rounded bg-mint-green-100 text-sm font-semibold 
-               flex items-center justify-center hover:bg-blackish-green hover:text-white"
-                label="Book now"
-              />
+              <SubmitButton />
             </form>
           </div>
         </div>
@@ -184,10 +179,6 @@ export const FlightDetailWrapper = async ({
                 </div>
               ))}
             </div>
-            <p className="text-sm">
-              {" "}
-              Seats available: {offers.seat_availability?.seats_left}
-            </p>
           </BoxShadow>
           <BoxShadow className="shadow-large p-6 xl:w-[40%] lg:w-[45%] w-full">
             <div className="flex flex-col gap-y-6 h-full justify-between">
@@ -198,12 +189,11 @@ export const FlightDetailWrapper = async ({
                     ? "non stop"
                     : `${stopCount - 1} Stop${stopCount > 2 ? "s" : ""}`;
 
-                const firstLeg = segment.legs?.[0];
-                const carrier = firstLeg?.carriers?.[0];
+                const carrier = segment.marketingCarrier;
 
-                if (!firstLeg || !carrier) return null;
+                if (!carrier) return null;
 
-                const flightNumber = firstLeg?.flight_info?.flight_number;
+                const flightNumber = segment?.flight_info?.flight_number;
 
                 return (
                   <div

@@ -6,11 +6,11 @@ export type CardFormDataPayload = {
 };
 
 export type PriceInfoProps = {
-  total?: { currency_code: string | undefined; amount: number | undefined };
-  base_fare?: { amount: number | undefined };
-  tax?: { amount: number | undefined };
-  discount?: { amount: number | undefined };
-  service_fee?: { amount: number | undefined };
+  currency_code: string | undefined;
+  total_amount: number | undefined;
+  base_amount: number | undefined;
+  tax_amount: number | undefined;
+  discount_amount: number | null | undefined;
 };
 
 export type SaveCardOnSignupPayload = {

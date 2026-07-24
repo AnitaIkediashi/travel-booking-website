@@ -336,11 +336,7 @@ export const queryFlightToken = async ({
     });
 
     if (!flightOffer) return null;
-
-    // Same reasoning as in queryFlightData: Decimal fields come back from
-    // Prisma as Prisma.Decimal instances, which don't serialize cleanly
-    // across a server/client boundary. Convert them to plain numbers here
-    // so the shape matches NewFlightOffer/PriceBreakdown/TravelerPrice.
+    
     return {
       ...flightOffer,
       traveler_price: flightOffer.traveler_price.map((price) => ({

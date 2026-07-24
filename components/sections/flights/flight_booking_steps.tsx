@@ -13,7 +13,7 @@ import {
   formateToReadableDate,
   getDuration,
 } from "@/helpers/convertNumberToTime";
-import { Leg, NewFlightOffer } from "@/types/flight_type";
+import { Carrier, FlightInfo, Leg, NewFlightOffer } from "@/types/flight_type";
 import Image from "next/image";
 import { useState } from "react";
 import { PassengerWrapper } from "./passenger_wrapper";
@@ -31,38 +31,38 @@ type BookingStepsProps = {
 type SegmentsPropsArray = {
   departCity: string;
   arrivalCity: string;
-  id?: number | undefined;
-  segment_id?: string | undefined;
-  departure_airport_code?: string | undefined;
-  arrival_airport_code?: string | undefined;
-  departure_time?: Date | undefined;
-  arrival_time?: Date | undefined;
-  total_time?: number | undefined;
+  id?: string;
+  segment_id?: string;
+  departure_airport_code?: string;
+  arrival_airport_code?: string;
+  departure_time?: Date;
+  arrival_time?: Date;
+  duration?: number;
   legs?: Leg[] | undefined;
+  marketingCarrier?: Carrier;
+  flight_info?: FlightInfo | null;
 };
 
 export const FlightBookingSteps = ({
   offer,
   totalTravelers,
   segments,
-  bookingId
+  bookingId,
 }: BookingStepsProps) => {
-   const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const priceInfoObj = offer.price_breakdown;
-  const totalPrice = priceInfoObj?.total?.amount;
-  const basefare = priceInfoObj?.base_fare?.amount;
-  const tax = priceInfoObj?.tax?.amount;
-  const discount = priceInfoObj?.discount?.amount;
+  const totalPrice = priceInfoObj?.total_amount;
+  const basefare = priceInfoObj?.base_amount;
+  const tax = priceInfoObj?.tax_amount;
+  const discount = priceInfoObj?.discount_amount;
 
   const newPriceObj = {
-    total: {
-      currency_code: priceInfoObj?.total?.currency_code,
-      amount: priceInfoObj?.total?.amount,
-    },
-    base_fare: { amount: priceInfoObj?.base_fare?.amount },
-    tax: { amount: priceInfoObj?.tax?.amount },
-    discount: { amount: priceInfoObj?.discount?.amount },
+    currency_code: priceInfoObj?.currency_code,
+    total_amount: totalPrice,
+    base_amount: basefare,
+    tax_amount: tax,
+    discount_amount: discount,
   };
 
   const cabin = offer.branded_fareinfo?.cabin_class;
@@ -114,12 +114,11 @@ export const FlightBookingSteps = ({
             <BoxShadow className="shadow-large p-6">
               <div className="flex flex-col gap-y-6 h-full justify-between">
                 {segments.map(async (segment, idx) => {
-                  const firstLeg = segment.legs?.[0];
-                  const carrier = firstLeg?.carriers?.[0];
+                  const carrier = segment.marketingCarrier;
 
-                  if (!firstLeg || !carrier) return null;
+                  if (!carrier) return null;
 
-                  const flightNumber = firstLeg?.flight_info?.flight_number;
+                  const flightNumber = segment?.flight_info?.flight_number;
 
                   const departCity = segment.departCity;
 

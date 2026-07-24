@@ -40,13 +40,12 @@ export async function processPaymentIntent(
   try {
     const priceDetails = priceInfo;
 
-    const baseFare = priceDetails.base_fare?.amount || 0;
-    const tax = priceDetails.tax?.amount || 0;
-    const serviceFee = priceDetails.service_fee?.amount || 0;
-    const discount = priceDetails.discount?.amount || 0;
+    const baseFare = priceDetails.base_amount || 0;
+    const tax = priceDetails.tax_amount || 0;
+    const discount = priceDetails.discount_amount || 0;
 
-    const totalAmount = baseFare + tax + serviceFee - discount;
-    const currency = (priceDetails.total?.currency_code ?? "usd").toLowerCase();
+    const totalAmount = baseFare + tax + discount;
+    const currency = (priceDetails.currency_code ?? "usd").toLowerCase();
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100), // Stripe expects amount in cents
@@ -262,12 +261,11 @@ export async function processPaymentWithSavedCard(
       return { success: false, message: "No Stripe customer found." };
     }
 
-    const baseFare = priceInfo.base_fare?.amount || 0;
-    const tax = priceInfo.tax?.amount || 0;
-    const serviceFee = priceInfo.service_fee?.amount || 0;
-    const discount = priceInfo.discount?.amount || 0;
-    const totalAmount = baseFare + tax + serviceFee - discount;
-    const currency = (priceInfo.total?.currency_code ?? "usd").toLowerCase();
+    const baseFare = priceInfo.base_amount || 0;
+    const tax = priceInfo.tax_amount || 0;
+    const discount = priceInfo.discount_amount || 0;
+    const totalAmount = baseFare + tax + discount;
+    const currency = (priceInfo.currency_code ?? "usd").toLowerCase();
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100),
