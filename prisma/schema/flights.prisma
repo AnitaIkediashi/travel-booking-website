@@ -244,6 +244,8 @@ model Booking {
   hold_expires_at DateTime? // set once seats are picked; null before that
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
+  contact_email   String?      
+  contact_phone   String? 
   passengers      Passenger[]
   seats           Seat[]
 
@@ -265,8 +267,8 @@ model Passenger {
   first_name      String
   last_name       String
   gender          String
-  id_type         String // "passport" | "national_id"
-  id_number       String
+  id_type         String? // "passport" | "national_id"
+  id_number       String?
   nationality     String
   date_of_birth   DateTime
   seat_id         Int?     @unique // FK -> Seat, nullable until seat step is done

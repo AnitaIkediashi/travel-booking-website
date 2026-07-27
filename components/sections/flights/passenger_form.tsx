@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { IdType, Passenger } from "./passenger_wrapper";
+import { Passenger } from "./passenger_wrapper";
 import { Button } from "@/components/reusable/button";
 import { passengerSchema } from "@/lib/zod_schema";
-import { Select } from "antd";
+import { DatePicker, Select } from "antd";
 import countryList from "react-select-country-list";
+import dayjs from "dayjs";
 
 type PassengerFormProps = {
   passenger: Passenger;
@@ -42,9 +43,9 @@ export const PassengerForm = ({
       firstName: passenger.firstName,
       lastName: passenger.lastName,
       gender: passenger.gender,
-      idType: passenger.idType,
+      // idType: passenger.idType,
       nationality: passenger.nationality,
-      idNumber: passenger.idNumber,
+      // idNumber: passenger.idNumber,
       dateOfBirth: passenger.dateOfBirth,
     });
 
@@ -54,9 +55,9 @@ export const PassengerForm = ({
         firstName: fieldErrors.firstName?.[0],
         lastName: fieldErrors.lastName?.[0],
         gender: fieldErrors.gender?.[0],
-        idType: fieldErrors.idType?.[0],
+        // idType: fieldErrors.idType?.[0],
         nationality: fieldErrors.nationality?.[0],
-        idNumber: fieldErrors.idNumber?.[0],
+        // idNumber: fieldErrors.idNumber?.[0],
         dateOfBirth: fieldErrors.dateOfBirth?.[0],
       });
       return false;
@@ -79,7 +80,7 @@ export const PassengerForm = ({
 
       {/* First name */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">First name</label>
+        <label className="text-sm font-medium">First name on ID</label>
         <input
           className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.firstName ? "border-red-400" : "border-gray-300"}`}
@@ -94,7 +95,7 @@ export const PassengerForm = ({
 
       {/* Last name */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Last name</label>
+        <label className="text-sm font-medium">Last name on ID</label>
         <input
           className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.lastName ? "border-red-400" : "border-gray-300"}`}
@@ -109,7 +110,7 @@ export const PassengerForm = ({
 
       {/* Gender */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Gender</label>
+        <label className="text-sm font-medium">Gender on ID</label>
         <Select
           options={[
             { value: "", label: "Select gender" },
@@ -126,101 +127,38 @@ export const PassengerForm = ({
         )}
       </div>
 
-      {/* ID type */}
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">ID type</label>
-        <Select
-          options={[
-            { value: "", label: "Select ID type" },
-            { value: "PASSPORT", label: "Passport" },
-            { value: "NATIONAL_ID", label: "National ID" },
-          ]}
-          className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
-            ${errors.idType ? "border-red-400" : "border-gray-300"}`}
-          value={passenger.idType}
-          onChange={(value) => {
-            onChange({
-              ...passenger,
-              idType: value as IdType,
-              nationality: "",
-              idNumber: "",
-            });
-            setErrors((prev) => ({
-              ...prev,
-              idType: undefined,
-              nationality: undefined,
-              idNumber: undefined,
-            }));
-          }}
-        />
-        {errors.idType && (
-          <span className="text-xs text-red-500">{errors.idType}</span>
-        )}
-      </div>
-
       {/* Nationality */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Nationality</label>
-        {passenger.idType === "NATIONAL_ID" ? (
-          <input
-            className="border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"
-            value="Nigerian"
-            disabled
-          />
-        ) : (
-          <Select
-            options={CountryOptions}
-            placeholder="Select your nationality"
-            value={passenger.nationality}
-            allowClear
-            showSearch={{
-              optionFilterProp: "label",
-            }}
-            className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
-              ${errors.nationality ? "border-red-400" : "border-gray-300"}
-              ${!passenger.idType ? "bg-gray-50 cursor-not-allowed" : ""}`}
-            onChange={(value) => handleChange("nationality", value)}
-            disabled={!passenger.idType}
-          />
-        )}
+        <Select
+          options={CountryOptions}
+          placeholder="Select your nationality"
+          value={passenger.nationality}
+          allowClear
+          showSearch={{
+            optionFilterProp: "label",
+          }}
+          className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
+              ${errors.nationality ? "border-red-400" : "border-gray-300"}`}
+          onChange={(value) => handleChange("nationality", value)}
+        />
         {errors.nationality && (
           <span className="text-xs text-red-500">{errors.nationality}</span>
-        )}
-      </div>
-
-      {/* ID number */}
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">
-          {passenger.idType === "PASSPORT"
-            ? "Passport number"
-            : passenger.idType === "NATIONAL_ID"
-              ? "National ID number"
-              : "ID number"}
-        </label>
-        <input
-          className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
-            ${errors.idNumber ? "border-red-400" : "border-gray-300"}
-            ${!passenger.idType ? "bg-gray-50 cursor-not-allowed" : ""}`}
-          placeholder={!passenger.idType ? "Select an ID type first" : ""}
-          value={passenger.idNumber}
-          onChange={(e) => handleChange("idNumber", e.target.value)}
-          disabled={!passenger.idType}
-        />
-        {errors.idNumber && (
-          <span className="text-xs text-red-500">{errors.idNumber}</span>
         )}
       </div>
 
       {/* Date of birth */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Date of birth</label>
-        <input
-          type="date"
-          className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
+        <DatePicker
+          format="YYYY-MM-DD"
+          className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.dateOfBirth ? "border-red-400" : "border-gray-300"}`}
-          value={passenger.dateOfBirth}
-          max={new Date().toISOString().split("T")[0]}
-          onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+          value={passenger.dateOfBirth ? dayjs(passenger.dateOfBirth) : null}
+          onChange={(value) =>
+            handleChange("dateOfBirth", value ? value.format("YYYY-MM-DD") : "")
+          }
+          maxDate={dayjs()}
         />
         {errors.dateOfBirth && (
           <span className="text-xs text-red-500">{errors.dateOfBirth}</span>

@@ -113,7 +113,7 @@ export const FlightBookingSteps = ({
           <div className="xl:w-[60%] lg:w-[55%] w-full h-fit lg:order-1 order-2 flex flex-col gap-y-10">
             <BoxShadow className="shadow-large p-6">
               <div className="flex flex-col gap-y-6 h-full justify-between">
-                {segments.map(async (segment, idx) => {
+                {segments.map((segment, idx) => {
                   const carrier = segment.marketingCarrier;
 
                   if (!carrier) return null;
@@ -203,13 +203,13 @@ export const FlightBookingSteps = ({
               </div>
             </BoxShadow>
             <BoxShadow className="shadow-large p-4">
-              {currentStep === 0 && (
+              <div className={currentStep === 0 ? "" : "hidden"}>
                 <PassengerWrapper
                   nextStep={() => goToStep(1)}
                   totalTravelers={totalTravelers}
                   bookingId={bookingId}
                 />
-              )}
+              </div>
               {currentStep === 1 && (
                 <SelectSeatsWrapper nextStep={() => goToStep(2)} />
               )}

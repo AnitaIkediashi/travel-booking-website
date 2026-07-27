@@ -18,8 +18,8 @@ export type Passenger = {
   firstName: string;
   lastName: string;
   gender: Gender | "";
-  idType: IdType | "";
-  idNumber: string;
+  // idType: IdType | "";
+  // idNumber: string;
   nationality: string;
   dateOfBirth: string;
 };
@@ -28,8 +28,8 @@ const emptyPassenger: Passenger = {
   firstName: "",
   lastName: "",
   gender: "",
-  idType: "",
-  idNumber: "",
+  // idType: "",
+  // idNumber: "",
   nationality: "",
   dateOfBirth: "",
 };
@@ -44,32 +44,45 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
 
   // restore previously saved passengers on page refresh
   useEffect(() => {
+    let ignore = false;
+
     (async () => {
-      const saved = await getPassengersForBooking(bookingId);
-      if (saved.length > 0) {
-        setPassengers((prev) =>
-          prev.map((p, i) => {
-            const match = saved[i];
-            if (!match) return p;
-            return {
-              id: match.id,
-              firstName: match.first_name,
-              lastName: match.last_name,
-              gender: match.gender as Gender,
-              idType: match.id_type as IdType,
-              idNumber: match.id_number,
-              nationality: match.nationality,
-              dateOfBirth: new Date(match.date_of_birth)
-                .toISOString()
-                .split("T")[0],
-            };
-          }),
-        );
-        setCurrentIndex(Math.min(saved.length, totalTravelers - 1));
+      try {
+        const saved = await getPassengersForBooking(bookingId);
+        if (ignore) return; // bail if a newer effect run has already superseded this one
+
+        if (saved.length > 0) {
+          setPassengers((prev) =>
+            prev.map((p, i) => {
+              const match = saved[i];
+              if (!match) return p;
+              return {
+                id: match.id,
+                firstName: match.first_name,
+                lastName: match.last_name,
+                gender: match.gender as Gender,
+                idType: match.id_type as IdType,
+                idNumber: match.id_number,
+                nationality: match.nationality,
+                dateOfBirth: new Date(match.date_of_birth)
+                  .toISOString()
+                  .split("T")[0],
+              };
+            }),
+          );
+          setCurrentIndex(Math.min(saved.length, totalTravelers - 1));
+        }
+      } catch (err) {
+        console.error("Failed to load passengers:", err);
+      } finally {
+        if (!ignore) setIsLoaded(true);
       }
-      setIsLoaded(true);
     })();
-  }, [bookingId, totalTravelers]); // 👈 only re-runs if bookingId or totalTravelers changes
+
+    return () => {
+      ignore = true;
+    };
+  }, [bookingId, totalTravelers]);
 
   const updatePassenger = (updated: Passenger) => {
     setPassengers((prev) =>
@@ -87,8 +100,8 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
           firstName: current.firstName,
           lastName: current.lastName,
           gender: current.gender as "MALE" | "FEMALE",
-          idType: current.idType as "PASSPORT" | "NATIONAL_ID",
-          idNumber: current.idNumber,
+          // idType: current.idType as "PASSPORT" | "NATIONAL_ID",
+          // idNumber: current.idNumber,
           nationality: current.nationality,
           dateOfBirth: current.dateOfBirth,
         },
@@ -97,13 +110,9 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
       );
 
       if (!result.success) {
-        // server-side validation failed (shouldn't happen if client zod runs first,
-        // but good to handle in case someone bypasses the form)
         console.error("Server validation failed:", result.errors);
         return;
       }
-
-      // result.id is now guaranteed to be a string ✅
       setPassengers((prev) =>
         prev.map((p, i) => (i === currentIndex ? { ...p, id: result.id } : p)),
       );

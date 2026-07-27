@@ -34,9 +34,9 @@ export const passengerSchema = z.object({
   }),
   idType: z.enum(["PASSPORT", "NATIONAL_ID"], {
     message: "ID type is required",
-  }),
+  }).optional(),
   nationality: z.string().min(1, "Nationality is required").trim(),
-  idNumber: z.string().min(1, "ID number is required").trim(),
+  idNumber: z.string().min(1, "ID number is required").trim().optional(),
   dateOfBirth: z
     .string()
     .min(1, "Date of birth is required")
@@ -48,3 +48,14 @@ export const passengerSchema = z.object({
 });
 
 export type PassengerSchema = z.infer<typeof passengerSchema>;
+
+export const contactInfoSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Invalid email address"),
+  phoneNo: z.string().trim().min(1, "Phone number is required"),
+});
+
+export type ContactInfoSchema = z.infer<typeof contactInfoSchema>;
