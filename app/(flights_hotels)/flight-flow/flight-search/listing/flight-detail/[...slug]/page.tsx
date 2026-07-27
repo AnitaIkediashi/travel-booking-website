@@ -1,10 +1,10 @@
-import { FlightDetailWrapper } from "@/components/sections/flights/flight_detail_wrapper"
-import { queryFlightToken } from "@/helpers/query_flights"
-import { FlightSearchParams } from "@/types/flight_type"
-import { redirect } from "next/navigation"
+import { FlightDetailWrapper } from "@/components/sections/flights/flight_detail_wrapper";
+import { queryFlightToken } from "@/helpers/query_flights";
+import { FlightSearchParams } from "@/types/flight_type";
+import { redirect } from "next/navigation";
 
-const FlightDetailPage = async ({searchParams}: FlightSearchParams) => {
-  const searchProps = await searchParams
+const FlightDetailPage = async ({ searchParams }: FlightSearchParams) => {
+  const searchProps = await searchParams;
 
   const {
     from,
@@ -32,31 +32,42 @@ const FlightDetailPage = async ({searchParams}: FlightSearchParams) => {
   const isReturnDateValid =
     trip === "round-trip" && returnDate && new Date(returnDate) < departDate;
 
-  const adultCount = +(adults ?? 0)
-  const childCount = +(child ?? 0)
-  const infantCount = +(infant ?? 0)
-  const totalTravelers = adultCount + childCount + infantCount
+  const adultCount = +(adults ?? 0);
+  const childCount = +(child ?? 0);
+  const infantCount = +(infant ?? 0);
+  const totalTravelers = adultCount + childCount + infantCount;
 
   const isValidQuery =
-      from &&
-      to &&
-      depart &&
-      trip &&
-      cabin &&
-      token && 
-      !isPastDate &&
-      !isReturnDateValid &&
-      (adultCount > 0 || childCount > 0 || infantCount > 0);
-  
-    if (!isValidQuery) {
-      redirect("/flight-flow/flight-search/listing");
-    }
-    
-  const data = await queryFlightToken({ token })
-  
-  return (
-    <FlightDetailWrapper offers={data} totalTravelers={totalTravelers} searchProps={searchProps} />
-  )
-}
+    from &&
+    to &&
+    depart &&
+    trip &&
+    cabin &&
+    token &&
+    !isPastDate &&
+    !isReturnDateValid &&
+    (adultCount > 0 || childCount > 0 || infantCount > 0);
 
-export default FlightDetailPage
+  if (!isValidQuery) {
+    redirect("/flight-flow/flight-search/listing");
+  }
+
+  const newParams = {
+    adults: adultCount,
+    child: childCount,
+    infant: infantCount,
+    token
+  };
+
+  const data = await queryFlightToken(newParams);
+
+  return (
+    <FlightDetailWrapper
+      offers={data}
+      totalTravelers={totalTravelers}
+      searchProps={searchProps}
+    />
+  );
+};
+
+export default FlightDetailPage;

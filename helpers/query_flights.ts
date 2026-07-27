@@ -286,12 +286,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
         return {
           ...offer,
           traveler_price: updatedTravelerPrices,
-          // OVERWRITE the main price_breakdown with the calculated sum.
-          // discount_amount isn't recalculated (there's no per-passenger
-          // discount logic here), but it still needs converting out of
-          // Prisma.Decimal into a plain number like the other three fields,
-          // or it'd be the odd one out — a Decimal instance that doesn't
-          // survive a JSON/server-to-client boundary the way a number does.
           price_breakdown: {
             ...offer.price_breakdown,
             base_amount: offerWideBase,
@@ -319,11 +313,15 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   }
 };
 
-export const queryFlightToken = async ({
-  token,
-}: {
-  token: string | undefined;
-}) => {
+type queryFlightTokenProps = {
+  adults: number;
+  child: number;
+  infant: number;
+  token: string;
+};
+
+export const queryFlightToken = async (params: queryFlightTokenProps) => {
+  const { token, adults, child, infant } = params;
   if (!token) return null;
   try {
     const flightOffer = await prisma.flightOffers.findFirst({
@@ -336,26 +334,45 @@ export const queryFlightToken = async ({
     });
 
     if (!flightOffer) return null;
-    
+
+    let offerWideTotal = 0;
+    let offerWideBase = 0;
+    let offerWideTax = 0;
+
+    const updatedTravelerPrice = flightOffer.traveler_price.map((price) => {
+      const type = price.passenger_type;
+      const count =
+        type === "INFANT" ? infant : type === "CHILD" ? child : adults;
+
+      const base = Number(price.base_fare) * count;
+      const tax = Number(price.tax_amount) * count;
+      const total = Number(price.total_per_pax) * count;
+
+      // Accumulate the global offer total
+      offerWideBase += base;
+      offerWideTax += tax;
+      offerWideTotal += total;
+
+      return {
+        ...price,
+        base_fare: base,
+        tax_amount: tax,
+        total_per_pax: total,
+      };
+    });
+
     return {
       ...flightOffer,
-      traveler_price: flightOffer.traveler_price.map((price) => ({
-        ...price,
-        base_fare: Number(price.base_fare),
-        tax_amount: Number(price.tax_amount),
-        total_per_pax: Number(price.total_per_pax),
-      })),
-      price_breakdown: flightOffer.price_breakdown
-        ? {
-            ...flightOffer.price_breakdown,
-            total_amount: Number(flightOffer.price_breakdown.total_amount),
-            base_amount: Number(flightOffer.price_breakdown.base_amount),
-            tax_amount: Number(flightOffer.price_breakdown.tax_amount),
-            discount_amount: flightOffer.price_breakdown.discount_amount
-              ? Number(flightOffer.price_breakdown.discount_amount)
-              : 0,
-          }
-        : null,
+      traveler_price: updatedTravelerPrice,
+      price_breakdown: {
+        ...flightOffer.price_breakdown,
+        base_amount: offerWideBase,
+        tax_amount: offerWideTax,
+        total_amount: offerWideTotal,
+        discount_amount: flightOffer.price_breakdown?.discount_amount
+          ? Number(flightOffer.price_breakdown.discount_amount)
+          : 0,
+      },
     };
   } catch (error) {
     console.error("no such token available: ", error);

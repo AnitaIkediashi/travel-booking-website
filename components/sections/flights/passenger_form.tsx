@@ -1,9 +1,11 @@
-'use client'
+"use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { IdType, Passenger } from "./passenger_wrapper";
 import { Button } from "@/components/reusable/button";
 import { passengerSchema } from "@/lib/zod_schema";
+import { Select } from "antd";
+import countryList from "react-select-country-list";
 
 type PassengerFormProps = {
   passenger: Passenger;
@@ -26,46 +28,48 @@ export const PassengerForm = ({
   onSubmit,
   onBack,
 }: PassengerFormProps) => {
-    const [errors, setErrors] = useState<PassengerFormErrors>({});
+  const CountryOptions = useMemo(() => countryList().getData(), []);
 
-    const handleChange = (field: keyof Passenger, value: string) => {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-      onChange({ ...passenger, [field]: value });
-    };
+  const [errors, setErrors] = useState<PassengerFormErrors>({});
 
-    const validate = () => {
-      const result = passengerSchema.safeParse({
-        firstName: passenger.firstName,
-        lastName: passenger.lastName,
-        gender: passenger.gender,
-        idType: passenger.idType,
-        nationality: passenger.nationality,
-        idNumber: passenger.idNumber,
-        dateOfBirth: passenger.dateOfBirth,
+  const handleChange = (field: keyof Passenger, value: string) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+    onChange({ ...passenger, [field]: value });
+  };
+
+  const validate = () => {
+    const result = passengerSchema.safeParse({
+      firstName: passenger.firstName,
+      lastName: passenger.lastName,
+      gender: passenger.gender,
+      idType: passenger.idType,
+      nationality: passenger.nationality,
+      idNumber: passenger.idNumber,
+      dateOfBirth: passenger.dateOfBirth,
+    });
+
+    if (!result.success) {
+      const { fieldErrors } = result.error.flatten();
+      setErrors({
+        firstName: fieldErrors.firstName?.[0],
+        lastName: fieldErrors.lastName?.[0],
+        gender: fieldErrors.gender?.[0],
+        idType: fieldErrors.idType?.[0],
+        nationality: fieldErrors.nationality?.[0],
+        idNumber: fieldErrors.idNumber?.[0],
+        dateOfBirth: fieldErrors.dateOfBirth?.[0],
       });
+      return false;
+    }
 
-      if (!result.success) {
-        const { fieldErrors } = result.error.flatten();
-        setErrors({
-          firstName: fieldErrors.firstName?.[0],
-          lastName: fieldErrors.lastName?.[0],
-          gender: fieldErrors.gender?.[0],
-          idType: fieldErrors.idType?.[0],
-          nationality: fieldErrors.nationality?.[0],
-          idNumber: fieldErrors.idNumber?.[0],
-          dateOfBirth: fieldErrors.dateOfBirth?.[0],
-        });
-        return false;
-      }
+    setErrors({});
+    return true;
+  };
 
-      setErrors({});
-      return true;
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (validate()) onSubmit();
-    };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) onSubmit();
+  };
   return (
     <form
       onSubmit={handleSubmit}
@@ -81,6 +85,7 @@ export const PassengerForm = ({
             ${errors.firstName ? "border-red-400" : "border-gray-300"}`}
           value={passenger.firstName}
           onChange={(e) => handleChange("firstName", e.target.value)}
+          autoCapitalize="words"
         />
         {errors.firstName && (
           <span className="text-xs text-red-500">{errors.firstName}</span>
@@ -95,6 +100,7 @@ export const PassengerForm = ({
             ${errors.lastName ? "border-red-400" : "border-gray-300"}`}
           value={passenger.lastName}
           onChange={(e) => handleChange("lastName", e.target.value)}
+          autoCapitalize="words"
         />
         {errors.lastName && (
           <span className="text-xs text-red-500">{errors.lastName}</span>
@@ -104,16 +110,17 @@ export const PassengerForm = ({
       {/* Gender */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Gender</label>
-        <select
-          className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
+        <Select
+          options={[
+            { value: "", label: "Select gender" },
+            { value: "MALE", label: "Male" },
+            { value: "FEMALE", label: "Female" },
+          ]}
+          className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.gender ? "border-red-400" : "border-gray-300"}`}
           value={passenger.gender}
-          onChange={(e) => handleChange("gender", e.target.value)}
-        >
-          <option value="">Select gender</option>
-          <option value="MALE">Male</option>
-          <option value="FEMALE">Female</option>
-        </select>
+          onChange={(value) => handleChange("gender", value)}
+        />
         {errors.gender && (
           <span className="text-xs text-red-500">{errors.gender}</span>
         )}
@@ -122,14 +129,19 @@ export const PassengerForm = ({
       {/* ID type */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">ID type</label>
-        <select
-          className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
+        <Select
+          options={[
+            { value: "", label: "Select ID type" },
+            { value: "PASSPORT", label: "Passport" },
+            { value: "NATIONAL_ID", label: "National ID" },
+          ]}
+          className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.idType ? "border-red-400" : "border-gray-300"}`}
           value={passenger.idType}
-          onChange={(e) => {
+          onChange={(value) => {
             onChange({
               ...passenger,
-              idType: e.target.value as IdType,
+              idType: value as IdType,
               nationality: "",
               idNumber: "",
             });
@@ -140,11 +152,7 @@ export const PassengerForm = ({
               idNumber: undefined,
             }));
           }}
-        >
-          <option value="">Select ID type</option>
-          <option value="PASSPORT">Passport</option>
-          <option value="NATIONAL_ID">National ID</option>
-        </select>
+        />
         {errors.idType && (
           <span className="text-xs text-red-500">{errors.idType}</span>
         )}
@@ -160,15 +168,18 @@ export const PassengerForm = ({
             disabled
           />
         ) : (
-          <input
-            className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
+          <Select
+            options={CountryOptions}
+            placeholder="Select your nationality"
+            value={passenger.nationality}
+            allowClear
+            showSearch={{
+              optionFilterProp: "label",
+            }}
+            className={`border rounded px-3! py-2! focus:outline-none focus:ring-2 focus:ring-blackish-green/30
               ${errors.nationality ? "border-red-400" : "border-gray-300"}
               ${!passenger.idType ? "bg-gray-50 cursor-not-allowed" : ""}`}
-            placeholder={
-              passenger.idType ? "Enter nationality" : "Select an ID type first"
-            }
-            value={passenger.nationality}
-            onChange={(e) => handleChange("nationality", e.target.value)}
+            onChange={(value) => handleChange("nationality", value)}
             disabled={!passenger.idType}
           />
         )}

@@ -55,7 +55,14 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
     redirect("/flight-flow/flight-search/listing");
   }
 
-  const flightData = await queryFlightToken({token});
+  const newParams = {
+    adults: adultCount,
+    child: childCount,
+    infant: infantCount,
+    token,
+  };
+
+  const flightData = await queryFlightToken(newParams);
 
   return (
     <BookingWrapper

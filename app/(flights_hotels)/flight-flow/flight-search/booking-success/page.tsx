@@ -69,9 +69,16 @@ const BookingSuccessPage = async ({
         redirect("/flight-flow/flight-search/listing");
       }
     }
+
+    const newParams = {
+      adults: bookingId.adults,
+      child: bookingId.child,
+      infant: bookingId.infant,
+      token: bookingId.token,
+    };
     const totalTravelers =
       bookingId.adults + bookingId.child + bookingId.infant;
-    const flightData = await queryFlightToken({ token: bookingId.token });
+    const flightData = await queryFlightToken(newParams);
     return (
       <FlightBookingSuccess
         offers={flightData}
