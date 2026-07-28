@@ -7,6 +7,7 @@ import { passengerSchema } from "@/lib/zod_schema";
 import { DatePicker, Select } from "antd";
 import countryList from "react-select-country-list";
 import dayjs from "dayjs";
+import { autoCapitalizeWords } from "@/utils/inputClassName";
 
 type PassengerFormProps = {
   passenger: Passenger;
@@ -80,12 +81,15 @@ export const PassengerForm = ({
 
       {/* First name */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">First name on ID</label>
+        <label className="text-sm font-medium">First name</label>
         <input
           className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.firstName ? "border-red-400" : "border-gray-300"}`}
           value={passenger.firstName}
           onChange={(e) => handleChange("firstName", e.target.value)}
+          onBlur={(e) =>
+            handleChange("firstName", autoCapitalizeWords(e.target.value))
+          }
           autoCapitalize="words"
         />
         {errors.firstName && (
@@ -95,12 +99,15 @@ export const PassengerForm = ({
 
       {/* Last name */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Last name on ID</label>
+        <label className="text-sm font-medium">Last name</label>
         <input
           className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.lastName ? "border-red-400" : "border-gray-300"}`}
           value={passenger.lastName}
           onChange={(e) => handleChange("lastName", e.target.value)}
+          onBlur={(e) =>
+            handleChange("lastName", autoCapitalizeWords(e.target.value))
+          }
           autoCapitalize="words"
         />
         {errors.lastName && (
@@ -110,7 +117,7 @@ export const PassengerForm = ({
 
       {/* Gender */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium">Gender on ID</label>
+        <label className="text-sm font-medium">Gender</label>
         <Select
           options={[
             { value: "", label: "Select gender" },

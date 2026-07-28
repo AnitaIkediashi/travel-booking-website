@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Button } from "../reusable/button";
-import { inputClassName } from "@/utils/inputClassName";
+import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
 import { useRouter } from "next/navigation";
 import { GoogleIcon } from "../icons/google";
 import { Checkbox } from "antd";
@@ -61,6 +61,11 @@ export const SignUpForm = () => {
         };
       });
     }
+  };
+
+  const handleAutoCapitalizeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSignUpData((prev) => ({ ...prev, [name]: autoCapitalizeWords(value) }));
   };
 
   const handleGoogleSignIn = async () => {
@@ -148,6 +153,7 @@ export const SignUpForm = () => {
                         autoCapitalize="words"
                         value={signUpData.firstName}
                         onChange={handleFormInput}
+                        onBlur={handleAutoCapitalizeBlur}
                         className={inputClassName}
                       />
                     </fieldset>
@@ -169,6 +175,7 @@ export const SignUpForm = () => {
                         autoCapitalize="words"
                         value={signUpData.lastName}
                         onChange={handleFormInput}
+                        onBlur={handleAutoCapitalizeBlur}
                         className={inputClassName}
                       />
                     </fieldset>
@@ -206,7 +213,7 @@ export const SignUpForm = () => {
                         phone number
                       </legend>
                       <input
-                        type="number"
+                        type="tel"
                         placeholder="Type your phone number"
                         name="phoneNo"
                         value={signUpData.phoneNo}

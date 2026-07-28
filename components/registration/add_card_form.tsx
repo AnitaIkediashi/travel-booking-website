@@ -2,7 +2,7 @@
 
 import { Select } from "antd";
 import { Button } from "../reusable/button";
-import { inputClassName } from "@/utils/inputClassName";
+import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
 import {
   CardCvcElement,
   CardExpiryElement,
@@ -76,6 +76,14 @@ export const AddCardForm = () => {
         };
       });
     }
+  };
+
+  const handleAutoCapitalizeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCardFormData((prev) => ({
+      ...prev,
+      [name]: autoCapitalizeWords(value),
+    }));
   };
 
   const handleCardSubmit = async (e: FormEvent) => {
@@ -197,6 +205,7 @@ export const AddCardForm = () => {
                 className={inputClassName}
                 value={cardFormData.cardName}
                 onChange={handleCardInputChange}
+                onBlur={handleAutoCapitalizeBlur}
               />
             </fieldset>
             {errors?.properties?.cardName?.errors?.[0] && (

@@ -5,7 +5,7 @@ import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { inputClassName } from "@/utils/inputClassName";
+import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
 import {
   processPaymentIntent,
   saveCardToDatabase,
@@ -120,6 +120,14 @@ export const CreateCardForm = ({
         };
       });
     }
+  };
+
+  const handleAutoCapitalizeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCardFormData((prev) => ({
+      ...prev,
+      [name]: autoCapitalizeWords(value),
+    }));
   };
 
   const handleCardSubmit = async (e: FormEvent) => {
@@ -331,6 +339,7 @@ export const CreateCardForm = ({
                       className={inputClassName}
                       value={cardFormData.cardName}
                       onChange={handleCardInputChange}
+                      onBlur={handleAutoCapitalizeBlur}
                     />
                   </fieldset>
                   {errors?.properties?.cardName?.errors?.[0] && (

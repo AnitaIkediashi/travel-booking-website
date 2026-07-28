@@ -3,7 +3,20 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { passengerSchema, PassengerSchema } from "../zod_schema";
+import { passengerSchema, PassengerSchema, ContactInfoSchema, contactInfoSchema } from "../zod_schema";
+
+export type ContactInfoInput = {
+  email: string;
+  phoneNo: string;
+};
+
+type SaveContactInfoResult =
+  | { success: true }
+  | {
+      success: false;
+      errors: z.core.$ZodErrorTree<ContactInfoSchema> | string;
+    };
+
 
 export async function createBookingAction(formData: FormData) {
   const flightOfferId = formData.get("flightOfferId") as string;
@@ -77,4 +90,39 @@ export async function getPassengersForBooking(bookingId: string | undefined) {
     where: { booking_id: bookingId },
     orderBy: { passenger_index: "asc" },
   });
+}
+
+export async function saveContactInfo(
+  bookingId: string | undefined,
+  contactInfo: ContactInfoInput,
+): Promise<SaveContactInfoResult> {
+  if (!bookingId) {
+    return { success: false, errors: "Missing booking ID" };
+  }
+
+  const validated = contactInfoSchema.safeParse(contactInfo);
+  if (!validated.success) {
+    return { success: false, errors: z.treeifyError(validated.error) };
+  }
+
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      contact_email: validated.data.email,
+      contact_phone: validated.data.phoneNo,
+    },
+  });
+
+  return { success: true };
+}
+
+export async function getContactInfoForBooking(bookingId: string | undefined) {
+  if (!bookingId) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { contact_email: true, contact_phone: true },
+  });
+
+  return booking;
 }

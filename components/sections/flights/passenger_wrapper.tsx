@@ -1,8 +1,16 @@
-'use client'
+"use client";
 
-import { getPassengersForBooking, savePassenger } from "@/lib/actions/flight-booking-actions";
+import {
+  ContactInfoInput,
+  getContactInfoForBooking,
+  getPassengersForBooking,
+  saveContactInfo,
+  savePassenger,
+} from "@/lib/actions/flight-booking-actions";
 import { useEffect, useState } from "react";
 import { PassengerForm } from "./passenger_form";
+import { contactInfoSchema } from "@/lib/zod_schema";
+import { ContactInfoSection } from "./contact_info_section";
 
 type PassengerProps = {
   nextStep: () => void;
@@ -34,11 +42,22 @@ const emptyPassenger: Passenger = {
   dateOfBirth: "",
 };
 
-export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: PassengerProps) => {
+const emptyContactInfo: ContactInfoInput = { email: "", phoneNo: "" };
+
+export const PassengerWrapper = ({
+  nextStep,
+  totalTravelers,
+  bookingId,
+}: PassengerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [passengers, setPassengers] = useState<Passenger[]>(
     Array.from({ length: totalTravelers }, () => ({ ...emptyPassenger })),
   );
+  const [contactInfo, setContactInfo] =
+    useState<ContactInfoInput>(emptyContactInfo);
+  const [contactErrors, setContactErrors] = useState<
+    Partial<Record<keyof ContactInfoInput, string>>
+  >({});
   const [isSaving, setIsSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -48,21 +67,22 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
 
     (async () => {
       try {
-        const saved = await getPassengersForBooking(bookingId);
-        if (ignore) return; // bail if a newer effect run has already superseded this one
+        const [savedPassengers, savedContact] = await Promise.all([
+          getPassengersForBooking(bookingId),
+          getContactInfoForBooking(bookingId),
+        ]);
+        if (ignore) return;
 
-        if (saved.length > 0) {
+        if (savedPassengers.length > 0) {
           setPassengers((prev) =>
             prev.map((p, i) => {
-              const match = saved[i];
+              const match = savedPassengers[i];
               if (!match) return p;
               return {
                 id: match.id,
                 firstName: match.first_name,
                 lastName: match.last_name,
                 gender: match.gender as Gender,
-                idType: match.id_type as IdType,
-                idNumber: match.id_number,
                 nationality: match.nationality,
                 dateOfBirth: new Date(match.date_of_birth)
                   .toISOString()
@@ -70,10 +90,17 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
               };
             }),
           );
-          setCurrentIndex(Math.min(saved.length, totalTravelers - 1));
+          setCurrentIndex(Math.min(savedPassengers.length, totalTravelers - 1));
+        }
+
+        if (savedContact?.contact_email || savedContact?.contact_phone) {
+          setContactInfo({
+            email: savedContact.contact_email ?? "",
+            phoneNo: savedContact.contact_phone ?? "",
+          });
         }
       } catch (err) {
-        console.error("Failed to load passengers:", err);
+        console.error("Failed to load passenger/contact info:", err);
       } finally {
         if (!ignore) setIsLoaded(true);
       }
@@ -90,42 +117,61 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
     );
   };
 
-  const handlePassengerSubmit = async () => {
-    setIsSaving(true);
-    try {
-      const current = passengers[currentIndex];
-      const result = await savePassenger(
-        bookingId,
-        {
-          firstName: current.firstName,
-          lastName: current.lastName,
-          gender: current.gender as "MALE" | "FEMALE",
-          // idType: current.idType as "PASSPORT" | "NATIONAL_ID",
-          // idNumber: current.idNumber,
-          nationality: current.nationality,
-          dateOfBirth: current.dateOfBirth,
-        },
-        currentIndex,
-        current.id,
-      );
-
+  const validateContactInfo = () => {
+      const result = contactInfoSchema.safeParse(contactInfo);
       if (!result.success) {
-        console.error("Server validation failed:", result.errors);
-        return;
+        const { fieldErrors } = result.error.flatten();
+        setContactErrors({ email: fieldErrors.email?.[0], phoneNo: fieldErrors.phoneNo?.[0] });
+        return false;
       }
-      setPassengers((prev) =>
-        prev.map((p, i) => (i === currentIndex ? { ...p, id: result.id } : p)),
-      );
+      setContactErrors({});
+      return true;
+    };
 
-      if (currentIndex < totalTravelers - 1) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        nextStep();
+  const handlePassengerSubmit = async () => {
+      if (currentIndex === 0 && !validateContactInfo()) {
+        return; // block progression until contact info is valid
       }
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  
+      setIsSaving(true);
+      try {
+        if (currentIndex === 0) {
+          const contactResult = await saveContactInfo(bookingId, contactInfo);
+          if (!contactResult.success) {
+            console.error("Contact info save failed:", contactResult.errors);
+            return;
+          }
+        }
+  
+        const current = passengers[currentIndex];
+        const result = await savePassenger(
+          bookingId,
+          {
+            firstName: current.firstName,
+            lastName: current.lastName,
+            gender: current.gender as "MALE" | "FEMALE",
+            nationality: current.nationality,
+            dateOfBirth: current.dateOfBirth,
+          },
+          currentIndex,
+          current.id,
+        );
+  
+        if (!result.success) {
+          console.error("Server validation failed:", result.errors);
+          return;
+        }
+        setPassengers((prev) => prev.map((p, i) => (i === currentIndex ? { ...p, id: result.id } : p)));
+  
+        if (currentIndex < totalTravelers - 1) {
+          setCurrentIndex((prev) => prev + 1);
+        } else {
+          nextStep();
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    };
 
   if (!isLoaded) {
     return (
@@ -159,18 +205,27 @@ export const PassengerWrapper = ({ nextStep, totalTravelers, bookingId }: Passen
         </div>
       )}
 
-      <PassengerForm
-        key={currentIndex}
-        passenger={passengers[currentIndex]}
-        passengerNumber={currentIndex + 1}
-        isLastPassenger={currentIndex === totalTravelers - 1}
-        isSaving={isSaving}
-        onChange={updatePassenger}
-        onSubmit={handlePassengerSubmit}
-        onBack={
-          currentIndex > 0 ? () => setCurrentIndex((p) => p - 1) : undefined
-        }
-      />
+      <div className="w-full">
+        {currentIndex === 0 && (
+          <ContactInfoSection
+            contactInfo={contactInfo}
+            errors={contactErrors}
+            onChange={setContactInfo}
+          />
+        )}
+        <PassengerForm
+          key={currentIndex}
+          passenger={passengers[currentIndex]}
+          passengerNumber={currentIndex + 1}
+          isLastPassenger={currentIndex === totalTravelers - 1}
+          isSaving={isSaving}
+          onChange={updatePassenger}
+          onSubmit={handlePassengerSubmit}
+          onBack={
+            currentIndex > 0 ? () => setCurrentIndex((p) => p - 1) : undefined
+          }
+        />
+      </div>
     </div>
   );
 };

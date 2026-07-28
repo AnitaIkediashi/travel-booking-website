@@ -94,12 +94,6 @@ export const ForgotPasswordForm = () => {
                 an otp shortly.
               </p>
             </div>
-            {/* <Button
-            type="button"
-            className="bg-mint-green-100 capitalize text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white"
-            label="Back to login"
-            onClick={() => router.push("/signin")}
-          /> */}
           </div>
         </div>
         <ToastContainer
