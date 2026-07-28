@@ -13,6 +13,7 @@ type PassengerFormProps = {
   passenger: Passenger;
   passengerNumber: number;
   isLastPassenger: boolean;
+  isMainPassenger: boolean;
   isSaving: boolean;
   onChange: (passenger: Passenger) => void;
   onSubmit: () => void;
@@ -29,6 +30,7 @@ export const PassengerForm = ({
   onChange,
   onSubmit,
   onBack,
+  isMainPassenger
 }: PassengerFormProps) => {
   const CountryOptions = useMemo(() => countryList().getData(), []);
 
@@ -77,7 +79,9 @@ export const PassengerForm = ({
       onSubmit={handleSubmit}
       className="flex flex-col gap-4 w-full max-w-lg"
     >
-      <h3 className="font-semibold text-lg">Passenger {passengerNumber}</h3>
+      <h3 className="font-semibold text-lg">
+        {isMainPassenger ? "Main passenger" : `Passenger ${passengerNumber}`}
+      </h3>
 
       {/* First name */}
       <div className="flex flex-col gap-1">

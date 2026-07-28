@@ -1,20 +1,18 @@
+import { Fragment } from "react";
 
 type StepperProps = {
-    current: number
-    labels: string[]
-}
+  current: number;
+  labels: string[];
+};
 
 export const Stepper = ({ current, labels }: StepperProps) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full mb-8">
+    <div className="flex items-start w-full mb-8">
       {labels.map((label, index) => (
-        <div
-          key={index}
-          className="flex flex-col md:flex-row items-start md:items-center flex-1 last:flex-none"
-        >
-          <div className="flex flex-col items-center">
+        <Fragment key={index}>
+          <div className="flex flex-col items-center shrink-0">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0
                 ${
                   index < current
                     ? "bg-blackish-green text-white"
@@ -29,15 +27,15 @@ export const Stepper = ({ current, labels }: StepperProps) => {
               {label}
             </span>
           </div>
+
           {index < labels.length - 1 && (
             <div
-              className={`md:flex-1 md:mx-2 mx-[45px] self-auto my-4 md:my-0
-                w-0.5 h-8 md:w-auto md:h-0.5 ${
-                  index < current ? "bg-blackish-green" : "bg-gray-200"
-                }`}
+              className={`flex-1 min-w-3 h-0.5 mt-4 mx-1 sm:mx-2 ${
+                index < current ? "bg-blackish-green" : "bg-gray-200"
+              }`}
             />
           )}
-        </div>
+        </Fragment>
       ))}
     </div>
   );

@@ -48,8 +48,6 @@ const flightOfferDetailInclude = {
     omit: {
       id: true,
       segment_id: true,
-      marketingCarrierId: true,
-      operatingCarrierId: true,
     },
     orderBy: { departure_time: "asc" as const },
     include: {
@@ -67,13 +65,11 @@ const flightOfferDetailInclude = {
       },
       marketingCarrier: {
         omit: {
-          id: true,
           carrier_id: true,
         },
       },
       operatingCarrier: {
         omit: {
-          id: true,
           carrier_id: true,
         },
       },
@@ -197,9 +193,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       slice_index: 1, // 1 = Inbound
     };
 
-    // trip_type is now a real enum on FlightOffers, so trip-type matching
-    // is checked directly against it instead of being inferred purely
-    // from which segments exist/don't exist.
     const tripTypeCondition: Prisma.FlightOffersWhereInput =
       trip === "round-trip"
         ? {
@@ -214,10 +207,6 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
             segments: { some: outboundFilter },
           };
 
-    // Build ONE combined condition and reuse it for both the outer `where`
-    // (which Data rows to fetch) and the inner include's `where` (which
-    // offers within that Data row to include) so they always agree on
-    // what counts as a match.
     const offerMatchCondition: Prisma.FlightOffersWhereInput = {
       AND: [
         {
@@ -305,7 +294,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       };
     });
 
-    // console.log('flight data>> ', JSON.stringify(finalData, null, 2))
+    // console.log('flight data>> ', finalData)
     return finalData;
   } catch (error) {
     console.error("Error querying flight data: ", error);

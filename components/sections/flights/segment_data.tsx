@@ -91,79 +91,86 @@ export const SegmentData = ({
           if (!carrier) return null;
 
           return (
-            <div
-              key={index}
-              className="flex justify-between items-center md:items-start relative"
-            >
-              <div className="md:flex md:gap-6 gap-1.5 hidden">
-                <Image
-                  src={carrier.logo?.trim() || "/flights/airplane-ticket.png"}
-                  alt={`${carrier.name} logo`}
-                  width={100}
-                  height={40}
-                  loading="eager"
-                  className="w-[50px] h-[50px]"
-                />
-                <div className="flex flex-col">
-                  <p className="font-semibold">
-                    {formatDateTime(segment.departure_time)} -{" "}
-                    {formatDateTime(segment.arrival_time)}
+            <div key={index}>
+              <div className="flex justify-between items-center md:items-start relative">
+                <div className="md:flex md:gap-6 gap-1.5 hidden">
+                  <Image
+                    src={carrier.logo?.trim() || "/flights/airplane-ticket.png"}
+                    alt={`${carrier.name} logo`}
+                    width={100}
+                    height={40}
+                    loading="eager"
+                    className="w-[50px] h-[50px]"
+                  />
+                  <div className="flex flex-col">
+                    <p className="font-semibold">
+                      {formatDateTime(segment.departure_time)} -{" "}
+                      {formatDateTime(segment.arrival_time)}
+                    </p>
+                    <p className="text-sm opacity-40">{carrier.name}</p>
+                  </div>
+                </div>
+                {index === 0 && (
+                  <p className="text-sm font-semibold opacity-78 hidden md:block">
+                    {stopLabel}
                   </p>
-                  <p className="text-sm opacity-40">{carrier.name}</p>
+                )}
+                <div className="md:flex flex-col hidden">
+                  <p className="opacity-78 font-semibold">
+                    {getDuration(segment.departure_time, segment.arrival_time)}
+                  </p>
+                  <p className="text-sm opacity-40">
+                    {segment.departure_airport_code} -{" "}
+                    {segment.arrival_airport_code}
+                  </p>
+                </div>
+                <div className="flex md:hidden flex-col md:items-center items-start gap-0.5">
+                  <Image
+                    src={carrier.logo?.trim() || "/flights/airplane-ticket.png"}
+                    alt={`${carrier.name} logo`}
+                    width={24}
+                    height={20}
+                    loading="eager"
+                    className="w-6 h-5"
+                  />
+                  <small className="text-[10px] opacity-40">
+                    {carrier.name}
+                  </small>
+                </div>
+                <div className="flex md:hidden flex-col">
+                  <small className="text-xs font-semibold">
+                    {formatDateTime(segment.departure_time)}
+                  </small>
+                  <small className="text-xs opacity-40">
+                    {segment.departure_airport_code}
+                  </small>
+                </div>
+                <div className="md:hidden flex flex-col items-center gap-y-2">
+                  {index === 0 && (
+                    <small className="text-[10px] font-medium opacity-78 block md:hidden">
+                      {stopLabel}
+                    </small>
+                  )}
+                  <hr className="min-w-16 bg-blackish-green opacity-50" />
+                  <small className="text-[10px] opacity-78">
+                    {getDuration(segment.departure_time, segment.arrival_time)}
+                  </small>
+                </div>
+                <div className="flex md:hidden flex-col">
+                  <small className="text-xs font-semibold">
+                    {formatDateTime(segment.arrival_time)}
+                  </small>
+                  <small className="text-xs opacity-40">
+                    {segment.arrival_airport_code}
+                  </small>
                 </div>
               </div>
-              {index === 0 && (
-                <p className="text-sm font-semibold opacity-78 hidden md:block">
-                  {stopLabel}
-                </p>
-              )}
-              <div className="md:flex flex-col hidden">
-                <p className="opacity-78 font-semibold">
-                  {getDuration(segment.departure_time, segment.arrival_time)}
-                </p>
-                <p className="text-sm opacity-40">
-                  {segment.departure_airport_code} -{" "}
-                  {segment.arrival_airport_code}
-                </p>
-              </div>
-              <div className="flex md:hidden flex-col items-center gap-0.5">
-                <Image
-                  src={carrier.logo?.trim() || "/flights/airplane-ticket.png"}
-                  alt={`${carrier.name} logo`}
-                  width={24}
-                  height={20}
-                  loading="eager"
-                  className="w-6 h-5"
-                />
-                <small className="text-[10px] opacity-40">{carrier.name}</small>
-              </div>
-              <div className="flex md:hidden flex-col">
-                <small className="text-xs font-semibold">
-                  {formatDateTime(segment.departure_time)}
-                </small>
-                <small className="text-xs opacity-40">
-                  {segment.departure_airport_code}
-                </small>
-              </div>
-              <div className="md:hidden flex flex-col items-center gap-y-2">
-                {index === 0 && (
-                  <small className="text-[10px] font-medium opacity-78 block md:hidden">
-                    {stopLabel}
+              {segment.operatingCarrier &&
+                segment.operatingCarrier.id !== carrier.id && (
+                  <small className="opacity-35 md:text-xs text-[10px] block">
+                    <i>Operated by {segment.operatingCarrier.name}</i>
                   </small>
                 )}
-                <hr className="min-w-16 bg-blackish-green opacity-50" />
-                <small className="text-[10px] opacity-78">
-                  {getDuration(segment.departure_time, segment.arrival_time)}
-                </small>
-              </div>
-              <div className="flex md:hidden flex-col">
-                <small className="text-xs font-semibold">
-                  {formatDateTime(segment.arrival_time)}
-                </small>
-                <small className="text-xs opacity-40">
-                  {segment.arrival_airport_code}
-                </small>
-              </div>
             </div>
           );
         })}

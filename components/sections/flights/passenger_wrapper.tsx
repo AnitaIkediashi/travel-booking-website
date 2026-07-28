@@ -218,6 +218,7 @@ export const PassengerWrapper = ({
           passenger={passengers[currentIndex]}
           passengerNumber={currentIndex + 1}
           isLastPassenger={currentIndex === totalTravelers - 1}
+          isMainPassenger={currentIndex === 0}
           isSaving={isSaving}
           onChange={updatePassenger}
           onSubmit={handlePassengerSubmit}

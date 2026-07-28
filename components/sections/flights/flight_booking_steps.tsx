@@ -40,6 +40,7 @@ type SegmentsPropsArray = {
   duration?: number;
   legs?: Leg[] | undefined;
   marketingCarrier?: Carrier;
+  operatingCarrier?: Carrier | null;
   flight_info?: FlightInfo | null;
 };
 
@@ -143,9 +144,14 @@ export const FlightBookingSteps = ({
                         />
                         <div className="flex flex-col gap-y-1.5">
                           <p className="font-semibold">
-                            {segment.departure_airport_code} ({departCity})
-                            &#8594; {segment.arrival_airport_code} (
-                            {arrivalCity})
+                            {segment.departure_airport_code}{" "}
+                            <span className="hidden md:inline">
+                              ({departCity})
+                            </span>
+                            &#8594; {segment.arrival_airport_code}{" "}
+                            <span className="hidden md:inline">
+                              ({arrivalCity})
+                            </span>
                           </p>
                           <span className="inline-block">
                             {formateToReadableDate(segment.departure_time)}
@@ -179,6 +185,12 @@ export const FlightBookingSteps = ({
                         <small className="my-0.5 block opacity-78 font-medium">
                           {carrier.name}
                         </small>
+                        {segment.operatingCarrier &&
+                          segment.operatingCarrier.id !== carrier.id && (
+                            <small className="opacity-35 md:text-xs text-[10px] block">
+                              <i>Operated by {segment.operatingCarrier.name}</i>
+                            </small>
+                          )}
                         <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                           {flightNumber}
                         </small>

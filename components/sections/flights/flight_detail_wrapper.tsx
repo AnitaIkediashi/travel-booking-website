@@ -96,7 +96,7 @@ export const FlightDetailWrapper = async ({
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">
         <div className="w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10">
           <div className="flex flex-col gap-y-2">
-            <div className="flex">
+            <div className="flex flex-col md:flex-row">
               <div className="flex flex-col">
                 <p className="font-bold md:text-2xl text-lg">
                   {departCityAndCountry?.city} ({departAirportCode})
@@ -105,7 +105,7 @@ export const FlightDetailWrapper = async ({
                   {departCityAndCountry?.country}
                 </small>
               </div>
-              <span className="mx-4">-</span>
+              <span className="md:mx-4 ">-</span>
               <div className="flex flex-col">
                 <p className="font-bold md:text-2xl text-lg">
                   {arrivalCityAndCountry?.city} ({arrivalAirportCode})
@@ -248,6 +248,12 @@ export const FlightDetailWrapper = async ({
                       <small className="my-0.5 block opacity-78 font-medium">
                         {carrier.name}
                       </small>
+                      {segment.operatingCarrier &&
+                        segment.operatingCarrier.id !== carrier.id && (
+                          <small className="opacity-35 md:text-xs text-[10px] block">
+                            <i>Operated by {segment.operatingCarrier.name}</i>
+                          </small>
+                        )}
                       <small className="opacity-78 font-medium border p-1.5 rounded block mt-1 border-blackish-green/30 w-fit">
                         {flightNumber}
                       </small>
