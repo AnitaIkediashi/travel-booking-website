@@ -4,6 +4,7 @@ import "./globals.css"
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AuthProvider } from "@/lib/auth-context";
+import "react-phone-number-input/style.css";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",

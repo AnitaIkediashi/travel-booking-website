@@ -160,3 +160,15 @@ export type NewFlightOffer = {
   traveler_price: TravelerPrice[];
   price_breakdown: PriceBreakdown | null;
 };
+
+export type Seat = {
+  id: number;
+  seat_number: string;
+  cabin_class: string;
+  is_window: boolean;
+  is_aisle: boolean;
+  is_exit_row: boolean;
+  is_booked: boolean;
+  extra_fee: number;
+  booking_id: string | null;
+};

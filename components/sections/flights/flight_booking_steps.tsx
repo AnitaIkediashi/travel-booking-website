@@ -223,7 +223,12 @@ export const FlightBookingSteps = ({
                 />
               </div>
               {currentStep === 1 && (
-                <SelectSeatsWrapper nextStep={() => goToStep(2)} />
+                <SelectSeatsWrapper
+                  nextStep={() => goToStep(2)}
+                  bookingId={bookingId!}
+                  flightOfferId={offer.id}
+                  totalTravelers={totalTravelers}
+                />
               )}
               {currentStep === 2 && (
                 <CardDetails priceInfo={newPriceObj} flowType="flight" />

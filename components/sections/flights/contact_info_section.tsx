@@ -2,6 +2,7 @@
 
 import { ContactInfoInput } from "@/lib/actions/flight-booking-actions";
 import { Dispatch, SetStateAction } from "react";
+import PhoneInput from "react-phone-number-input";
 
 type ContactInfoSectionType = {
   contactInfo: ContactInfoInput;
@@ -40,12 +41,12 @@ export const ContactInfoSection = ({
       {/* Phone number */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium">Phone number</label>
-        <input
-          type="tel"
+        <PhoneInput
+          defaultCountry="NG"
           className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blackish-green/30
             ${errors.phoneNo ? "border-red-400" : "border-gray-300"}`}
           value={contactInfo.phoneNo}
-          onChange={(e) => handleChange("phoneNo", e.target.value)}
+          onChange={(value) => handleChange("phoneNo", value ?? "")}
         />
         {errors.phoneNo && (
           <span className="text-xs text-red-500">{errors.phoneNo}</span>
