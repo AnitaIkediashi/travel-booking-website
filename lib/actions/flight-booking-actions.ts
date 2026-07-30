@@ -38,8 +38,6 @@ type PassengerInput = {
   firstName: string;
   lastName: string;
   gender: "MALE" | "FEMALE";
-  // idType: "PASSPORT" | "NATIONAL_ID";
-  // idNumber: string;
   nationality: string;
   dateOfBirth: string;
 };
@@ -67,8 +65,6 @@ export async function savePassenger(
     first_name: validated.data.firstName,
     last_name: validated.data.lastName,
     gender: validated.data.gender,
-    // id_type: validated.data.idType,
-    // id_number: validated.data.idNumber,
     nationality: validated.data.nationality,
     date_of_birth: new Date(validated.data.dateOfBirth),
   };

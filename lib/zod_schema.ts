@@ -16,7 +16,7 @@ export const signUpSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required"),
     lastName: z.string().trim().min(1, "Last name is required"),
-    email: z.string().email("Invalid email address"),
+    email: z.email("Invalid email address"),
     phoneNo: z.string().min(1, "Phone number is required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
@@ -32,9 +32,11 @@ export const passengerSchema = z.object({
   gender: z.enum(["MALE", "FEMALE"], {
     message: "Gender is required",
   }),
-  idType: z.enum(["PASSPORT", "NATIONAL_ID"], {
-    message: "ID type is required",
-  }).optional(),
+  idType: z
+    .enum(["PASSPORT", "NATIONAL_ID"], {
+      message: "ID type is required",
+    })
+    .optional(),
   nationality: z.string().min(1, "Nationality is required").trim(),
   idNumber: z.string().min(1, "ID number is required").trim().optional(),
   dateOfBirth: z
@@ -50,11 +52,7 @@ export const passengerSchema = z.object({
 export type PassengerSchema = z.infer<typeof passengerSchema>;
 
 export const contactInfoSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .email("Invalid email address"),
+  email: z.email("Invalid email address").trim().min(1, "Email is required"),
   phoneNo: z.string().trim().min(1, "Phone number is required"),
 });
 
