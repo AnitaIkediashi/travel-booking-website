@@ -12,6 +12,10 @@ import {
   holdSeat,
 } from "@/lib/actions/seat_selection";
 
+/**
+ * note: useCallback is a React Hook that caches (memoizes) a function definition between component re-renders
+ */
+
 type Passenger = {
   id: string;
   first_name: string;

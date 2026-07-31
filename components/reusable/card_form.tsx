@@ -1,0 +1,362 @@
+"use client";
+
+import { Checkbox, CheckboxChangeEvent, Select } from "antd";
+import { Button } from "../reusable/button";
+import countryList from "react-select-country-list";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
+import {
+  processPaymentIntent,
+  saveCardToDatabase,
+} from "@/lib/actions/card-actions";
+import { ToastContainer, toast } from "react-toastify";
+import { CardFormDataPayload, PriceInfoProps } from "@/types/card_type";
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { z } from "zod";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
+
+type CardFormProps = {
+  priceInfo: PriceInfoProps;
+  flowType: string;
+  passengerNames: string[];
+  totalTravelers: number;
+};
+
+const stripeStyle = {
+  base: {
+    color: "#1c1b1f",
+    fontWeight: "400",
+    fontSize: "16px",
+    fontFamily: "Montserrat, sans-serif",
+    lineHeight: "24px",
+  },
+};
+
+const stripeClasses = {
+  base: "outline-none w-full transition-all duration-100",
+  focus: "border-2 border-blue-500/10 border-b-blue-500 rounded-sm",
+  invalid: "border-red-500 text-red-500",
+};
+
+export const CardForm = ({
+  priceInfo,
+  flowType,
+  passengerNames,
+  totalTravelers,
+}: CardFormProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const stripe = useStripe();
+  const elements = useElements();
+  const CountryOptions = useMemo(() => countryList().getData(), []);
+
+  const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
+    cardName: "",
+    country: "",
+    saveCard: false,
+  });
+
+  const [errors, setErrors] = useState<ReturnType<
+    typeof z.treeifyError<CardFormDataPayload>
+  > | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const countrySearch = (value: string) => {
+    setCardFormData((prev) => ({
+      ...prev,
+      country: value,
+    }));
+  };
+
+  const handleCheckedInfo = (e: CheckboxChangeEvent) => {
+    setCardFormData((prev) => ({
+      ...prev,
+      saveCard: e.target.checked,
+    }));
+  };
+
+  const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setCardFormData((prev) => ({ ...prev, [name]: value }));
+
+    const fieldName = name as keyof NonNullable<typeof errors>["properties"];
+
+    if (errors?.properties && fieldName in errors.properties) {
+      setErrors((prev) => {
+        if (!prev || !prev.properties) return prev;
+
+        const { [fieldName]: _, ...remainingProperties } = prev.properties;
+
+        return {
+          ...prev,
+          properties: remainingProperties,
+        };
+      });
+    }
+  };
+
+  const handleAutoCapitalizeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCardFormData((prev) => ({
+      ...prev,
+      [name]: autoCapitalizeWords(value),
+    }));
+  };
+
+  const handleCardSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsLoading(true);
+    setErrors(null);
+
+    try {
+      // 1. Initialize the Payment Intent on the server
+      const intentResponse = await processPaymentIntent(
+        cardFormData,
+        priceInfo,
+      );
+
+      if (!intentResponse.success) {
+        if (intentResponse.errors) {
+          setErrors(
+            intentResponse.errors as ReturnType<
+              typeof z.treeifyError<CardFormDataPayload>
+            >,
+          );
+        } else {
+          toast.error(intentResponse.message || "Failed to initialize payment");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Confirm the payment with the Stripe SDK
+      const cardNumberElement = elements.getElement(CardNumberElement);
+
+      const { paymentIntent, error: stripeError } =
+        await stripe.confirmCardPayment(intentResponse.clientSecret!, {
+          payment_method: {
+            card: cardNumberElement!,
+            billing_details: {
+              name: cardFormData.cardName,
+              address: { country: cardFormData.country },
+            },
+          },
+        });
+
+      if (stripeError) {
+        toast.error(stripeError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Finalize DB saving if successful and saveCard was checked
+      if (paymentIntent.status === "succeeded") {
+        const currentParams = new URLSearchParams(searchParams.toString());
+
+        const paymentIntentId = paymentIntent.id;
+
+        const from = currentParams.get("from");
+        const to = currentParams.get("to");
+        const trip = currentParams.get("trip");
+        const depart = currentParams.get("depart");
+        const returnDate = currentParams.get("return");
+        const adults = +(currentParams.get("adults") ?? 0); //convert to number
+        const child = +(currentParams.get("child") ?? 0);
+        const infant = +(currentParams.get("infant") ?? 0);
+        const cabin = currentParams.get("cabin");
+        const token = currentParams.get("token");
+
+        const bookingPayLoad = {
+          flowType,
+          passengerNames,
+          totalTravelers,
+          from,
+          to,
+          depart,
+          return: returnDate,
+          adults,
+          child,
+          infant,
+          cabin,
+          trip,
+          token,
+          paymentIntentId,
+        };
+
+        if (cardFormData.saveCard) {
+          const saveResult = await saveCardToDatabase(paymentIntent.id);
+
+          // Auth guard — server told us to redirect to login
+          if ("redirect" in saveResult && saveResult.redirect) {
+            router.push(saveResult.redirect);
+            return;
+          }
+
+          if (saveResult?.hasCardAlreadyCreated) {
+            toast.error("This card is already saved in your account.");
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        toast.success("Payment successful!");
+
+        const urlResponse = await getSecureBookingUrl(bookingPayLoad);
+
+        if (urlResponse.success && urlResponse.bookingId) {
+          const successPath =
+            flowType === "flight"
+              ? "/flight-flow/flight-search/booking-success"
+              : "/hotel-flow/flight-search/booking-success";
+
+          setCardFormData({ cardName: "", country: "", saveCard: false });
+
+          router.push(
+            `${successPath}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Submission failed", error);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div>
+        <h2 className="font-bold text-2xl md:text-[4xl] text-black mb-12">
+          Add card details
+        </h2>
+        <form action="" onSubmit={handleCardSubmit}>
+          <div className="flex flex-col gap-y-6 mb-10">
+            <div className="relative">
+              <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
+                <legend className="text-blackish-green text-sm capitalize">
+                  card number
+                </legend>
+                <CardNumberElement
+                  options={{
+                    classes: stripeClasses,
+                    style: stripeStyle,
+                    showIcon: true,
+                    disableLink: true,
+                  }}
+                />
+              </fieldset>
+            </div>
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="relative lg:w-1/2 w-full">
+                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+                  <legend className="text-blackish-green text-sm capitalize">
+                    exp. date
+                  </legend>
+                  <CardExpiryElement
+                    options={{
+                      classes: stripeClasses,
+                      style: stripeStyle,
+                    }}
+                  />
+                </fieldset>
+              </div>
+              <div className="relative lg:w-1/2 w-full">
+                <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+                  <legend className="text-blackish-green text-sm uppercase">
+                    cvc
+                  </legend>
+                  <CardCvcElement
+                    options={{
+                      classes: stripeClasses,
+                      style: stripeStyle,
+                    }}
+                  />
+                </fieldset>
+              </div>
+            </div>
+            <div className="relative">
+              <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3">
+                <legend className="text-blackish-green text-sm">
+                  Name on Card
+                </legend>
+                <input
+                  type="text"
+                  placeholder="Type your name"
+                  name="cardName"
+                  autoCapitalize="words"
+                  className={inputClassName}
+                  value={cardFormData.cardName}
+                  onChange={handleCardInputChange}
+                  onBlur={handleAutoCapitalizeBlur}
+                />
+              </fieldset>
+              {errors?.properties?.cardName?.errors?.[0] && (
+                <span className="text-red-500 text-xs absolute -bottom-4">
+                  {errors.properties.cardName.errors[0]}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 select_wrapper">
+                <legend className="text-blackish-green text-sm">
+                  Country or Region
+                </legend>
+                <Select
+                  options={CountryOptions}
+                  value={cardFormData.country}
+                  allowClear
+                  showSearch={{
+                    optionFilterProp: "label",
+                  }}
+                  className="w-full text-blackish-green-10"
+                  onChange={countrySearch}
+                />
+              </fieldset>
+              {errors?.properties?.country?.errors?.[0] && (
+                <span className="text-red-500 text-xs absolute -bottom-4">
+                  {errors.properties.country.errors[0]}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <Checkbox
+                name="saveCard"
+                checked={cardFormData.saveCard}
+                onChange={handleCheckedInfo}
+                className="text-blackish-green-10"
+              >
+                Securely save my information for 1-click checkout
+              </Checkbox>
+            </div>
+          </div>
+          <div className="w-full">
+            <Button
+              type="submit"
+              label={isLoading ? "processing..." : "add card"}
+              className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded"
+              disabled={isLoading ? true : false}
+            />
+            <p className="text-center text-xs opacity-75">
+              By confirming your subscription, you allow Stripe to charge your
+              card for this payment and future payments in accordance with their
+              terms. You can always cancel your subscription.
+            </p>
+          </div>
+        </form>
+      </div>
+      <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
+    </>
+  );
+};

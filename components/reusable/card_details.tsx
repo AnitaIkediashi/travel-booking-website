@@ -7,24 +7,26 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { PriceInfoProps } from "@/types/card_type";
 import { useCurrentUser } from "@/lib/auth-context";
-import { MiniLogin } from "./mini_login";
 import { CardDetails as CardDetailsType } from "@/app/generated/prisma/client";
 import { getCardInfo, processPaymentWithSavedCard } from "@/lib/actions/card-actions";
 import { toast, ToastContainer } from "react-toastify";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "./button";
+import { CardForm } from "./card_form";
+import { getPassengersForBooking } from "@/lib/actions/flight-booking-actions";
 
 type CardDetailsProps = {
   priceInfo: PriceInfoProps;
   flowType: string;
+  bookingId: string | undefined;
 };
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, // for client 'pk'
 );
 
-export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
+export const CardDetails = ({ priceInfo, flowType, bookingId }: CardDetailsProps) => {
   const router = useRouter()
   const searchParams = useSearchParams();
   const { isAuthenticated } = useCurrentUser();
@@ -32,6 +34,8 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
   const [cards, setCards] = useState<CardDetailsType[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [passengerNames, setPassengerNames] = useState<string[]>([]);
+  const [totalTravelers, setTotalTravelers] = useState(0);
   
 
   useEffect(() => {
@@ -47,6 +51,25 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
 
     fetchCards();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const passengers = await getPassengersForBooking(bookingId);
+        if (ignore) return;
+        setPassengerNames(
+          passengers.map((p) => `${p.first_name} ${p.last_name}`.trim()),
+        );
+        setTotalTravelers(passengers.length);
+      } catch (err) {
+        console.error("Failed to load passengers:", err);
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [bookingId]);
 
   const handleOpenCardForm = () => {
     setShowCardForm(true);
@@ -159,7 +182,9 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
                       {/* card info */}
                       <div className="flex flex-col md:flex-row md:items-center md:gap-8 gap-3">
                         {/* card type, last 4 digits, expiry date */}
-                        <h2 className="md:text-xl text-lg font-bold uppercase">{card.cardType}</h2>
+                        <h2 className="md:text-xl text-lg font-bold uppercase">
+                          {card.cardType}
+                        </h2>
                         <div>
                           <span className="font-bold mr-2 text-sm md:text-base">
                             **** {card.last4}
@@ -209,13 +234,32 @@ export const CardDetails = ({ priceInfo, flowType }: CardDetailsProps) => {
               onClose={handleCloseCardForm}
               priceInfo={priceInfo}
               flowType={flowType}
+              passengerNames={passengerNames}
+              totalTravelers={totalTravelers}
             />
           </Elements>
         </div>
       ) : (
-        <MiniLogin />
+        <Elements stripe={stripePromise}>
+          <CardForm
+            priceInfo={priceInfo}
+            flowType={flowType}
+            passengerNames={passengerNames}
+            totalTravelers={totalTravelers}
+          />
+        </Elements>
       )}
       <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
     </>
   );
 };
+
+
+{/* <Elements stripe={stripePromise}>
+  <CreateCardForm
+    showCardForm={showCardForm}
+    onClose={handleCloseCardForm}
+    priceInfo={priceInfo}
+    flowType={flowType}
+  />
+</Elements>; */}

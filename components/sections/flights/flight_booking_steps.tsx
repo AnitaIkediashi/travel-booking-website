@@ -231,7 +231,11 @@ export const FlightBookingSteps = ({
                 />
               )}
               {currentStep === 2 && (
-                <CardDetails priceInfo={newPriceObj} flowType="flight" />
+                <CardDetails
+                  priceInfo={newPriceObj}
+                  flowType="flight"
+                  bookingId={bookingId!}
+                />
               )}
             </BoxShadow>
           </div>

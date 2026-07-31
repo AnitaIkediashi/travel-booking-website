@@ -8,7 +8,8 @@ const classStyle =
 
 type FlightPayload = {
   flowType: "flight";
-  // cardName: string;
+  passengerNames: string[];
+  totalTravelers: number;
   from: string;
   to: string;
   depart: string;
@@ -76,14 +77,13 @@ const BookingSuccessPage = async ({
       infant: bookingId.infant,
       token: bookingId.token,
     };
-    const totalTravelers =
-      bookingId.adults + bookingId.child + bookingId.infant;
+    
     const flightData = await queryFlightToken(newParams);
     return (
       <FlightBookingSuccess
         offers={flightData}
-        totalTravelers={totalTravelers}
-        // cardName={bookingId.cardName}
+        totalTravelers={bookingId.totalTravelers}
+        passengerNames={bookingId.passengerNames}
         paymentIntentId={bookingId.paymentIntentId}
       />
     );

@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { PassengerForm } from "./passenger_form";
 import { contactInfoSchema } from "@/lib/zod_schema";
+import { z } from "zod";
 import { ContactInfoSection } from "./contact_info_section";
 
 type PassengerProps = {
@@ -18,7 +19,7 @@ type PassengerProps = {
   bookingId: string | undefined;
 };
 
-export type IdType = "PASSPORT" | "NATIONAL_ID";
+// export type IdType = "PASSPORT" | "NATIONAL_ID";
 type Gender = "MALE" | "FEMALE";
 
 export type Passenger = {
@@ -26,8 +27,6 @@ export type Passenger = {
   firstName: string;
   lastName: string;
   gender: Gender | "";
-  // idType: IdType | "";
-  // idNumber: string;
   nationality: string;
   dateOfBirth: string;
 };
@@ -36,8 +35,6 @@ const emptyPassenger: Passenger = {
   firstName: "",
   lastName: "",
   gender: "",
-  // idType: "",
-  // idNumber: "",
   nationality: "",
   dateOfBirth: "",
 };
@@ -118,15 +115,18 @@ export const PassengerWrapper = ({
   };
 
   const validateContactInfo = () => {
-      const result = contactInfoSchema.safeParse(contactInfo);
-      if (!result.success) {
-        const { fieldErrors } = result.error.flatten();
-        setContactErrors({ email: fieldErrors.email?.[0], phoneNo: fieldErrors.phoneNo?.[0] });
-        return false;
-      }
-      setContactErrors({});
-      return true;
-    };
+    const result = contactInfoSchema.safeParse(contactInfo);
+    if (!result.success) {
+      const { fieldErrors } = z.flattenError(result.error);
+      setContactErrors({
+        email: fieldErrors.email?.[0],
+        phoneNo: fieldErrors.phoneNo?.[0],
+      });
+      return false;
+    }
+    setContactErrors({});
+    return true;
+  };
 
   const handlePassengerSubmit = async () => {
       if (currentIndex === 0 && !validateContactInfo()) {

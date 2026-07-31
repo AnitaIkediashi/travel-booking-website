@@ -8,13 +8,13 @@ import { FlightTicket } from "./flight_ticket";
 export type FlightBookingSuccessProps = {
   offers: NewFlightOffer | null;
   totalTravelers: number;
-  // cardName: string;
+  passengerNames: string[];
   paymentIntentId: string;
 };
 
 export const FlightBookingSuccess = async ({
   offers,
-  // cardName,
+  passengerNames,
   totalTravelers,
   paymentIntentId,
 }: FlightBookingSuccessProps) => {
@@ -31,7 +31,7 @@ export const FlightBookingSuccess = async ({
   const arrivalCityAndCountry = await fetchCountryName(arrivalAirportCode);
 
   const priceInfoObj = offers.price_breakdown;
-  const totalPrice = priceInfoObj?.total?.amount;
+  const totalPrice = priceInfoObj?.total_amount;
 
   const cabin = offers.branded_fareinfo?.cabin_class;
 
@@ -51,18 +51,18 @@ export const FlightBookingSuccess = async ({
     stopCount === 0 ? "non stop" : stopCount === 1 ? "1 stop" : "2 stop";
 
   const flightNumber =
-    segments[0]?.legs?.[0]?.flight_info?.flight_number ?? "N/A";
+    segments[0].flight_info?.flight_number ?? "N/A";
 
   const dateToDepart = getDate(segments[0].departure_time);
 
   const seatNo = "N/A";
 
-  const carrier = segments[0]?.legs?.[0]?.carriers?.[0]?.name ?? "N/A";
+  const carrier = segments[0].marketingCarrier?.name ?? "N/A";
 
   const gateType = "N/A";
 
   const tripType =
-    offers.trip_type === "round-trip" ? "Round trip" : "One way";
+    offers.trip_type === "ROUND_TRIP" ? "Round trip" : "One way";
 
   const ticketInfo = {
     departAirportCode,

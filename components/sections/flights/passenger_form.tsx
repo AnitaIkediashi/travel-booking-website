@@ -8,6 +8,7 @@ import { DatePicker, Select } from "antd";
 import countryList from "react-select-country-list";
 import dayjs from "dayjs";
 import { autoCapitalizeWords } from "@/utils/inputClassName";
+import { z } from "zod";
 
 type PassengerFormProps = {
   passenger: Passenger;
@@ -46,21 +47,17 @@ export const PassengerForm = ({
       firstName: passenger.firstName,
       lastName: passenger.lastName,
       gender: passenger.gender,
-      // idType: passenger.idType,
       nationality: passenger.nationality,
-      // idNumber: passenger.idNumber,
       dateOfBirth: passenger.dateOfBirth,
     });
 
     if (!result.success) {
-      const { fieldErrors } = result.error.flatten();
+      const { fieldErrors } = z.flattenError(result.error);
       setErrors({
         firstName: fieldErrors.firstName?.[0],
         lastName: fieldErrors.lastName?.[0],
         gender: fieldErrors.gender?.[0],
-        // idType: fieldErrors.idType?.[0],
         nationality: fieldErrors.nationality?.[0],
-        // idNumber: fieldErrors.idNumber?.[0],
         dateOfBirth: fieldErrors.dateOfBirth?.[0],
       });
       return false;

@@ -28,6 +28,8 @@ type CreateCardFormProps = {
   onClose: () => void;
   priceInfo: PriceInfoProps;
   flowType: string;
+  passengerNames: string[];
+  totalTravelers: number;
 };
 
 const stripeStyle = {
@@ -51,6 +53,8 @@ export const CreateCardForm = ({
   onClose,
   priceInfo,
   flowType,
+  passengerNames,
+  totalTravelers,
 }: CreateCardFormProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -197,7 +201,8 @@ export const CreateCardForm = ({
 
         const bookingPayLoad = {
           flowType,
-          // cardName: cardFormData.cardName,
+          passengerNames,
+          totalTravelers,
           from,
           to,
           depart,
@@ -245,7 +250,6 @@ export const CreateCardForm = ({
 
           onClose();
         }
-
       }
     } catch (error) {
       console.error("Submission failed", error);
