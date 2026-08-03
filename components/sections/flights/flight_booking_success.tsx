@@ -81,10 +81,10 @@ export const FlightBookingSuccess = async ({
     gateType,
     tripType,
     paymentIntentId,
-    // cardName,
     totalTravelers,
     cabin,
     totalPrice,
+    passengerNames,
   };
 
   return (
@@ -93,6 +93,7 @@ export const FlightBookingSuccess = async ({
         <FlightTicket
           ticketInfo={ticketInfo}
         />
+
         <article>
           <h5 className="text-2xl font-semibold mb-[34px]">
             Terms and Conditions

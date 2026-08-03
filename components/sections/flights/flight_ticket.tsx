@@ -40,10 +40,10 @@ type TicketInfoProps = {
   gateType: string;
   tripType: string;
   paymentIntentId: string;
-  // cardName: string;
   totalTravelers: number;
   cabin: string | undefined;
   totalPrice: number | undefined;
+  passengerNames: string[];
 };
 
 export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
@@ -166,7 +166,11 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
             </div>
           </div>
           <small className="text-sm text-blackish-green/50">
-            {ticketInfo.tripType}
+            {ticketInfo.tripType} &#8594;{" "}
+            <span className="ml-2">
+              {ticketInfo.totalTravelers} traveler
+              {ticketInfo.totalTravelers === 1 ? "" : "s"}
+            </span>
           </small>
         </div>
         <div className="flex flex-col gap-4">
@@ -187,91 +191,98 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
           </div>
         </div>
       </div>
-      <div
-        className="flex md:flex-row flex-col border rounded-2xl"
-        style={{ borderColor: "#EAEAEA" }}
-        ref={contentRef}
-      >
-        <div
-          className="w-full md:w-1/4 py-[34.5px] px-6 rounded-tl-2xl rounded-tr-2xl md:rounded-tr-none md:rounded-bl-2xl flex flex-col justify-between"
-          style={{ backgroundColor: "#EBF6F2" }}
-        >
-          <div className="flex flex-col mb-4">
-            <p className="lg:text-[32px] text-2xl font-semibold">
-              {ticketInfo.departTime}
-            </p>
-            <small className="font-medium text-xs" style={{ opacity: "60%" }}>
-              {ticketInfo.departCountry} ({ticketInfo.departAirportCode})
-            </small>
-          </div>
-          <div className="flex items-center mb-4">
-            <FlightDesc />
-            <span className="text-xs" style={{ opacity: "60%" }}>
-              {ticketInfo.stopLabel}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <p className="lg:text-[32px] text-2xl font-semibold">
-              {ticketInfo.arrivalTime}
-            </p>
-            <small className="font-medium text-xs" style={{ opacity: "60%" }}>
-              {ticketInfo.arriveCountry} ({ticketInfo.arrivalAirportCode})
-            </small>
-          </div>
-        </div>
-        <div className="w-full md:w-3/4 grow rounded-tr-2xl rounded-br-2xl flex flex-col">
+      <div className="flex flex-col gap-y-5">
+        {ticketInfo.passengerNames.map((passenger, index) => (
           <div
-            className="p-6 flex items-center justify-between md:rounded-tr-2xl"
-            style={{ backgroundColor: "#8dd3bb" }}
+            key={index}
+            className="flex md:flex-row flex-col border rounded-2xl"
+            style={{ borderColor: "#EAEAEA" }}
+            ref={contentRef}
           >
-            <div className="flex flex-col">
-              {/* <p className="text-xl font-bold capitalize">
-                {ticketInfo.cardName}
-              </p> */}
-              <p className="text-sm capitalize">
-                {ticketInfo.totalTravelers}{" "}
-                {ticketInfo.totalTravelers === 1 ? "traveler" : "travelers"}
-              </p>
-            </div>
-            <p className="text-sm font-bold">{ticketInfo.cabin} class</p>
-          </div>
-          <div
-            className="flex-1 flex flex-col justify-between p-6 gap-10"
-            style={{ backgroundColor: "#fff" }}
-          >
-            <div className="flex w-full md:justify-between gap-8 flex-wrap">
-              {flightInfo.map((info) => (
-                <div key={info.id} className="flex items-center gap-[5px]">
-                  <div
-                    className="w-8 h-8 grid place-items-center rounded"
-                    style={{ backgroundColor: "#ebf6f2" }}
-                  >
-                    {info.icon}
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="opacity-60 text-sm font-semibold capitalize">
-                      {info.label}
-                    </p>
-                    <small className="text-xs font-medium">{info.value}</small>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex lg:justify-between flex-1 lg:flex-row flex-col">
-              <div className="flex flex-col gap-1">
-                <p className="text-[32px] font-semibold">
-                  {ticketInfo.carrier}
+            <div
+              className="w-full md:w-1/4 py-[34.5px] px-6 rounded-tl-2xl rounded-tr-2xl md:rounded-tr-none md:rounded-bl-2xl flex flex-col justify-between"
+              style={{ backgroundColor: "#EBF6F2" }}
+            >
+              <div className="flex flex-col mb-4">
+                <p className="lg:text-[32px] text-2xl font-semibold">
+                  {ticketInfo.departTime}
                 </p>
-                <small className="opacity-60 text-xs">
-                  {ticketInfo.flightNumber}
+                <small
+                  className="font-medium text-xs"
+                  style={{ opacity: "60%" }}
+                >
+                  {ticketInfo.departCountry} ({ticketInfo.departAirportCode})
                 </small>
               </div>
-              <div className="lg:self-end">
-                <BarcodeDisplay value={ticketInfo.paymentIntentId} />
+              <div className="flex items-center mb-4">
+                <FlightDesc />
+                <span className="text-xs" style={{ opacity: "60%" }}>
+                  {ticketInfo.stopLabel}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <p className="lg:text-[32px] text-2xl font-semibold">
+                  {ticketInfo.arrivalTime}
+                </p>
+                <small
+                  className="font-medium text-xs"
+                  style={{ opacity: "60%" }}
+                >
+                  {ticketInfo.arriveCountry} ({ticketInfo.arrivalAirportCode})
+                </small>
+              </div>
+            </div>
+            <div className="w-full md:w-3/4 grow rounded-tr-2xl rounded-br-2xl flex flex-col">
+              <div
+                className="p-6 flex items-center justify-between md:rounded-tr-2xl"
+                style={{ backgroundColor: "#8dd3bb" }}
+              >
+                <div className="flex flex-col">
+                  <p className="text-xl font-bold capitalize">{passenger}</p>
+                </div>
+                <p className="text-sm font-bold">{ticketInfo.cabin} class</p>
+              </div>
+              <div
+                className="flex-1 flex flex-col justify-between p-6 gap-10"
+                style={{ backgroundColor: "#fff" }}
+              >
+                <div className="flex w-full md:justify-between gap-8 flex-wrap">
+                  {flightInfo.map((info) => (
+                    <div key={info.id} className="flex items-center gap-[5px]">
+                      <div
+                        className="w-8 h-8 grid place-items-center rounded"
+                        style={{ backgroundColor: "#ebf6f2" }}
+                      >
+                        {info.icon}
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="opacity-60 text-sm font-semibold capitalize">
+                          {info.label}
+                        </p>
+                        <small className="text-xs font-medium">
+                          {info.value}
+                        </small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex lg:justify-between flex-1 lg:flex-row flex-col">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[32px] font-semibold">
+                      {ticketInfo.carrier}
+                    </p>
+                    <small className="opacity-60 text-xs">
+                      {ticketInfo.flightNumber}
+                    </small>
+                  </div>
+                  <div className="lg:self-end">
+                    <BarcodeDisplay value={ticketInfo.paymentIntentId} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );

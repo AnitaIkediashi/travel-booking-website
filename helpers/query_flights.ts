@@ -349,7 +349,7 @@ export const queryFlightToken = async (params: queryFlightTokenProps) => {
         total_per_pax: total,
       };
     });
-
+    
     return {
       ...flightOffer,
       traveler_price: updatedTravelerPrice,
