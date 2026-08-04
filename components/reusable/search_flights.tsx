@@ -425,6 +425,7 @@ export const SearchFlights = ({ from }: FlightSearchParamsProps) => {
               onCabinClassChange={handleCabinClassChange}
               showDropDown={showDropDown}
               onClose={handleDropDownClick}
+              searchFlights={handleShowFlights}
             />
           </div>
         </div>

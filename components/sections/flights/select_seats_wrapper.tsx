@@ -76,6 +76,12 @@ export const SelectSeatsWrapper = ({
 
   const activePassenger = passengers[activePassengerIndex];
 
+  const totalSeatFees = passengers.reduce((sum, p) => {
+    if (!p.seat_id) return sum;
+    const seat = seats.find((s) => s.id === p.seat_id);
+    return sum + (seat?.extra_fee ?? 0);
+  }, 0);
+
   const handleSeatSelect = async (seat: Seat) => {
     if (!activePassenger || isAssigning) return;
 
@@ -161,6 +167,13 @@ export const SelectSeatsWrapper = ({
       </div>
 
       <SeatLegend />
+
+      {totalSeatFees > 0 && (
+        <p className="text-sm font-medium text-blackish-green">
+          Seat selection fees:{" "}
+          <span className="font-semibold">${totalSeatFees}</span>
+        </p>
+      )}
 
       <Button
         type="button"

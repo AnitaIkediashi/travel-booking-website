@@ -26,11 +26,12 @@ export const RandomPlacesToBook = async () => {
               item.country!.length > 10
                 ? `${item.country!.slice(0, 10)}...`
                 : item.country;
+              const price = Number(item.price);
             return (
               <RandomLocationCardTwo
                 key={index}
                 shortenCountryLength={shortenCountryLength}
-                price={item.price}
+                price={price}
                 image={item.imageUrl}
                 currency={item.currencyCode}
                 airportCode={item.airportCode}

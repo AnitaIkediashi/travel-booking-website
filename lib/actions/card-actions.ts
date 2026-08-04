@@ -43,8 +43,9 @@ export async function processPaymentIntent(
     const baseFare = priceDetails.base_amount || 0;
     const tax = priceDetails.tax_amount || 0;
     const discount = priceDetails.discount_amount || 0;
+    const seatFees = priceDetails.seat_fees_total || 0;
 
-    const totalAmount = baseFare + tax + discount;
+    const totalAmount = baseFare + tax + discount + seatFees;
     const currency = (priceDetails.currency_code ?? "usd").toLowerCase();
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -264,7 +265,8 @@ export async function processPaymentWithSavedCard(
     const baseFare = priceInfo.base_amount || 0;
     const tax = priceInfo.tax_amount || 0;
     const discount = priceInfo.discount_amount || 0;
-    const totalAmount = baseFare + tax + discount;
+    const seatFees = priceInfo.seat_fees_total || 0;
+    const totalAmount = baseFare + tax + discount + seatFees;
     const currency = (priceInfo.currency_code ?? "usd").toLowerCase();
 
     const paymentIntent = await stripe.paymentIntents.create({

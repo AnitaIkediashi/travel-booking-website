@@ -430,6 +430,7 @@ export const ListSearchFlights = ({
             onCabinClassChange={handleCabinClassChange}
             showDropDown={showDropDown}
             onClose={handleDropDownClick}
+            searchFlights={handleShowFlights}
           />
         </div>
         <Button

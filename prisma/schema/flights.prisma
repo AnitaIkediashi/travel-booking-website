@@ -16,15 +16,15 @@ datasource db {
 //creating the tables/models i need for my app
 
 model Airport {
-  airport_code      String    @id // PK
-  airport_name      String
-  image_url         String? // optional field
-  city              String
-  country           String
+  airport_code       String    @id // PK
+  airport_name       String
+  image_url          String? // optional field
+  city               String
+  country            String
   departure_segments Segment[] @relation("DepartureSegment") // using a unique name for relation because a single Airport is related to Segment twice same goes for Legs model -- 1:M relation with Segment
   arrival_segments   Segment[] @relation("ArrivalSegment") // 1:M relation with Segment
   departure_legs     Legs[]    @relation("DepartureLegs") // 1:M relation with Legs
-  arrival_legs      Legs[]    @relation("ArrivalLegs") // 1:M relation with Legs
+  arrival_legs       Legs[]    @relation("ArrivalLegs") // 1:M relation with Legs
 
   @@map("airports")
 }
@@ -38,11 +38,11 @@ model Data {
 }
 
 model Airlines {
-  id         String     @id @default(uuid()) // PK
-  name       String
-  logo       String
-  iata_code  String     @unique
-  carriers   Carriers[]
+  id        String     @id @default(uuid()) // PK
+  name      String
+  logo      String
+  iata_code String     @unique
+  carriers  Carriers[]
 
   @@map("airlines")
 }
@@ -107,8 +107,8 @@ model Legs {
   departure_time         DateTime
   arrival_time           DateTime
   duration               Int //The actual air time of a single non-stop flight from takeoff to landing.
-  departure_gate_id      Int?     
-  arrival_gate_id        Int?     
+  departure_gate_id      Int?
+  arrival_gate_id        Int?
   departure_airport      Airport  @relation("DepartureLegs", fields: [departure_airport_code], references: [airport_code])
   arrival_airport        Airport  @relation("ArrivalLegs", fields: [arrival_airport_code], references: [airport_code])
   departure_gate         Gate?    @relation("DepartureGateOf", fields: [departure_gate_id], references: [id])
@@ -208,8 +208,8 @@ model Gate {
   id              Int    @id @default(autoincrement())
   gate_number     String
   terminal        String
-  departureForLeg Legs[]  @relation("DepartureGateOf")
-  arrivalForLeg   Legs[]  @relation("ArrivalGateOf")
+  departureForLeg Legs[] @relation("DepartureGateOf")
+  arrivalForLeg   Legs[] @relation("ArrivalGateOf")
 
   @@map("gates")
 }
@@ -244,8 +244,9 @@ model Booking {
   hold_expires_at DateTime? // set once seats are picked; null before that
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
-  contact_email   String?      
-  contact_phone   String? 
+  contact_email   String?
+  contact_phone   String?
+  seat_fees_total Decimal?      @default(0) @db.Decimal(10, 2)
   passengers      Passenger[]
   seats           Seat[]
 

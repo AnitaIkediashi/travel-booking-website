@@ -11,6 +11,7 @@ export type PriceInfoProps = {
   base_amount: number | undefined;
   tax_amount: number | undefined;
   discount_amount: number | null | undefined;
+  seat_fees_total?: number
 };
 
 export type SaveCardOnSignupPayload = {

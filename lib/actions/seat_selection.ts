@@ -114,16 +114,24 @@ export async function confirmAllSeatsAssigned(
   bookingId: string,
   totalTravelers: number,
 ) {
-  const seatedCount = await prisma.passenger.count({
+  const passengers = await prisma.passenger.findMany({
     where: { booking_id: bookingId, seat_id: { not: null } },
+    include: { seat: true },
   });
-  if (seatedCount < totalTravelers) return false;
+
+  if (passengers.length < totalTravelers) return false;
+
+  const seatFeesTotal = passengers.reduce(
+    (sum, p) => sum + (p.seat?.extra_fee ?? 0),
+    0,
+  );
 
   await prisma.booking.update({
     where: { id: bookingId },
     data: {
       status: "HELD",
       hold_expires_at: new Date(Date.now() + 10 * 60 * 1000),
+      seat_fees_total: seatFeesTotal,
     },
   });
   return true;

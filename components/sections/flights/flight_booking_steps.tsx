@@ -26,6 +26,7 @@ type BookingStepsProps = {
   totalTravelers: number;
   segments: SegmentsPropsArray[];
   bookingId: string | undefined;
+  seatFeesTotal: number;
 };
 
 type SegmentsPropsArray = {
@@ -49,8 +50,11 @@ export const FlightBookingSteps = ({
   totalTravelers,
   segments,
   bookingId,
+  seatFeesTotal,
 }: BookingStepsProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+
+  console.log('seat fees total in flight_booking_steps:', seatFeesTotal);
 
   const priceInfoObj = offer.price_breakdown;
   const totalPrice = priceInfoObj?.total_amount;
@@ -64,6 +68,7 @@ export const FlightBookingSteps = ({
     base_amount: basefare,
     tax_amount: tax,
     discount_amount: discount,
+    seat_fees_total: seatFeesTotal,
   };
 
   const cabin = offer.branded_fareinfo?.cabin_class;
@@ -259,6 +264,14 @@ export const FlightBookingSteps = ({
                     <span className="font-medium capitalize">tax</span>
                     <span className="font-semibold">${tax}</span>
                   </div>
+                  {seatFeesTotal > 0 && (
+                    <div className="w-full flex items-center justify-between mb-4">
+                      <span className="font-medium capitalize">
+                        seat selection
+                      </span>
+                      <span className="font-semibold">${seatFeesTotal}</span>
+                    </div>
+                  )}
                   <div className="w-full flex items-center justify-between">
                     <span className="font-medium capitalize">discount</span>
                     <span className="font-semibold">${discount}</span>

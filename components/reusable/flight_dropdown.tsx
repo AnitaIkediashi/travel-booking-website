@@ -15,6 +15,7 @@ type FlightDropdownProps = {
   onCabinClassChange: (value: string) => void;
   showDropDown?: boolean;
   onClose?: () => void;
+  searchFlights?: () => void;
 };
 
 export const FlightDropdown = ({
@@ -31,6 +32,7 @@ export const FlightDropdown = ({
   onCabinClassChange,
   showDropDown,
   onClose,
+  searchFlights,
 }: FlightDropdownProps) => {
   return (
     <div
@@ -151,7 +153,10 @@ export const FlightDropdown = ({
         type="button"
         label="confirm"
         className="w-full h-12 flex items-center justify-center capitalize text-blackish-green bg-mint-green-100 hover:bg-blackish-green-10/30 transition ease-in-out duration-300 font-medium text-sm rounded-sm mt-3"
-        onClick={onClose}
+        onClick={() => {
+          onClose?.();
+          searchFlights?.();
+        }}
       />
     </div>
   );

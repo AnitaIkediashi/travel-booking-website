@@ -188,12 +188,14 @@ export const SegmentData = ({
           type="button"
           className="capitalize h-12 w-full bg-mint-green-100 text-sm font-semibold hidden md:flex items-center justify-center rounded hover:bg-blackish-green hover:text-white"
           label={isPending ? "loading..." : "view deal"}
+          disabled={isPending}
           onClick={handleNavigate}
         />
         <Button
           type="button"
           className="capitalize h-10 w-full bg-mint-green-100 text-sm font-semibold flex md:hidden items-center justify-center rounded hover:bg-blackish-green hover:text-white"
           label={isPending ? "loading..." : "view"}
+          disabled={isPending}
           onClick={handleNavigate}
         />
       </div>

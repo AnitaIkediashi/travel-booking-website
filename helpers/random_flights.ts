@@ -10,7 +10,7 @@ export const randomizeLocations = async () => {
     },
   });
   // Shuffle the array here if you want it truly random
-  return response.sort(() => Math.random() - 0.5).slice(0, 9);
+  return response.sort(() => Math.random() - 0.5).slice(0, 8);
 };
 
 export const randomCountriesAndPrice = async () => {
@@ -26,12 +26,12 @@ export const randomCountriesAndPrice = async () => {
               departure_airport_code: true,
             },
           },
-        },
-      },
-      min_price: {
-        select: {
-          amount: true,
-          currency_code: true,
+          price_breakdown: {
+            select: {
+              total_amount: true,
+              currency_code: true,
+            }
+          }
         },
       },
     },
@@ -42,8 +42,8 @@ export const randomCountriesAndPrice = async () => {
     dataResponse.map(async (item) => {
       const airportCode =
         item.flight_offers[0]?.segments[0]?.departure_airport_code;
-      const price = item.min_price?.amount;
-      const currencyCode = item.min_price?.currency_code;
+      const price = item.flight_offers[0]?.price_breakdown?.total_amount;
+      const currencyCode = item.flight_offers[0]?.price_breakdown?.currency_code;
 
       // Now we can safely await here
       const airportResponse = await prisma.airport.findFirst({

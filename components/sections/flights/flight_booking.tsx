@@ -2,6 +2,7 @@
 import { fetchCountryName } from "@/helpers/query_flights";
 import { NewFlightOffer } from "@/types/flight_type";
 import { FlightBookingSteps } from "./flight_booking_steps";
+import { getBookingSeatFeesTotal } from "@/helpers/getBookingSeatsTotal";
 
 type FlightBookingProps = {
   offers: NewFlightOffer | null;
@@ -27,6 +28,7 @@ export const FlightBooking = async ({offers, totalTravelers, bookingId}: FlightB
     }),
   );
 
+  const seatFeesTotal = await getBookingSeatFeesTotal(bookingId);
 
   return (
     <FlightBookingSteps
@@ -34,6 +36,7 @@ export const FlightBooking = async ({offers, totalTravelers, bookingId}: FlightB
       segments={segmentsWithCities}
       totalTravelers={totalTravelers}
       bookingId={bookingId}
+      seatFeesTotal={seatFeesTotal}
     />
   );
 }

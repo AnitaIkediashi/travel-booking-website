@@ -123,7 +123,6 @@ export const CardDetails = ({ priceInfo, flowType, bookingId }: CardDetailsProps
 
         const bookingPayLoad = {
           flowType,
-          // cardName,
           from,
           to,
           depart,

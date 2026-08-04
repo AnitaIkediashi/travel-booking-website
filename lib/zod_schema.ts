@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 // define the schema
 export const cardSchema = z.object({
@@ -53,7 +54,13 @@ export type PassengerSchema = z.infer<typeof passengerSchema>;
 
 export const contactInfoSchema = z.object({
   email: z.email("Invalid email address").trim().min(1, "Email is required"),
-  phoneNo: z.string().trim().min(1, "Phone number is required"),
+  phoneNo: z
+    .string()
+    .trim()
+    .min(1, "Phone number is required")
+    .refine((val) => isValidPhoneNumber(val), {
+      message: "Invalid phone number",
+    }),
 });
 
 export type ContactInfoSchema = z.infer<typeof contactInfoSchema>;

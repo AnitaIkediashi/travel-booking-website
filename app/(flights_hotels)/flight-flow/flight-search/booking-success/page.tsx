@@ -40,7 +40,7 @@ type BookingPayload = FlightPayload | HotelPayload;
 const BookingSuccessPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ bookingId: string }>; // Wrap in Promise
+  searchParams: Promise<{ bookingId: string }>; 
 }) => {
   const encryptedBookingId = (await searchParams).bookingId;
 
