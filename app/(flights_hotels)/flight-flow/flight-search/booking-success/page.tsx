@@ -21,6 +21,7 @@ type FlightPayload = {
   trip: string;
   token: string;
   paymentIntentId: string;
+  liveSeatFeesTotal: number | undefined;
 };
 
 type HotelPayload = {
@@ -85,6 +86,7 @@ const BookingSuccessPage = async ({
         totalTravelers={bookingId.totalTravelers}
         passengerNames={bookingId.passengerNames}
         paymentIntentId={bookingId.paymentIntentId}
+        liveSeatFeesTotal={bookingId.liveSeatFeesTotal ?? 0}
       />
     );
   } else if (bookingId.flowType === "hotel") {

@@ -10,6 +10,7 @@ export type FlightBookingSuccessProps = {
   totalTravelers: number;
   passengerNames: string[];
   paymentIntentId: string;
+  liveSeatFeesTotal: number | undefined;
 };
 
 export const FlightBookingSuccess = async ({
@@ -17,6 +18,7 @@ export const FlightBookingSuccess = async ({
   passengerNames,
   totalTravelers,
   paymentIntentId,
+  liveSeatFeesTotal,
 }: FlightBookingSuccessProps) => {
   if (!offers || Object.keys(offers).length === 0) return;
 
@@ -32,6 +34,8 @@ export const FlightBookingSuccess = async ({
 
   const priceInfoObj = offers.price_breakdown;
   const totalPrice = priceInfoObj?.total_amount;
+
+  const newTotalPrice = (totalPrice ?? 0) + (liveSeatFeesTotal ?? 0);
 
   const cabin = offers.branded_fareinfo?.cabin_class;
 
@@ -83,7 +87,7 @@ export const FlightBookingSuccess = async ({
     paymentIntentId,
     totalTravelers,
     cabin,
-    totalPrice,
+    totalPrice: newTotalPrice,
     passengerNames,
   };
 

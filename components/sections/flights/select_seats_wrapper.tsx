@@ -25,7 +25,7 @@ type Passenger = {
 };
 
 type SeatProps = {
-  nextStep: () => void;
+  nextStep: (seatFeesTotal: number) => void;
   bookingId: string;
   flightOfferId: string;
   totalTravelers: number;
@@ -110,15 +110,15 @@ export const SelectSeatsWrapper = ({
   };
 
   const handleContinue = async () => {
-    const allAssigned = await confirmAllSeatsAssigned(
-      bookingId,
-      totalTravelers,
-    );
-    if (!allAssigned) {
-      setError("Please assign a seat to every passenger before continuing.");
-      return;
-    }
-    nextStep();
+     const allAssigned = await confirmAllSeatsAssigned(
+       bookingId,
+       totalTravelers,
+     );
+     if (!allAssigned) {
+       setError("Please assign a seat to every passenger before continuing.");
+       return;
+     }
+    nextStep(totalSeatFees);
   };
 
   if (!isLoaded) {

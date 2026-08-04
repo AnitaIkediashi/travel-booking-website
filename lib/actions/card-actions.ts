@@ -266,6 +266,7 @@ export async function processPaymentWithSavedCard(
     const tax = priceInfo.tax_amount || 0;
     const discount = priceInfo.discount_amount || 0;
     const seatFees = priceInfo.seat_fees_total || 0;
+
     const totalAmount = baseFare + tax + discount + seatFees;
     const currency = (priceInfo.currency_code ?? "usd").toLowerCase();
 

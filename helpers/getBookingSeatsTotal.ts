@@ -8,7 +8,5 @@ export async function getBookingSeatFeesTotal(bookingId: string | undefined) {
     select: { seat_fees_total: true },
   });
 
-  console.log("seat_fees_total from DB:", booking?.seat_fees_total);
-
   return Number(booking?.seat_fees_total ?? 0);
 }

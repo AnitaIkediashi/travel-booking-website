@@ -27,13 +27,14 @@ type CardFormProps = {
   flowType: string;
   passengerNames: string[];
   totalTravelers: number;
+  liveSeatFeesTotal: number | undefined;
 };
 
 const stripeStyle = {
   base: {
     color: "#1c1b1f",
     fontWeight: "400",
-    fontSize: "16px",
+    fontSize: "18px",
     fontFamily: "Montserrat, sans-serif",
     lineHeight: "24px",
   },
@@ -50,6 +51,7 @@ export const CardForm = ({
   flowType,
   passengerNames,
   totalTravelers,
+  liveSeatFeesTotal,
 }: CardFormProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -192,6 +194,7 @@ export const CardForm = ({
           trip,
           token,
           paymentIntentId,
+          liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
         };
 
         if (cardFormData.saveCard) {

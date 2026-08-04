@@ -53,8 +53,7 @@ export const FlightBookingSteps = ({
   seatFeesTotal,
 }: BookingStepsProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-
-  console.log('seat fees total in flight_booking_steps:', seatFeesTotal);
+  const [liveSeatFeesTotal, setLiveSeatFeesTotal] = useState(seatFeesTotal);
 
   const priceInfoObj = offer.price_breakdown;
   const totalPrice = priceInfoObj?.total_amount;
@@ -62,13 +61,15 @@ export const FlightBookingSteps = ({
   const tax = priceInfoObj?.tax_amount;
   const discount = priceInfoObj?.discount_amount;
 
+  const newTotalPrice = (totalPrice ?? 0) + liveSeatFeesTotal;
+
   const newPriceObj = {
     currency_code: priceInfoObj?.currency_code,
     total_amount: totalPrice,
     base_amount: basefare,
     tax_amount: tax,
     discount_amount: discount,
-    seat_fees_total: seatFeesTotal,
+    seat_fees_total: liveSeatFeesTotal,
   };
 
   const cabin = offer.branded_fareinfo?.cabin_class;
@@ -229,7 +230,10 @@ export const FlightBookingSteps = ({
               </div>
               {currentStep === 1 && (
                 <SelectSeatsWrapper
-                  nextStep={() => goToStep(2)}
+                  nextStep={(fees: number) => {
+                    setLiveSeatFeesTotal(fees);
+                    goToStep(2);
+                  }}
                   bookingId={bookingId!}
                   flightOfferId={offer.id}
                   totalTravelers={totalTravelers}
@@ -240,6 +244,7 @@ export const FlightBookingSteps = ({
                   priceInfo={newPriceObj}
                   flowType="flight"
                   bookingId={bookingId!}
+                  liveSeatFeesTotal={liveSeatFeesTotal}
                 />
               )}
             </BoxShadow>
@@ -264,12 +269,14 @@ export const FlightBookingSteps = ({
                     <span className="font-medium capitalize">tax</span>
                     <span className="font-semibold">${tax}</span>
                   </div>
-                  {seatFeesTotal > 0 && (
+                  {liveSeatFeesTotal > 0 && (
                     <div className="w-full flex items-center justify-between mb-4">
                       <span className="font-medium capitalize">
                         seat selection
                       </span>
-                      <span className="font-semibold">${seatFeesTotal}</span>
+                      <span className="font-semibold">
+                        ${liveSeatFeesTotal}
+                      </span>
                     </div>
                   )}
                   <div className="w-full flex items-center justify-between">
@@ -279,7 +286,7 @@ export const FlightBookingSteps = ({
                 </div>
                 <div className="w-full flex items-center justify-between">
                   <span className="font-medium capitalize">total</span>
-                  <span className="font-semibold">${totalPrice}</span>
+                  <span className="font-semibold">${newTotalPrice}</span>
                 </div>
               </div>
             </BoxShadow>

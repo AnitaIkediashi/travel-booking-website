@@ -20,13 +20,14 @@ type CardDetailsProps = {
   priceInfo: PriceInfoProps;
   flowType: string;
   bookingId: string | undefined;
+  liveSeatFeesTotal?: number;
 };
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, // for client 'pk'
 );
 
-export const CardDetails = ({ priceInfo, flowType, bookingId }: CardDetailsProps) => {
+export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal }: CardDetailsProps) => {
   const router = useRouter()
   const searchParams = useSearchParams();
   const { isAuthenticated } = useCurrentUser();
@@ -134,6 +135,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId }: CardDetailsProps
           trip,
           token,
           paymentIntentId,
+          liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
         };
 
         const urlResponse = await getSecureBookingUrl(bookingPayLoad);
@@ -235,6 +237,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId }: CardDetailsProps
               flowType={flowType}
               passengerNames={passengerNames}
               totalTravelers={totalTravelers}
+              liveSeatFeesTotal={liveSeatFeesTotal ?? 0}
             />
           </Elements>
         </div>
@@ -245,6 +248,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId }: CardDetailsProps
             flowType={flowType}
             passengerNames={passengerNames}
             totalTravelers={totalTravelers}
+            liveSeatFeesTotal={liveSeatFeesTotal ?? 0}
           />
         </Elements>
       )}
