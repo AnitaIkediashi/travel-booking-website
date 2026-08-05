@@ -31,6 +31,7 @@ type CreateCardFormProps = {
   passengerNames: string[];
   totalTravelers: number;
   liveSeatFeesTotal: number | undefined;
+  bookingId: string | undefined;
 };
 
 const stripeStyle = {
@@ -57,6 +58,7 @@ export const CreateCardForm = ({
   passengerNames,
   totalTravelers,
   liveSeatFeesTotal,
+  bookingId,
 }: CreateCardFormProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -217,6 +219,7 @@ export const CreateCardForm = ({
           token,
           paymentIntentId,
           liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
+          bookingId,
         };
 
         if (cardFormData.saveCard) {

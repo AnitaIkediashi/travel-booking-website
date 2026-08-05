@@ -4,6 +4,7 @@ import { fetchCountryName } from "@/helpers/query_flights";
 import { NewFlightOffer } from "@/types/flight_type";
 import { termsAndConditions } from "@/utils/terms_condition_content";
 import { FlightTicket } from "./flight_ticket";
+import { getPassengerSeats } from "@/helpers/getPassengersSeatNo";
 
 export type FlightBookingSuccessProps = {
   offers: NewFlightOffer | null;
@@ -11,6 +12,7 @@ export type FlightBookingSuccessProps = {
   passengerNames: string[];
   paymentIntentId: string;
   liveSeatFeesTotal: number | undefined;
+  bookingId: string | undefined;
 };
 
 export const FlightBookingSuccess = async ({
@@ -19,10 +21,50 @@ export const FlightBookingSuccess = async ({
   totalTravelers,
   paymentIntentId,
   liveSeatFeesTotal,
+  bookingId,
 }: FlightBookingSuccessProps) => {
   if (!offers || Object.keys(offers).length === 0) return;
 
+  const passengerSeats = await getPassengerSeats(bookingId);
+
   const segments = offers.segments;
+
+  const segmentDetails = segments.map((segment) => {
+    const firstLeg = segment.legs?.[0];
+
+    const gateType = firstLeg?.departure_gate
+      ? `${firstLeg.departure_gate.gate_number} (${firstLeg.departure_gate.terminal})`
+      : "Available at check-in";
+
+    const legGates = (segment.legs ?? []).map((leg) => ({
+      from: leg.departure_airport_code,
+      to: leg.arrival_airport_code,
+      departureGate: leg.departure_gate
+        ? `${leg.departure_gate.gate_number} (${leg.departure_gate.terminal})`
+        : "Available at check-in",
+      arrivalGate: leg.arrival_gate
+        ? `${leg.arrival_gate.gate_number} (${leg.arrival_gate.terminal})`
+        : "Available at check-in",
+    }));
+
+    const stopCount = Math.max(0, (segment.legs?.length ?? 1) - 1);
+    const stopLabel =
+      stopCount === 0 ? "non stop" : stopCount === 1 ? "1 stop" : "2 stop";
+
+    return {
+      sliceIndex: segment.slice_index, // 0 = outbound, 1 = inbound
+      departAirportCode: segment.departure_airport_code,
+      arrivalAirportCode: segment.arrival_airport_code,
+      departTime: formatDateTime(segment.departure_time),
+      arrivalTime: formatDateTime(segment.arrival_time),
+      dateToDepart: getDate(segment.departure_time),
+      flightNumber: segment.flight_info?.flight_number ?? "N/A",
+      carrier: segment.marketingCarrier?.name ?? "N/A",
+      stopLabel,
+      gateType,
+      legGates,
+    };
+  });
 
   const departAirportCode = segments[0].departure_airport_code;
 
@@ -39,32 +81,6 @@ export const FlightBookingSuccess = async ({
 
   const cabin = offers.branded_fareinfo?.cabin_class;
 
-  const departTime = formatDateTime(segments[0].departure_time);
-
-  const arrivalTime = formatDateTime(
-    segments[segments.length - 1].arrival_time,
-  );
-
-  const totalLegs =
-    segments?.reduce((acc, segment) => acc + (segment.legs?.length ?? 0), 0) ??
-    0;
-
-  const stopCount = Math.max(0, totalLegs - 1);
-
-  const stopLabel =
-    stopCount === 0 ? "non stop" : stopCount === 1 ? "1 stop" : "2 stop";
-
-  const flightNumber =
-    segments[0].flight_info?.flight_number ?? "N/A";
-
-  const dateToDepart = getDate(segments[0].departure_time);
-
-  const seatNo = "N/A";
-
-  const carrier = segments[0].marketingCarrier?.name ?? "N/A";
-
-  const gateType = "N/A";
-
   const tripType =
     offers.trip_type === "ROUND_TRIP" ? "Round trip" : "One way";
 
@@ -75,20 +91,14 @@ export const FlightBookingSuccess = async ({
     departCountry: departCityAndCountry?.country,
     arriveCity: arrivalCityAndCountry?.city,
     arriveCountry: arrivalCityAndCountry?.country,
-    departTime,
-    arrivalTime,
-    stopLabel,
-    flightNumber,
-    dateToDepart,
-    seatNo,
-    carrier,
-    gateType,
     tripType,
     paymentIntentId,
     totalTravelers,
     cabin,
     totalPrice: newTotalPrice,
     passengerNames,
+    passengerSeats,
+    segmentDetails,
   };
 
   return (
@@ -97,7 +107,6 @@ export const FlightBookingSuccess = async ({
         <FlightTicket
           ticketInfo={ticketInfo}
         />
-
         <article>
           <h5 className="text-2xl font-semibold mb-[34px]">
             Terms and Conditions

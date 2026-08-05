@@ -238,6 +238,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
               passengerNames={passengerNames}
               totalTravelers={totalTravelers}
               liveSeatFeesTotal={liveSeatFeesTotal ?? 0}
+              bookingId={bookingId}
             />
           </Elements>
         </div>
@@ -249,6 +250,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
             passengerNames={passengerNames}
             totalTravelers={totalTravelers}
             liveSeatFeesTotal={liveSeatFeesTotal ?? 0}
+            bookingId={bookingId}
           />
         </Elements>
       )}

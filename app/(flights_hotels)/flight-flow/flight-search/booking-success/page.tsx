@@ -22,6 +22,7 @@ type FlightPayload = {
   token: string;
   paymentIntentId: string;
   liveSeatFeesTotal: number | undefined;
+  bookingId: string | undefined;
 };
 
 type HotelPayload = {
@@ -48,7 +49,7 @@ const BookingSuccessPage = async ({
   if (!encryptedBookingId)
     return <div className={classStyle}>Invalid Booking</div>;
 
-  const bookingId = decryptObject<BookingPayload>(
+  const bookingResponse = decryptObject<BookingPayload>(
     decodeURIComponent(encryptedBookingId),
   );
 
@@ -57,48 +58,52 @@ const BookingSuccessPage = async ({
 
   //   console.log("Decrypted Booking ID:", bookingId); // Debug log to check the decrypted booking ID
 
-  if (bookingId.flowType === "flight") {
-    const departDate = new Date(bookingId.depart);
-  
+  if (bookingResponse.flowType === "flight") {
+    const departDate = new Date(bookingResponse.depart);
+
     if (departDate < today) {
       redirect("/flight-flow/flight-search/listing");
     }
 
     // Check return date too if it's a round trip
-    if (bookingId.return) {
-      const returnDate = new Date(bookingId.return);
+    if (bookingResponse.return) {
+      const returnDate = new Date(bookingResponse.return);
       if (returnDate < today) {
         redirect("/flight-flow/flight-search/listing");
       }
     }
 
     const newParams = {
-      adults: bookingId.adults,
-      child: bookingId.child,
-      infant: bookingId.infant,
-      token: bookingId.token,
+      adults: bookingResponse.adults,
+      child: bookingResponse.child,
+      infant: bookingResponse.infant,
+      token: bookingResponse.token,
     };
-    
+
     const flightData = await queryFlightToken(newParams);
+
+    console.log('liveseatFeesTotal:', bookingResponse.liveSeatFeesTotal);
+    
     return (
       <FlightBookingSuccess
         offers={flightData}
-        totalTravelers={bookingId.totalTravelers}
-        passengerNames={bookingId.passengerNames}
-        paymentIntentId={bookingId.paymentIntentId}
-        liveSeatFeesTotal={bookingId.liveSeatFeesTotal ?? 0}
+        totalTravelers={bookingResponse.totalTravelers}
+        passengerNames={bookingResponse.passengerNames}
+        paymentIntentId={bookingResponse.paymentIntentId}
+        liveSeatFeesTotal={bookingResponse.liveSeatFeesTotal ?? 0}
+        bookingId={bookingResponse.bookingId}
       />
     );
-  } else if (bookingId.flowType === "hotel") {
-    if (bookingId.checkInDate) {
-      const checkInDate = new Date(bookingId.checkInDate);
+  } else if (bookingResponse.flowType === "hotel") {
+    if (bookingResponse.checkInDate) {
+      const checkInDate = new Date(bookingResponse.checkInDate);
       if (checkInDate < today) {
         redirect("/hotel-flow/hotel-search/listing");
       }
     }
 
-    if (bookingId.checkOutDate) {
-      const checkOutDate = new Date(bookingId.checkOutDate);
+    if (bookingResponse.checkOutDate) {
+      const checkOutDate = new Date(bookingResponse.checkOutDate);
       if (checkOutDate < today) {
         redirect("/hotel-flow/hotel-search/listing");
       }
