@@ -21,6 +21,7 @@ import {
 import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
+import { useCurrentUser } from "@/lib/auth-context";
 
 type CardFormProps = {
   priceInfo: PriceInfoProps;
@@ -60,6 +61,7 @@ export const CardForm = ({
   const stripe = useStripe();
   const elements = useElements();
   const CountryOptions = useMemo(() => countryList().getData(), []);
+  const { isAuthenticated } = useCurrentUser();
 
   const [cardFormData, setCardFormData] = useState<CardFormDataPayload>({
     cardName: "",
@@ -336,16 +338,18 @@ export const CardForm = ({
                 </span>
               )}
             </div>
-            <div className="relative">
-              <Checkbox
-                name="saveCard"
-                checked={cardFormData.saveCard}
-                onChange={handleCheckedInfo}
-                className="text-blackish-green-10"
-              >
-                Securely save my information for 1-click checkout
-              </Checkbox>
-            </div>
+            {isAuthenticated && (
+              <div className="relative">
+                <Checkbox
+                  name="saveCard"
+                  checked={cardFormData.saveCard}
+                  onChange={handleCheckedInfo}
+                  className="text-blackish-green-10"
+                >
+                  Securely save my information for 1-click checkout
+                </Checkbox>
+              </div>
+            )}
           </div>
           <div className="w-full">
             <Button
