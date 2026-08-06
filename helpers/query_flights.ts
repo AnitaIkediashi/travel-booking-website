@@ -94,6 +94,13 @@ const flightOfferDetailInclude = {
   },
 } satisfies Prisma.FlightOffersInclude;
 
+/**
+ * "Departure date" and "Return date" always refer to the date you depart, 
+  not the date you arrive.
+   satisfies method: validates that a value matches a type while 
+   preserving the value's exact, narrow inferred type
+ */
+
 export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   const {
     from,
@@ -124,8 +131,7 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
   const departDate = new Date(depart);
 
   const isPastDate = departDate < currentDate;
-  // consider for trip type if one-way or round-trip, for the validation if queryParams is empty instead of returning all data.
-
+  
   const isValidQuery =
     from &&
     to &&
@@ -221,6 +227,8 @@ export const queryFlightData = async (queryParams: FlightSearchParamsProps) => {
       ],
     };
 
+    //include doesn't filter parent rows, it just decides what related data to attach.
+    
     const dataResponse = await prisma.data.findMany({
       where: {
         flight_offers: {
@@ -349,7 +357,7 @@ export const queryFlightToken = async (params: queryFlightTokenProps) => {
         total_per_pax: total,
       };
     });
-    
+
     return {
       ...flightOffer,
       traveler_price: updatedTravelerPrice,
