@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { passengerSchema, PassengerSchema, ContactInfoSchema, contactInfoSchema } from "../zod_schema";
+import { sendFlightBookingConfirmationEmail } from "@/helpers/send_booking_confirmation";
+import { stripe } from "../stripe";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth";
 
 export type ContactInfoInput = {
   email: string;
@@ -96,7 +100,15 @@ export async function saveContactInfo(
     return { success: false, errors: "Missing booking ID" };
   }
 
-  const validated = contactInfoSchema.safeParse(contactInfo);
+  // if logged in, always use the account email, ignoring whatever was typed 
+  const session = await getServerSession(authOptions);
+  const emailToUse = session?.user?.email ?? contactInfo.email;
+
+  const validated = contactInfoSchema.safeParse({
+    ...contactInfo,
+    email: emailToUse,
+  });
+
   if (!validated.success) {
     return { success: false, errors: z.treeifyError(validated.error) };
   }
@@ -121,4 +133,44 @@ export async function getContactInfoForBooking(bookingId: string | undefined) {
   });
 
   return booking;
+}
+
+export async function confirmBookingAndNotify(
+  bookingId: string,
+  paymentIntentId: string,
+) {
+  try {
+    // Re-verify payment status server-side — never trust the client's claim
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== "succeeded") {
+      console.error("Payment not actually succeeded for", bookingId, paymentIntent.status);
+      return { success: false, message: "Payment not verified" };
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      return { success: false, message: "Booking not found" };
+    }
+
+    if (booking.status === "CONFIRMED") {
+      // Already confirmed — avoid re-sending on retries/refreshes
+      return { success: true, alreadyConfirmed: true };
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: "CONFIRMED" },
+    });
+
+    await sendFlightBookingConfirmationEmail(updatedBooking.id);
+
+    return { success: true };
+  } catch (error) {
+    console.error("confirmBookingAndNotify error:", error);
+    return { success: false, message: "Failed to confirm booking" };
+  }
 }

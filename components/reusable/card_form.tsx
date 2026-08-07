@@ -22,6 +22,7 @@ import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useCurrentUser } from "@/lib/auth-context";
+import { confirmBookingAndNotify } from "@/lib/actions/flight-booking-actions";
 
 type CardFormProps = {
   priceInfo: PriceInfoProps;
@@ -168,9 +169,24 @@ export const CardForm = ({
 
       // 3. Finalize DB saving if successful and saveCard was checked
       if (paymentIntent.status === "succeeded") {
+        const paymentIntentId = paymentIntent.id;
+
+        if (bookingId) {
+          const confirmResult = await confirmBookingAndNotify(
+            bookingId,
+            paymentIntentId,
+          );
+          if (!confirmResult.success) {
+            toast.error(
+              "Payment succeeded but booking confirmation failed. Please contact support.",
+            );
+            setIsLoading(false);
+            return;
+          }
+        }
+
         const currentParams = new URLSearchParams(searchParams.toString());
 
-        const paymentIntentId = paymentIntent.id;
 
         const from = currentParams.get("from");
         const to = currentParams.get("to");
@@ -247,7 +263,7 @@ export const CardForm = ({
     <>
       <div>
         <h2 className="font-bold text-2xl md:text-[4xl] text-black mb-12">
-          Add card details
+          Fill in card details
         </h2>
         <form action="" onSubmit={handleCardSubmit}>
           <div className="flex flex-col gap-y-6 mb-10">
@@ -354,7 +370,7 @@ export const CardForm = ({
           <div className="w-full">
             <Button
               type="submit"
-              label={isLoading ? "processing..." : "add card"}
+              label={isLoading ? "processing..." : "pay now"}
               className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded"
               disabled={isLoading ? true : false}
             />

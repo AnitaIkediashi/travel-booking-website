@@ -4,11 +4,9 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { prisma } from "../prisma";
 import { z } from "zod";
-import { Resend } from "resend";
-import { ResetPasswordEmail } from "@/components/registration/reset_password_email";
+import { ResetPasswordEmail } from "@/components/emails/reset_password_email";
 import { signUpSchema } from "../zod_schema";
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { resend } from "../resend";
 
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");

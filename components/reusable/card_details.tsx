@@ -8,13 +8,19 @@ import { Elements } from "@stripe/react-stripe-js";
 import { PriceInfoProps } from "@/types/card_type";
 import { useCurrentUser } from "@/lib/auth-context";
 import { CardDetails as CardDetailsType } from "@/app/generated/prisma/client";
-import { getCardInfo, processPaymentWithSavedCard } from "@/lib/actions/card-actions";
+import {
+  getCardInfo,
+  processPaymentWithSavedCard,
+} from "@/lib/actions/card-actions";
 import { toast, ToastContainer } from "react-toastify";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "./button";
 import { CardForm } from "./card_form";
-import { getPassengersForBooking } from "@/lib/actions/flight-booking-actions";
+import {
+  confirmBookingAndNotify,
+  getPassengersForBooking,
+} from "@/lib/actions/flight-booking-actions";
 
 type CardDetailsProps = {
   priceInfo: PriceInfoProps;
@@ -27,8 +33,13 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, // for client 'pk'
 );
 
-export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal }: CardDetailsProps) => {
-  const router = useRouter()
+export const CardDetails = ({
+  priceInfo,
+  flowType,
+  bookingId,
+  liveSeatFeesTotal,
+}: CardDetailsProps) => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useCurrentUser();
   const [showCardForm, setShowCardForm] = useState(false);
@@ -37,7 +48,6 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
   const [isLoading, setIsLoading] = useState(false);
   const [passengerNames, setPassengerNames] = useState<string[]>([]);
   const [totalTravelers, setTotalTravelers] = useState(0);
-  
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -105,6 +115,19 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
       }
 
       if (result.status === "succeeded") {
+        if (bookingId) {
+          const confirmResult = await confirmBookingAndNotify(
+            bookingId,
+            result.paymentIntentId,
+          );
+          if (!confirmResult.success) {
+            toast.error(
+              "Payment succeeded but booking confirmation failed. Please contact support.",
+            );
+            return;
+          }
+        }
+
         toast.success("Payment successful!");
         const currentParams = new URLSearchParams(searchParams.toString());
         const from = currentParams.get("from");
@@ -117,10 +140,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
         const infant = +(currentParams.get("infant") ?? 0);
         const cabin = currentParams.get("cabin");
         const token = currentParams.get("token");
-        const paymentIntentId = result.paymentIntentId
-
-        // const selectedCard = cards.find((card) => card.id === selectedCardId);
-        // const cardName = selectedCard ? selectedCard.cardName : "-";
+        const paymentIntentId = result.paymentIntentId;
 
         const bookingPayLoad = {
           flowType,
@@ -136,6 +156,9 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
           token,
           paymentIntentId,
           liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
+          passengerNames,
+          bookingId,
+          totalTravelers,
         };
 
         const urlResponse = await getSecureBookingUrl(bookingPayLoad);
@@ -152,7 +175,7 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
         }
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
@@ -259,12 +282,13 @@ export const CardDetails = ({ priceInfo, flowType, bookingId, liveSeatFeesTotal 
   );
 };
 
-
-{/* <Elements stripe={stripePromise}>
+{
+  /* <Elements stripe={stripePromise}>
   <CreateCardForm
     showCardForm={showCardForm}
     onClose={handleCloseCardForm}
     priceInfo={priceInfo}
     flowType={flowType}
   />
-</Elements>; */}
+</Elements>; */
+}

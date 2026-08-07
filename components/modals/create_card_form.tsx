@@ -23,6 +23,7 @@ import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useCurrentUser } from "@/lib/auth-context";
+import { confirmBookingAndNotify } from "@/lib/actions/flight-booking-actions";
 
 type CreateCardFormProps = {
   showCardForm: boolean;
@@ -190,9 +191,25 @@ export const CreateCardForm = ({
 
       // 3. Finalize DB saving if successful and saveCard was checked
       if (paymentIntent.status === "succeeded") {
-        const currentParams = new URLSearchParams(searchParams.toString());
 
         const paymentIntentId = paymentIntent.id;
+
+        // confirm booking server-side (re-verifies payment, flips status, sends email)
+        if (bookingId) {
+          const confirmResult = await confirmBookingAndNotify(
+            bookingId,
+            paymentIntentId,
+          );
+          if (!confirmResult.success) {
+            toast.error(
+              "Payment succeeded but booking confirmation failed. Please contact support.",
+            );
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        const currentParams = new URLSearchParams(searchParams.toString());
 
         const from = currentParams.get("from");
         const to = currentParams.get("to");
