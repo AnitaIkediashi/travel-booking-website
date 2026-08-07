@@ -42,6 +42,7 @@ type SegmentDetail = {
   departTime: string;
   arrivalTime: string;
   dateToDepart: string;
+  dateToArrive: string;
   flightNumber: string;
   carrier: string;
   stopLabel: string;
@@ -150,10 +151,21 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
      reactToPrintFn();
    };
 
-   
+  const outboundFlightNumber = ticketInfo.segmentDetails.find(
+    (s) => s.sliceIndex === 0,
+  )?.flightNumber;
+
+  const inboundFlightNumber = ticketInfo.segmentDetails.find(
+    (s) => s.sliceIndex === 1,
+  )?.flightNumber;
+
+  const flightNumberLabel =
+    ticketInfo.tripType === "Round trip" && inboundFlightNumber
+      ? `Flights ${outboundFlightNumber} / ${inboundFlightNumber}`
+      : `Flight ${outboundFlightNumber}`;
 
    const handleCopyLink = async () => {
-     const shareText = `My flight: ${ticketInfo.departAirportCode} → ${ticketInfo.arrivalAirportCode} on ${ticketInfo.segmentDetails[0]?.dateToDepart}. Flight ${ticketInfo.segmentDetails[0]?.flightNumber}.`;
+     const shareText = `My flight: ${ticketInfo.departAirportCode} → ${ticketInfo.arrivalAirportCode} on ${ticketInfo.tripType === "Round trip" ? `${ticketInfo.segmentDetails[0]?.dateToDepart} to ${ticketInfo.segmentDetails[0]?.dateToArrive}` : ticketInfo.segmentDetails[0]?.dateToDepart}. ${flightNumberLabel}.`;
 
      try {
        await navigator.clipboard.writeText(shareText);
@@ -165,7 +177,7 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
    };
 
    const handleShareClick = async () => {
-     const shareText = `My flight: ${ticketInfo.departAirportCode} → ${ticketInfo.arrivalAirportCode} on ${ticketInfo.segmentDetails[0]?.dateToDepart}. Flight ${ticketInfo.segmentDetails[0]?.flightNumber}.`;
+     const shareText = `My flight: ${ticketInfo.departAirportCode} → ${ticketInfo.arrivalAirportCode} on ${ticketInfo.tripType === "Round trip" ? `${ticketInfo.segmentDetails[0]?.dateToDepart} to ${ticketInfo.segmentDetails[0]?.dateToArrive}` : ticketInfo.segmentDetails[0]?.dateToDepart}. ${flightNumberLabel}.`;
 
      if (navigator.share) {
        try {

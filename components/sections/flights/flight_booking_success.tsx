@@ -58,6 +58,7 @@ export const FlightBookingSuccess = async ({
       departTime: formatDateTime(segment.departure_time),
       arrivalTime: formatDateTime(segment.arrival_time),
       dateToDepart: getDate(segment.departure_time),
+      dateToArrive: getDate(segment.arrival_time),
       flightNumber: segment.flight_info?.flight_number ?? "N/A",
       carrier: segment.marketingCarrier?.name ?? "N/A",
       stopLabel,
@@ -68,7 +69,7 @@ export const FlightBookingSuccess = async ({
 
   const departAirportCode = segments[0].departure_airport_code;
 
-  const arrivalAirportCode = segments[segments.length - 1].arrival_airport_code;
+  const arrivalAirportCode = segments[0].arrival_airport_code;
 
   const departCityAndCountry = await fetchCountryName(departAirportCode);
 

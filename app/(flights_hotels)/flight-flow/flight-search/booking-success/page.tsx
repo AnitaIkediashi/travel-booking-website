@@ -81,8 +81,6 @@ const BookingSuccessPage = async ({
     };
 
     const flightData = await queryFlightToken(newParams);
-
-    console.log('liveseatFeesTotal:', bookingResponse.liveSeatFeesTotal);
     
     return (
       <FlightBookingSuccess

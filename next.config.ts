@@ -19,10 +19,7 @@ const nextConfig: NextConfig = {
   experimental: {
     globalNotFound: true,
     // serverActions: {
-    //   allowedOrigins: [
-    //     'ft5pdpzn-3000.uks1.devtunnels.ms',
-    //     'localhost:3000'
-    //   ],
+    //   allowedOrigins: ["qn5d8q0g-3000.uks1.devtunnels.ms", "localhost:3000"],
     // },
   },
 };
