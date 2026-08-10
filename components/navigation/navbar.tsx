@@ -8,7 +8,7 @@ import Image from "next/image";
 import logo from "@/public/logos/logo_mint.svg";
 import { Button } from "../reusable/button";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { MenuIcon } from "../icons/menu";
 import { AccountMenu } from "./account_menu";
 import { useCurrentUser } from "@/lib/auth-context";
@@ -31,6 +31,9 @@ const NavLinksDark: NavLinkProp[] = [
 export const Navbar = () => {
   const { user, isAuthenticated } = useCurrentUser();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showOtherMenu, setShowOtherMenu] = useState(false);
@@ -146,10 +149,12 @@ export const Navbar = () => {
                 <Button
                   label="login"
                   className="capitalize text-blackish-green text-sm font-semibold"
+                  href={`/signin?callbackUrl=${encodeURIComponent(currentUrl)}`}
                 />
                 <Button
                   label="Sign up"
                   className="text-sm font-semibold px-6 py-[15.5px] rounded-lg bg-blackish-green text-white"
+                  href={`/signup?callbackUrl=${encodeURIComponent(currentUrl)}`}
                 />
               </div>
             )}

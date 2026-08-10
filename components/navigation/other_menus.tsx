@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BedIcon } from "../icons/bed";
 import { FlightIcon } from "../icons/flight";
 import { CloseIcon } from "../icons/close";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 type OtherMenuProps = {
   showOtherMenu: boolean;
@@ -16,6 +16,9 @@ export const OtherMenus = ({
   isAuthenticated,
 }: OtherMenuProps) => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   return (
     <div
       className={`fixed inset-0 bg-blackish-green/30 z-50 transition-opacity duration-300 ${showOtherMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"} lg:hidden`}
@@ -56,7 +59,7 @@ export const OtherMenus = ({
             <>
               <li className="flex items-center cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
                 <Link
-                  href="/signin"
+                  href={`/signin?callbackUrl=${encodeURIComponent(currentUrl)}`}
                   className="capitalize text-sm font-semibold"
                 >
                   sign in
@@ -64,7 +67,7 @@ export const OtherMenus = ({
               </li>
               <li className="flex items-center cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg">
                 <Link
-                  href="/signup"
+                  href={`/signup?callbackUrl=${encodeURIComponent(currentUrl)}`}
                   className="capitalize text-sm font-semibold"
                 >
                   sign up

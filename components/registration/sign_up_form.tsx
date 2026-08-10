@@ -15,6 +15,7 @@ import { EyeOffIcon } from "../icons/eye_off";
 import { signUpUser } from "@/lib/actions/auth-actions";
 import { ToastContainer, toast } from "react-toastify";
 import { signIn } from "next-auth/react";
+import PhoneInput from "react-phone-number-input";
 
 export const SignUpForm = () => {
   const router = useRouter();
@@ -59,6 +60,18 @@ export const SignUpForm = () => {
           ...prev,
           properties: remainingProperties,
         };
+      });
+    }
+  };
+
+  const handlePhoneChange = (value: string | undefined) => {
+    setSignUpData((prev) => ({ ...prev, phoneNo: value ?? "" }));
+
+    if (errors?.properties && "phoneNo" in errors.properties) {
+      setErrors((prev) => {
+        if (!prev || !prev.properties) return prev;
+        const { phoneNo: _, ...remainingProperties } = prev.properties;
+        return { ...prev, properties: remainingProperties };
       });
     }
   };
@@ -128,6 +141,7 @@ export const SignUpForm = () => {
             alt="golobe logo"
             width={110.35}
             height={36}
+            className="w-auto h-auto"
           />
         </div>
         <div className="flex flex-col gap-6 flex-1">
@@ -212,13 +226,11 @@ export const SignUpForm = () => {
                       <legend className="text-blackish-green text-sm capitalize">
                         phone number
                       </legend>
-                      <input
-                        type="tel"
-                        placeholder="Type your phone number"
-                        name="phoneNo"
+                      <PhoneInput
+                        defaultCountry="NG"
                         value={signUpData.phoneNo}
-                        onChange={handleFormInput}
-                        className={inputClassName}
+                        onChange={handlePhoneChange}
+                        numberInputProps={{ className: inputClassName }}
                       />
                     </fieldset>
                     {errors?.properties?.phoneNo?.errors?.[0] && (

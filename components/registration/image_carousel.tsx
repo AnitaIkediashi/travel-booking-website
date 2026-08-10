@@ -81,13 +81,17 @@ export const ImageCarousel = ({ randomImages }: ImageCarouselType) => {
       <div className="carousel_wrapper overflow-hidden w-full h-full rounded-[30px]">
         <div className="carousel w-full h-full flex transition-transform duration-500 rounded-[inherit] items-stretch">
           {randomImages.map((item, index) => (
-            <div key={index} className="w-full h-full shrink-0 rounded-[inherit] relative">
+            <div
+              key={index}
+              className="w-full h-full shrink-0 rounded-[inherit] relative"
+            >
               <Image
                 src={item}
                 alt={`image ${index}`}
                 className="w-full h-full object-cover rounded-[inherit]"
                 loading="eager"
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
           ))}

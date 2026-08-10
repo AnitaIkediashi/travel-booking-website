@@ -14,6 +14,7 @@ import { Avatar } from "antd";
 import { AccountMenu } from "./account_menu";
 import { MenuIcon } from "../icons/menu";
 import { OtherMenus } from "./other_menus";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export type NavLinkProp = {
   label: string;
@@ -23,6 +24,9 @@ export type NavLinkProp = {
 
 export const HomeNavbar = () => {
   const { user, isAuthenticated } = useCurrentUser();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showOtherMenu, setShowOtherMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -168,7 +172,7 @@ export const HomeNavbar = () => {
                       className={`capitalize text-sm font-semibold ${
                         isScrolled ? "text-blackish-green" : "text-white"
                       }`}
-                      href="/signin"
+                      href={`/signin?callbackUrl=${encodeURIComponent(currentUrl)}`}
                     />
                     <Button
                       label="Sign up"
@@ -177,7 +181,7 @@ export const HomeNavbar = () => {
                           ? "text-white bg-blackish-green"
                           : "text-blackish-green bg-white"
                       }`}
-                      href="/signup"
+                      href={`/signup?callbackUrl=${encodeURIComponent(currentUrl)}`}
                     />
                   </div>
                 )}

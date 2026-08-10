@@ -75,7 +75,7 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: () =>
-      `flight-ticket-${ticketInfo.departAirportCode}-${ticketInfo.arrivalAirportCode}-${ticketInfo.segmentDetails[0]?.dateToDepart}`,
+      `flight-ticket-${ticketInfo.segmentDetails[0]?.departAirportCode}-${ticketInfo.segmentDetails[0]?.arrivalAirportCode}-${ticketInfo.segmentDetails[0]?.dateToDepart}`,
     print: async (printIframe: HTMLIFrameElement) => {
       const iframeDocument = printIframe.contentDocument;
       if (iframeDocument) {
@@ -133,7 +133,7 @@ export const FlightTicket = ({ ticketInfo }: FlightTicketProps) => {
             finalHeight,
           );
           pdf.save(
-            `ticket-${ticketInfo.paymentIntentId}-${ticketInfo.segmentDetails[0]?.dateToDepart}-${ticketInfo.departAirportCode}-${ticketInfo.arrivalAirportCode}.pdf`,
+            `ticket-${ticketInfo.paymentIntentId}-${ticketInfo.segmentDetails[0]?.dateToDepart}-${ticketInfo.segmentDetails[0]?.departAirportCode}-${ticketInfo.segmentDetails[0]?.arrivalAirportCode}.pdf`,
           );
         } catch (error) {
           console.error("PDF Generation Error:", error);
