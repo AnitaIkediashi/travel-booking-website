@@ -18,7 +18,7 @@ export const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  console.log("searchParams", searchParams)
+  // console.log("searchParams", searchParams)
 
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
