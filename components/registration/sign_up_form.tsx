@@ -135,7 +135,7 @@ export const SignUpForm = () => {
   return (
     <div className="lg:w-[60%] w-full h-full ">
       <div className="flex flex-col justify-between gap-6">
-        <div>
+        <Link href= "/">
           <Image
             src="/logos/logo_mint.svg"
             alt="golobe logo"
@@ -143,7 +143,7 @@ export const SignUpForm = () => {
             height={36}
             className="w-auto h-auto"
           />
-        </div>
+        </Link>
         <div className="flex flex-col gap-6 flex-1">
           <div className="flex flex-col gap-y-4">
             <h2 className="capitalize font-bold text-[40px]">Sign up</h2>

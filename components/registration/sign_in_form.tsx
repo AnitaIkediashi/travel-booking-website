@@ -68,14 +68,14 @@ export const SignInForm = () => {
   return (
     <div className="lg:w-[45%] w-full h-full">
       <div className="w-full h-full flex flex-col justify-between gap-6">
-        <div>
+        <Link href="/">
           <Image
             src="/logos/logo_mint.svg"
             alt="golobe logo"
             width={110.35}
             height={36}
           />
-        </div>
+        </Link>
         <div className="flex flex-col gap-6 flex-1">
           <div className="flex flex-col gap-y-4">
             <h2 className="capitalize font-bold text-[40px]">login</h2>

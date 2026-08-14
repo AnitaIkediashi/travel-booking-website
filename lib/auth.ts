@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
      * @default 2592000 (30 days in seconds)
      * @see updateAge to control how often this window rolls forward.
      */
-    maxAge: 30 * 24 * 60 * 60, // 30 days, in seconds
+    maxAge: 30 * 24 * 60 * 60,
 
     /**
      * Controls how often the session expiry gets pushed forward while the user is active.
@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
      * @note For a true non-rolling expiry (a hard 30 days from initial login regardless of activity),
      * implement custom `jwt()` logic checking `token.iat` against a fixed cutoff instead.
      */
-    updateAge: 24 * 60 * 60, // refresh the token's expiry once per day of activity
+    updateAge: 24 * 60 * 60,
   },
 
   providers: [
