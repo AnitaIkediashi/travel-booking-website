@@ -1,12 +1,8 @@
-'use client';
-
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import Image from "next/image";
-import { Button } from "@/components/reusable/button";
-import { RedirectIcon } from "@/components/icons/redirect";
-import { useRouter } from "next/navigation";
+import { GoHomeButton } from "@/components/navigation/go_home_button";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -20,11 +16,6 @@ export const metadata: Metadata = {
 };
 
 export default function GlobalNotFound() {
-  const router = useRouter();
-  const handleGoHome = () => {
-    router.push("/");
-    router.refresh();
-  }
   return (
     <html lang="en" className={`${montserrat.variable} antialiased`}>
       <body className="h-full flex items-center justify-center min-h-screen">
@@ -83,12 +74,7 @@ export default function GlobalNotFound() {
             </div>
           </div>
           <div>
-            <Button
-              label="Go back home"
-              className="flex gap-3 items-center pb-2 border-b border-b-blackish-green md:text-2xl text-lg hover:border-b-2 hover:font-semibold"
-              icon={<RedirectIcon />}
-              onClick={handleGoHome}
-            />
+            <GoHomeButton />
           </div>
         </section>
       </body>
