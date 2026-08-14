@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -46,7 +48,10 @@
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
@@ -55,6 +60,8 @@
     "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
