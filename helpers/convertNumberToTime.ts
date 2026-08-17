@@ -20,13 +20,6 @@ export const convertMinutesToTime = (totalMinutes: number): string => {
   return `${paddedHours}:${paddedMins} ${period}`;
 };
 
-export const formatDuration = (min: number) => {
-  if (!min || min === Infinity) return "N/A";
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${h}h${m}m`;
-};
-
 export const formatDateTime = (dateString: Date | undefined) => {
   if(!dateString) return ""
   const date = new Date(dateString);

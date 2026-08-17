@@ -1,4 +1,4 @@
-import { convertMinutesToTime, formatDateTime, formatDuration, getDuration } from "@/helpers/convertNumberToTime";
+import { convertMinutesToTime, formatDateTime, getDuration } from "@/helpers/convertNumberToTime";
 
 
 describe("convertMinutesToTime", () => {
@@ -32,34 +32,6 @@ describe("convertMinutesToTime", () => {
 
   it("does not pad double-digit hours", () => {
     expect(convertMinutesToTime(600)).toBe("10:00 AM");
-  });
-});
-
-describe("formatDuration", () => {
-  it("formats a duration with hours and minutes", () => {
-    expect(formatDuration(125)).toBe("2h5m");
-  });
-
-  it("formats a duration under an hour", () => {
-    expect(formatDuration(45)).toBe("0h45m");
-  });
-
-  it("formats an exact hour with 0 minutes", () => {
-    expect(formatDuration(120)).toBe("2h0m");
-  });
-
-  it("returns N/A for undefined", () => {
-    expect(formatDuration(undefined as unknown as number)).toBe("N/A");
-  });
-
-  it("returns N/A for Infinity", () => {
-    expect(formatDuration(Infinity)).toBe("N/A");
-  });
-
-  it("returns N/A for 0 (documenting current falsy-check behavior)", () => {
-    // NOTE: this may not be intentional -- 0 is a valid duration.
-    // Flag/fix if 0-minute durations should render as "0h0m" instead.
-    expect(formatDuration(0)).toBe("N/A");
   });
 });
 
