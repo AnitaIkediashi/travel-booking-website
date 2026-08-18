@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { faker } from "@faker-js/faker";
-import cron from "node-cron";
+// import cron from "node-cron";
 
 console.log("🚀 SCRIPT INITIALIZED");
 
@@ -851,9 +851,8 @@ async function runFlightDataCreateAutomation() {
  * runFlightDataCreateAutomation() — always go through runWithLock(),
  * never call runFlightDataCreateAutomation() directly, or the lock is
  * bypassed and you're back to two concurrent seed runs.
- */
-
-let isRunning = false;
+ * 
+ * let isRunning = false;
 
 async function runWithLock() {
   if (isRunning) {
@@ -876,3 +875,13 @@ console.info(
 cron.schedule("0 * * * *", () => {
   runWithLock();
 });
+no longer needed, using github actions now
+ */
+
+runFlightDataCreateAutomation()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+
