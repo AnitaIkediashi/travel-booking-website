@@ -62,9 +62,9 @@ type GateRecord = {
  *
  */
 
-const MIN_AIRPORTS = 15; // a reasonable spread for route variety
-const MIN_AIRLINES = 8; // a reasonable spread of carriers to draw from
-const MIN_GATES = 60; // a shared pool reused across flights, same as a real airport —
+const MIN_AIRPORTS = 15;
+const MIN_AIRLINES = 8;
+const MIN_GATES = 30;
 // gates are a fixed physical resource, not something manufactured per flight
 
 //helper function to calculate price multipliers and baggage allowance based on cabin class
@@ -72,15 +72,15 @@ const CABIN_CONFIGS: Record<
   string,
   { multiplier: number; baggage: number; seats: number }
 > = {
-  Economy: { multiplier: 1.0, baggage: 1, seats: 10 },
-  "Premium Economy": { multiplier: 1.4, baggage: 2, seats: 8 },
+  Economy: { multiplier: 1.0, baggage: 1, seats: 8 },
+  "Premium Economy": { multiplier: 1.4, baggage: 2, seats: 5 },
   Business: { multiplier: 2.2, baggage: 3, seats: 6 },
   "First Class": { multiplier: 3.5, baggage: 3, seats: 4 },
 };
 
 const SEAT_LAYOUTS: Record<string, { rows: number; cols: string[] }> = {
-  Economy: { rows: 10, cols: ["A", "B", "C", "D", "E", "F"] },
-  "Premium Economy": { rows: 6, cols: ["A", "B", "C", "D"] },
+  Economy: { rows: 8, cols: ["A", "B", "C", "D", "E", "F"] },
+  "Premium Economy": { rows: 5, cols: ["A", "B", "C", "D"] },
   Business: { rows: 4, cols: ["A", "C", "D", "F"] },
   "First Class": { rows: 2, cols: ["A", "D"] },
 };
@@ -352,7 +352,7 @@ async function clearStaleData() {
   try {
     const now = new Date();
     const bufferTime = new Date(now.getTime() - 30 * 60 * 1000); //30 mins ago
-    const MAX_FLIGHTS = 1000;
+    const MAX_FLIGHTS = 1500;
 
     console.info("🧹 Maintenance started...");
 
@@ -485,13 +485,6 @@ async function createFlightInstance(params: {
         ? `${instanceAirline.iata_code}${faker.airline.flightNumber({ length: 3 })}`
         : null;
 
-      // ---------------------------------------------------------
-      // Carriers must exist BEFORE the Segment that references them
-      // (Segment.marketingCarrierId is a required FK). Created once
-      // per instance and reused across both directions and all
-      // cabins, since Carriers.marketingSegments/operatingSegments
-      // are one-to-many.
-      // ---------------------------------------------------------
       const marketingCarrier = await tx.carriers.create({
         data: {
           carrier_id: faker.string.uuid(), // descriptive only — no enforced relation on this field
@@ -520,8 +513,6 @@ async function createFlightInstance(params: {
         }
       }
 
-      // Stops/legs computed ONCE per instance — shared across cabins,
-      // since the physical routing is identical regardless of cabin.
       const outboundLegsBase = populateFakeLegsData(
         outbound.departure_time,
         outbound.arrival_time,
@@ -540,8 +531,6 @@ async function createFlightInstance(params: {
           )
         : [];
 
-      // Gates picked from the existing pool — NO database writes here at
-      // all, just random picks from an array already loaded in memory.
       const outboundGatePairs: GateRecord[][] = outboundLegsBase.map(() => [
         faker.helpers.arrayElement(gatePool),
         faker.helpers.arrayElement(gatePool),
@@ -816,11 +805,11 @@ async function main() {
     const flightDate = new Date(startDate.getTime());
     flightDate.setDate(flightDate.getDate() + day);
     console.info(
-      `📅 Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()}`,
+      `-- Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()} --`,
     );
     const createdData = await prisma.data.create({ data: {} });
 
-    const numRoutes = faker.number.int({ min: 5, max: 8 });
+    const numRoutes = faker.number.int({ min: 3, max: 5 });
 
     for (let r = 0; r < numRoutes; r++) {
       // Pick the route ONCE — shared across every time instance below
@@ -830,18 +819,11 @@ async function main() {
       );
       const allAvailableCodes = createdAirports.map((a) => a.airport_code);
 
-      // returnDate is computed ONCE per route (not per instance), so
-      // every round-trip instance on this route shares the same return
-      // day — a search for an exact depart+return date pair can then
-      // surface ALL of that route's round-trip flight-time instances.
       const routeReturnDate = new Date(flightDate);
       routeReturnDate.setDate(
         routeReturnDate.getDate() + faker.number.int({ min: 2, max: 10 }),
       );
 
-      // Each route gets its OWN subset of 2-4 carriers drawn from the
-      // global Airlines pool, instead of every route sharing the same
-      // 1-3 airlines.
       const routeAirlines = faker.helpers.arrayElements(
         currentFlightAirlines,
         Math.min(
@@ -850,7 +832,7 @@ async function main() {
         ),
       );
 
-      const numFlightInstances = faker.number.int({ min: 3, max: 6 });
+      const numFlightInstances = faker.number.int({ min: 2, max: 4 });
 
       for (let f = 0; f < numFlightInstances; f++) {
         // Each instance runs sequentially, in its own small transaction.
