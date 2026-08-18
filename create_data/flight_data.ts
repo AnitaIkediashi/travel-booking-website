@@ -800,7 +800,7 @@ async function main() {
                     ],
                   },
                 },
-              });          
+              });
             } // end cabin loop
           } // end flight-time-instance loop
         } // end route loop
@@ -809,7 +809,7 @@ async function main() {
       // fewer round trips than the old post-hoc update pattern, but this
       // still does real work — profile a run and tune the timeout to the
       // observed worst case rather than guessing.
-      { timeout: 120000, maxWait: 10000 },
+      { timeout: 300000, maxWait: 10000 },
     );
   }
 }
