@@ -64,14 +64,14 @@ const CABIN_CONFIGS: Record<
   string,
   { multiplier: number; baggage: number; seats: number }
 > = {
-  Economy: { multiplier: 1.0, baggage: 1, seats: 20 },
-  "Premium Economy": { multiplier: 1.4, baggage: 2, seats: 12 },
-  Business: { multiplier: 2.2, baggage: 3, seats: 8 },
+  Economy: { multiplier: 1.0, baggage: 1, seats: 10 },
+  "Premium Economy": { multiplier: 1.4, baggage: 2, seats: 8 },
+  Business: { multiplier: 2.2, baggage: 3, seats: 6 },
   "First Class": { multiplier: 3.5, baggage: 3, seats: 4 },
 };
 
 const SEAT_LAYOUTS: Record<string, { rows: number; cols: string[] }> = {
-  Economy: { rows: 20, cols: ["A", "B", "C", "D", "E", "F"] },
+  Economy: { rows: 10, cols: ["A", "B", "C", "D", "E", "F"] },
   "Premium Economy": { rows: 6, cols: ["A", "B", "C", "D"] },
   Business: { rows: 4, cols: ["A", "C", "D", "F"] },
   "First Class": { rows: 2, cols: ["A", "D"] },
@@ -406,22 +406,22 @@ async function main() {
   });
 
   const today = new Date();
-  const ninetyDaysFromNow = new Date();
-  ninetyDaysFromNow.setDate(today.getDate() + 90);
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(today.getDate() + 30);
 
   let startDate = new Date();
   if (latestSegment) {
     const lastDate = new Date(latestSegment.departure_time);
-    if (lastDate >= ninetyDaysFromNow) {
-      console.info("✅ 90-day window is already full.");
+    if (lastDate >= thirtyDaysFromNow) {
+      console.info("✅ 30-day window is already full.");
       return;
     }
     startDate = new Date(lastDate);
-    // this means that if the DB has like some data left it continues from it stops until it reaches the 90 day max
+    // this means that if the DB has like some data left it continues from it stops until it reaches the 30 day max
     startDate.setDate(lastDate.getDate() + 1);
   }
 
-  const diffTime = ninetyDaysFromNow.getTime() - startDate.getTime();
+  const diffTime = thirtyDaysFromNow.getTime() - startDate.getTime();
   /**
    * 1000 (ms to seconds)
    * 60 (seconds to minutes)
@@ -453,7 +453,7 @@ async function main() {
         // ---------------------------------------------------------------
         // numRoutes = how many distinct O&D pairs we generate for this day.
         // ---------------------------------------------------------------
-        const numRoutes = faker.number.int({ min: 20, max: 30 });
+        const numRoutes = faker.number.int({ min: 10, max: 15 });
 
         for (let r = 0; r < numRoutes; r++) {
           // Pick the route ONCE — shared across every time instance below
@@ -483,7 +483,7 @@ async function main() {
             ),
           );
 
-          const numFlightInstances = faker.number.int({ min: 10, max: 15 });
+          const numFlightInstances = faker.number.int({ min: 5, max: 7 });
 
           for (let f = 0; f < numFlightInstances; f++) {
             // isRoundTrip is decided PER INSTANCE, giving a realistic mix
