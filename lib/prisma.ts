@@ -2,6 +2,10 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/app/generated/prisma/client";
 
+/**
+ * lib/prisma.ts	DATABASE_URL	6543 (pooled)	Your app — queries, seed script, everything at runtime
+ */
+
 const connectionString = `${process.env.DATABASE_URL}`;
 
 
