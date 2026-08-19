@@ -766,6 +766,9 @@ async function main() {
   const gatePool: GateRecord[] = await prisma.gate.findMany();
 
   const latestSegment = await prisma.segment.findFirst({
+    where:{
+      slice_index: 0
+    },
     orderBy: { departure_time: "desc" },
     select: { departure_time: true },
   });
@@ -778,7 +781,7 @@ async function main() {
   if (latestSegment) {
     const lastDate = new Date(latestSegment.departure_time);
     if (lastDate >= thirtyDaysFromNow) {
-      console.info("30-day window is already full.");
+      console.info("30-day window is already full...");
       return;
     }
     startDate = new Date(lastDate);
@@ -805,7 +808,7 @@ async function main() {
     const flightDate = new Date(startDate.getTime());
     flightDate.setDate(flightDate.getDate() + day);
     console.info(
-      `-- Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()} --`,
+      `Processing Day ${day + 1}/${daysToGenerate}: ${flightDate.toDateString()} ✅`,
     );
     const createdData = await prisma.data.create({ data: {} });
 
