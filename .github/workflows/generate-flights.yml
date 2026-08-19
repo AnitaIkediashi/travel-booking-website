@@ -27,7 +27,7 @@ jobs:
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
       - name: Run flight data seed script
-        run: tsx create_data/flight_data.ts
+        run: npx tsx create_data/flight_data.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
