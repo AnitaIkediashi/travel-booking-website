@@ -61,7 +61,7 @@ export const FlightBookingConfirmation = ({
     <body style={{ fontFamily: "sans-serif", color: "#1c1b1f" }}>
       <div style={{ maxWidth: 480, margin: "0 auto", padding: 24 }}>
         <h1 style={{ fontSize: 20, margin: "0 0 16px" }}>
-          Your booking is confirmed 🎉
+          Your booking ticket is confirmed 🎉
         </h1>
         <p style={{ margin: "0 0 4px" }}>Booking reference: {bookingId}</p>
         <p style={{ margin: "0 0 16px" }}>

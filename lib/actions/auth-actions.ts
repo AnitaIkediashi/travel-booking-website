@@ -91,8 +91,8 @@ export async function forgotPassword(email: string) {
 
   try {
     const { data, error } = await resend.emails.send({
-      // from: "noreply.golobe.com",
-      from: "onboarding@resend.dev",
+      // from: "onboarding@resend.dev",
+      from: "contact@golobe-booking-website.indevs.in",
       to: email,
       subject: "Your password reset code",
       react: ResetPasswordEmail({ rawOtp }),
