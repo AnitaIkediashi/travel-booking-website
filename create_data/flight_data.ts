@@ -812,7 +812,7 @@ async function main() {
     );
     const createdData = await prisma.data.create({ data: {} });
 
-    const numRoutes = faker.number.int({ min: 3, max: 5 });
+    const numRoutes = faker.number.int({ min: 4, max: 7 });
 
     for (let r = 0; r < numRoutes; r++) {
       // Pick the route ONCE — shared across every time instance below
@@ -835,7 +835,7 @@ async function main() {
         ),
       );
 
-      const numFlightInstances = faker.number.int({ min: 2, max: 4 });
+      const numFlightInstances = faker.number.int({ min: 3, max: 5 });
 
       for (let f = 0; f < numFlightInstances; f++) {
         // Each instance runs sequentially, in its own small transaction.

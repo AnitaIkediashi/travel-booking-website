@@ -65,12 +65,32 @@ export const SelectSeatsWrapper = ({
     }
   }, [bookingId, flightOfferId]);
 
+  // useEffect(() => {
+  //   ignoreRef.current = false;
+  //   loadData();
+
+  //   return () => {
+  //     ignoreRef.current = true;
+  //   };
+  // }, [loadData]);
+
   useEffect(() => {
     ignoreRef.current = false;
     loadData();
 
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        // Page was restored from bfcache (e.g. browser back/forward) —
+        // re-fetch fresh data instead of showing the stale snapshot.
+        loadData();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+
     return () => {
       ignoreRef.current = true;
+      window.removeEventListener("pageshow", handlePageShow);
     };
   }, [loadData]);
 
