@@ -1,6 +1,5 @@
 import { prisma } from "../lib/prisma";
 import { faker } from "@faker-js/faker";
-// import cron from "node-cron";
 
 console.log("🚀 SCRIPT INITIALIZED");
 
