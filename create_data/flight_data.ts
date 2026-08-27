@@ -69,19 +69,19 @@ const MIN_GATES = 30;
 //helper function to calculate price multipliers and baggage allowance based on cabin class
 const CABIN_CONFIGS: Record<
   string,
-  { multiplier: number; baggage: number; seats: number }
+  { multiplier: number; baggage: number; }
 > = {
-  Economy: { multiplier: 1.0, baggage: 1, seats: 12 },
-  "Premium Economy": { multiplier: 1.4, baggage: 2, seats: 8 },
-  Business: { multiplier: 2.2, baggage: 3, seats: 8 },
-  "First Class": { multiplier: 3.5, baggage: 3, seats: 6 },
+  Economy: { multiplier: 1.0, baggage: 1, },
+  "Premium Economy": { multiplier: 1.4, baggage: 2, },
+  Business: { multiplier: 2.2, baggage: 3, },
+  "First Class": { multiplier: 3.5, baggage: 3, },
 };
 
 const SEAT_LAYOUTS: Record<string, { rows: number; cols: string[] }> = {
-  Economy: { rows: 2, cols: ["A", "B", "C", "D", "E", "F"] },
-  "Premium Economy": { rows: 2, cols: ["A", "B", "C", "D"] },
-  Business: { rows: 2, cols: ["A", "C", "D", "F"] },
-  "First Class": { rows: 3, cols: ["A", "D"] },
+  Economy: { rows: 5, cols: ["A", "B", "C", "D", "E", "F"] },
+  "Premium Economy": { rows: 4, cols: ["A", "B", "C", "D"] },
+  Business: { rows: 3, cols: ["A", "C", "D", "F"] },
+  "First Class": { rows: 4, cols: ["A", "D"] },
 };
 
 function populateFakeAirports() {
@@ -247,8 +247,8 @@ function generateFakeSeats(cabinClass: string): FakeSeat[] {
   const midpointRight = Math.floor(layout.cols.length / 2);
 
   for (let row = 1; row <= layout.rows; row++) {
-    // const isExitRow = row === 1 || row === Math.ceil(layout.rows / 2);
-    const isExitRow = row === 1;
+    const isExitRow = row === 1 || row === Math.ceil(layout.rows / 2);
+    // const isExitRow = row === 1;
 
     for (let colIndex = 0; colIndex < layout.cols.length; colIndex++) {
       const col = layout.cols[colIndex];
