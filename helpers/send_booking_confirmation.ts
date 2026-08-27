@@ -72,7 +72,7 @@ export const sendFlightBookingConfirmationEmail = async (bookingId: string) => {
     );
 
     const { data, error } = await resend.emails.send({
-      from: "onboarding@golobe-booking-website.indevs.in",
+      from: "delivered@golobe-booking-website.indevs.in",
       to: booking.contact_email,
       subject: "Your flight booking on Golobe website is confirmed",
       html: emailHtml,
