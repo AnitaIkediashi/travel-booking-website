@@ -247,7 +247,8 @@ function generateFakeSeats(cabinClass: string): FakeSeat[] {
   const midpointRight = Math.floor(layout.cols.length / 2);
 
   for (let row = 1; row <= layout.rows; row++) {
-    const isExitRow = row === 1 || row === Math.ceil(layout.rows / 2);
+    // const isExitRow = row === 1 || row === Math.ceil(layout.rows / 2);
+    const isExitRow = row === 1;
 
     for (let colIndex = 0; colIndex < layout.cols.length; colIndex++) {
       const col = layout.cols[colIndex];
