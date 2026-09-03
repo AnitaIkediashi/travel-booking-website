@@ -7,35 +7,36 @@ model HotelData {
 }
 
 model Hotels {
-    id              String               @id @default(uuid())
-    data_id         String
-    longitude       Float
-    latitude        Float
-    description     String
-    country         String
-    city            String
-    state           String
-    token           String
-    price_breakdown HotelPriceBreakdown?
-    thumb_nails     String[]
-    amenities       String[]
-    reviews         Reviews[]
-    hotelData       HotelData            @relation(fields: [data_id], references: [id])
+    id          String    @id @default(uuid())
+    data_id     String
+    longitude   Float
+    latitude    Float
+    description String
+    country     String
+    city        String
+    state       String
+    token       String
+    thumb_nails String[]
+    amenities   String[]
+    reviews     Reviews[]
+    rules       Rules[]
+    rooms       Rooms[]
+    hotelData   HotelData @relation(fields: [data_id], references: [id])
 
     @@map("hotels")
 }
 
-model HotelPriceBreakdown {
+model RoomPriceBreakdown {
     id              String   @id @default(uuid())
-    hotel_id        String   @unique
+    rooms_id        String   @unique
     currency_code   String   @default("USD")
     total_amount    Decimal  @db.Decimal(10, 2)
     base_amount     Decimal  @db.Decimal(10, 2)
     tax_amount      Decimal  @db.Decimal(10, 2)
     discount_amount Decimal? @default(0) @db.Decimal(10, 2)
-    hotel           Hotels   @relation(fields: [hotel_id], references: [id])
+    rooms           Rooms    @relation(fields: [rooms_id], references: [id])
 
-    @@map("hotel_price_breakdown")
+    @@map("room_price_breakdown")
 }
 
 model Reviews {
@@ -60,4 +61,33 @@ model Rating {
     reviews   Reviews @relation(fields: [review_id], references: [id])
 
     @@map("ratings")
+}
+
+model Rules {
+    id            String   @id @default(uuid())
+    hotel_id      String
+    checkin_time  DateTime
+    checkout_time DateTime
+    category      String
+    description   String
+    hotel         Hotels   @relation(fields: [hotel_id], references: [id])
+
+    @@map("rules")
+}
+
+model Rooms {
+    id              String              @id @default(uuid())
+    hotel_id        String
+    room_left       Int
+    total_rooms     Int
+    room_type       String
+    bed_count       Int
+    description     String
+    amenities       String[] // ["Ocean View", "Balcony", "Mini-bar", "Bathtub", "Espresso Machine"]
+    features        String[] // Layout/construction specs, e.g., ["Soundproof", "Hardwood Floors"]
+    size_sqft       Float?
+    hotel           Hotels              @relation(fields: [hotel_id], references: [id])
+    price_breakdown RoomPriceBreakdown?
+
+    @@map("rooms")
 }
