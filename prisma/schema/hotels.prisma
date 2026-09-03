@@ -1,0 +1,63 @@
+model HotelData {
+    id        String   @id @default(uuid())
+    createdAt DateTime
+    hotels    Hotels[]
+
+    @@map("hotel_data")
+}
+
+model Hotels {
+    id              String               @id @default(uuid())
+    data_id         String
+    longitude       Float
+    latitude        Float
+    description     String
+    country         String
+    city            String
+    state           String
+    token           String
+    price_breakdown HotelPriceBreakdown?
+    thumb_nails     String[]
+    amenities       String[]
+    reviews         Reviews[]
+    hotelData       HotelData            @relation(fields: [data_id], references: [id])
+
+    @@map("hotels")
+}
+
+model HotelPriceBreakdown {
+    id              String   @id @default(uuid())
+    hotel_id        String   @unique
+    currency_code   String   @default("USD")
+    total_amount    Decimal  @db.Decimal(10, 2)
+    base_amount     Decimal  @db.Decimal(10, 2)
+    tax_amount      Decimal  @db.Decimal(10, 2)
+    discount_amount Decimal? @default(0) @db.Decimal(10, 2)
+    hotel           Hotels   @relation(fields: [hotel_id], references: [id])
+
+    @@map("hotel_price_breakdown")
+}
+
+model Reviews {
+    id            String   @id @default(uuid())
+    hotel_id      String
+    customer_name String
+    category      String
+    feedback      String
+    submit_time   DateTime
+    image         String?
+    rating        Rating?
+    hotel         Hotels   @relation(fields: [hotel_id], references: [id])
+
+    @@map("reviews")
+}
+
+model Rating {
+    id        Int     @id @default(autoincrement())
+    review_id String  @unique
+    stars     Int
+    count     Int
+    reviews   Reviews @relation(fields: [review_id], references: [id])
+
+    @@map("ratings")
+}
