@@ -1,3 +1,14 @@
+model Currency {
+    id                   String               @id @default(uuid())
+    name                 String
+    code                 String               @unique
+    rate                 Float
+    room_price_breakdown RoomPriceBreakdown[]
+    guest_price          GuestPrices[]
+
+    @@map("currency")
+}
+
 model HotelData {
     id        String   @id @default(uuid())
     createdAt DateTime
@@ -29,12 +40,13 @@ model Hotels {
 model RoomPriceBreakdown {
     id              String   @id @default(uuid())
     rooms_id        String   @unique
-    currency_code   String   @default("USD")
+    currency_id     String
     total_amount    Decimal  @db.Decimal(10, 2)
     base_amount     Decimal  @db.Decimal(10, 2)
     tax_amount      Decimal  @db.Decimal(10, 2)
     discount_amount Decimal? @default(0) @db.Decimal(10, 2)
     rooms           Rooms    @relation(fields: [rooms_id], references: [id])
+    currency        Currency @relation(fields: [currency_id], references: [id])
 
     @@map("room_price_breakdown")
 }
@@ -64,13 +76,13 @@ model Rating {
 }
 
 model Rules {
-    id            String   @id @default(uuid())
+    id            Int    @id @default(autoincrement())
     hotel_id      String
-    checkin_time  DateTime
-    checkout_time DateTime
+    checkin_time  String
+    checkout_time String
     category      String
     description   String
-    hotel         Hotels   @relation(fields: [hotel_id], references: [id])
+    hotel         Hotels @relation(fields: [hotel_id], references: [id])
 
     @@map("rules")
 }
@@ -88,6 +100,61 @@ model Rooms {
     size_sqft       Float?
     hotel           Hotels              @relation(fields: [hotel_id], references: [id])
     price_breakdown RoomPriceBreakdown?
+    booking_rooms   BookingRooms[]
+    guest_prices    GuestPrices[]
 
     @@map("rooms")
+}
+
+model BookingRooms {
+    id            String       @id @default(uuid())
+    room_id       String
+    booking_id    String
+    checkin_date  DateTime
+    checkout_date DateTime
+    room          Rooms        @relation(fields: [room_id], references: [id])
+    booking       HotelBooking @relation(fields: [booking_id], references: [id])
+
+    @@map("booking_rooms")
+}
+
+model HotelBooking {
+    id              String         @id @default(uuid())
+    status          BookingStatus  @default(IN_PROGRESS)
+    total_guests    Int // party size declared at booking time; may exceed guest.length until all guest details are collected
+    hold_expires_at DateTime?
+    created_at      DateTime
+    updated_at      DateTime
+    contact_email   String?
+    contact_phoneNo String?
+    room_fee_total  Decimal? @db.Decimal(10, 2)
+    booking_rooms   BookingRooms[]
+    guest           Guest[]
+
+    @@map("hotel_booking")
+}
+
+model Guest {
+    id            String       @id @default(uuid())
+    booking_id    String
+    first_name    String
+    last_name     String
+    gender        String
+    nationality   String
+    guest_index   Int
+    date_of_birth String
+    booking       HotelBooking @relation(fields: [booking_id], references: [id])
+}
+
+model GuestPrices {
+    id            String   @id @default(uuid())
+    room_id       String
+    currency_id   String
+    guest_type    String
+    quantity      Int
+    total_per_pax Decimal  @db.Decimal(10, 2)
+    base_amount   Decimal  @db.Decimal(10, 2)
+    tax_amount    Decimal  @db.Decimal(10, 2)
+    currency      Currency @relation(fields: [currency_id], references: [id])
+    room          Rooms    @relation(fields: [room_id], references: [id])
 }
