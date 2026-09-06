@@ -110,8 +110,8 @@ model BookingRooms {
     id            String       @id @default(uuid())
     room_id       String
     booking_id    String
-    checkin_date  DateTime
-    checkout_date DateTime
+    checkin_time  DateTime
+    checkout_time DateTime
     room          Rooms        @relation(fields: [room_id], references: [id])
     booking       HotelBooking @relation(fields: [booking_id], references: [id])
 
@@ -127,7 +127,7 @@ model HotelBooking {
     updated_at      DateTime
     contact_email   String?
     contact_phoneNo String?
-    room_fee_total  Decimal? @db.Decimal(10, 2)
+    room_fee_total  Decimal?       @db.Decimal(10, 2)
     booking_rooms   BookingRooms[]
     guest           Guest[]
 
@@ -135,15 +135,17 @@ model HotelBooking {
 }
 
 model Guest {
-    id            String       @id @default(uuid())
-    booking_id    String
-    first_name    String
-    last_name     String
-    gender        String
-    nationality   String
-    guest_index   Int
-    date_of_birth String
-    booking       HotelBooking @relation(fields: [booking_id], references: [id])
+    id             String       @id @default(uuid())
+    booking_id     String
+    first_name     String
+    last_name      String
+    gender         String
+    nationality    String
+    guest_index    Int
+    date_of_birth  String
+    checked_in_at  DateTime?
+    checked_out_at DateTime?
+    booking        HotelBooking @relation(fields: [booking_id], references: [id])
 }
 
 model GuestPrices {
