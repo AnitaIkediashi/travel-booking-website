@@ -2,7 +2,7 @@ model Currency {
     id                   String               @id @default(uuid())
     name                 String
     code                 String               @unique
-    rate                 Float
+    symbol               String
     room_price_breakdown RoomPriceBreakdown[]
     guest_price          GuestPrices[]
 
