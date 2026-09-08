@@ -147,7 +147,7 @@ model FlightInfo {
 model PriceBreakdown {
   id              Int    @id @default(autoincrement())
   flight_offer_id String @unique // 1-to-1 strict link
-  currency_code   String @default("USD")
+  currency_id     String
 
   total_amount    Decimal  @db.Decimal(10, 2)
   base_amount     Decimal  @db.Decimal(10, 2)
@@ -155,21 +155,23 @@ model PriceBreakdown {
   discount_amount Decimal? @default(0) @db.Decimal(10, 2)
 
   flightOffer FlightOffers @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+  currency    Currency     @relation(fields: [currency_id], references: [id])
 
   @@map("price_breakdowns")
 }
 
 model TravelerPrice {
-  id              Int    @id @default(autoincrement())
+  id              Int     @id @default(autoincrement())
   flight_offer_id String
+  currency_id     String
   passenger_type  String // ADT, CHD, INF
   quantity        Int // e.g. 2 Adults
-
-  base_fare     Decimal @db.Decimal(10, 2)
-  tax_amount    Decimal @db.Decimal(10, 2)
-  total_per_pax Decimal @db.Decimal(10, 2)
+  base_fare       Decimal @db.Decimal(10, 2)
+  tax_amount      Decimal @db.Decimal(10, 2)
+  total_per_pax   Decimal @db.Decimal(10, 2)
 
   flightOffer FlightOffers @relation(fields: [flight_offer_id], references: [id], onDelete: Cascade)
+  currency    Currency     @relation(fields: [currency_id], references: [id])
 
   @@map("passenger_fares")
 }

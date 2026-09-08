@@ -64,6 +64,9 @@ type GateRecord = {
 const MIN_AIRPORTS = 15;
 const MIN_AIRLINES = 8;
 const MIN_GATES = 30;
+
+const DEFAULT_CURRENCY_CODE = "USD";
+
 // gates are a fixed physical resource, not something manufactured per flight
 
 //helper function to calculate price multipliers and baggage allowance based on cabin class
@@ -343,6 +346,14 @@ async function ensureGatePool() {
   await prisma.gate.createMany({ data: gatesToCreate });
 }
 
+async function ensureDefaultCurrency() {
+  return prisma.currency.upsert({
+    where: { code: DEFAULT_CURRENCY_CODE },
+    update: {},
+    create: { name: "US Dollar", code: DEFAULT_CURRENCY_CODE, symbol: "$" },
+  });
+}
+
 /**
  * A database **transaction** refers to a sequence of read/write operations
  * that are guaranteed to either succeed or fail as a whole
@@ -441,6 +452,7 @@ async function createFlightInstance(params: {
   }[];
   cabinClasses: string[];
   gatePool: GateRecord[];
+  currencyId: string;
 }) {
   const {
     createdDataId,
@@ -453,6 +465,7 @@ async function createFlightInstance(params: {
     currentFlightAirlines,
     cabinClasses,
     gatePool,
+    currencyId,
   } = params;
 
   await prisma.$transaction(
@@ -591,6 +604,7 @@ async function createFlightInstance(params: {
 
           return {
             passenger_type: type,
+            currency_id: currencyId,
             quantity: 1,
             base_fare: base,
             tax_amount: tax,
@@ -671,7 +685,7 @@ async function createFlightInstance(params: {
             traveler_price: { create: travelerPriceCreateData },
             price_breakdown: {
               create: {
-                currency_code: "USD",
+                currency_id: currencyId,
                 total_amount: mainAdultTotal,
                 base_amount: mainAdultBase,
                 tax_amount: mainAdultTax,
@@ -749,6 +763,7 @@ async function main() {
   await ensureAirportPool();
   await ensureAirlinePool();
   await ensureGatePool();
+  const defaultCurrency = await ensureDefaultCurrency();
   const isHealthyAndHasRoom = await clearStaleData();
   if (!isHealthyAndHasRoom) return;
 
@@ -852,6 +867,7 @@ async function main() {
           currentFlightAirlines,
           cabinClasses,
           gatePool,
+          currencyId: defaultCurrency.id,
         });
       } // end flight-time-instance loop
     } // end route loop

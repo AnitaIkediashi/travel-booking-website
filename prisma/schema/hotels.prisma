@@ -1,25 +1,36 @@
+// ============================================================
+// onDelete STRATEGY — summary
+// ============================================================
+// Cascade  : catalog/content data with no independent value once its
+//            parent is gone (price breakdowns, guest prices, reviews,
+//            ratings, rules, and — within a single booking — the guest
+//            and booking_rooms records that only exist because that
+//            booking does).
+// Restrict : anything that would silently destroy real booking/stay
+//            history if its parent were deleted. A Rooms row must not
+//            be hard-deletable while BookingRooms reference it — that
+//            would wipe reservation history. Retire a room via a
+//            soft-delete flag instead (e.g. `is_active`), not a hard
+//            delete.
+// ============================================================
+
 model Currency {
-    id                   String               @id @default(uuid())
-    name                 String
-    code                 String               @unique
-    symbol               String
-    room_price_breakdown RoomPriceBreakdown[]
-    guest_price          GuestPrices[]
+    id                    String               @id @default(uuid())
+    name                  String
+    code                  String               @unique
+    symbol                String
+    room_price_breakdowns RoomPriceBreakdown[]
+    guest_prices          GuestPrices[]
+    price_breakdowns      PriceBreakdown[]
+    traveler_prices       TravelerPrice[]
 
     @@map("currency")
 }
 
-model HotelData {
-    id        String   @id @default(uuid())
-    createdAt DateTime
-    hotels    Hotels[]
-
-    @@map("hotel_data")
-}
-
 model Hotels {
     id          String    @id @default(uuid())
-    data_id     String
+    created_at  DateTime  @default(now())
+    updated_at  DateTime  @updatedAt
     longitude   Float
     latitude    Float
     description String
@@ -32,7 +43,6 @@ model Hotels {
     reviews     Reviews[]
     rules       Rules[]
     rooms       Rooms[]
-    hotelData   HotelData @relation(fields: [data_id], references: [id])
 
     @@map("hotels")
 }
@@ -45,7 +55,7 @@ model RoomPriceBreakdown {
     base_amount     Decimal  @db.Decimal(10, 2)
     tax_amount      Decimal  @db.Decimal(10, 2)
     discount_amount Decimal? @default(0) @db.Decimal(10, 2)
-    rooms           Rooms    @relation(fields: [rooms_id], references: [id])
+    rooms           Rooms    @relation(fields: [rooms_id], references: [id], onDelete: Cascade)
     currency        Currency @relation(fields: [currency_id], references: [id])
 
     @@map("room_price_breakdown")
@@ -60,7 +70,7 @@ model Reviews {
     submit_time   DateTime
     image         String?
     rating        Rating?
-    hotel         Hotels   @relation(fields: [hotel_id], references: [id])
+    hotel         Hotels   @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
 
     @@map("reviews")
 }
@@ -70,7 +80,7 @@ model Rating {
     review_id String  @unique
     stars     Int
     count     Int
-    reviews   Reviews @relation(fields: [review_id], references: [id])
+    reviews   Reviews @relation(fields: [review_id], references: [id], onDelete: Cascade)
 
     @@map("ratings")
 }
@@ -82,7 +92,7 @@ model Rules {
     checkout_time String
     category      String
     description   String
-    hotel         Hotels @relation(fields: [hotel_id], references: [id])
+    hotel         Hotels @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
 
     @@map("rules")
 }
@@ -98,7 +108,7 @@ model Rooms {
     amenities       String[] // ["Ocean View", "Balcony", "Mini-bar", "Bathtub", "Espresso Machine"]
     features        String[] // Layout/construction specs, e.g., ["Soundproof", "Hardwood Floors"]
     size_sqft       Float?
-    hotel           Hotels              @relation(fields: [hotel_id], references: [id])
+    hotel           Hotels              @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
     price_breakdown RoomPriceBreakdown?
     booking_rooms   BookingRooms[]
     guest_prices    GuestPrices[]
@@ -112,15 +122,19 @@ model BookingRooms {
     booking_id    String
     checkin_time  DateTime
     checkout_time DateTime
-    room          Rooms        @relation(fields: [room_id], references: [id])
-    booking       HotelBooking @relation(fields: [booking_id], references: [id])
+    // Restrict: deleting a Rooms row must not silently wipe booking
+    // history. Retire a room type via a soft-delete flag instead.
+    room          Rooms        @relation(fields: [room_id], references: [id], onDelete: Restrict)
+    // Cascade: a BookingRooms row only exists in the context of its
+    // parent booking — deleting the booking should take it with it.
+    booking       HotelBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
     @@map("booking_rooms")
 }
 
 model HotelBooking {
     id              String         @id @default(uuid())
-    status          BookingStatus  @default(IN_PROGRESS)
+    status          HotelBookingStatus  @default(IN_PROGRESS)
     total_guests    Int // party size declared at booking time; may exceed guest.length until all guest details are collected
     hold_expires_at DateTime?
     created_at      DateTime
@@ -129,7 +143,7 @@ model HotelBooking {
     contact_phoneNo String?
     room_fee_total  Decimal?       @db.Decimal(10, 2)
     booking_rooms   BookingRooms[]
-    guest           Guest[]
+    guests          Guest[]
 
     @@map("hotel_booking")
 }
@@ -145,7 +159,11 @@ model Guest {
     date_of_birth  String
     checked_in_at  DateTime?
     checked_out_at DateTime?
-    booking        HotelBooking @relation(fields: [booking_id], references: [id])
+    // Cascade: a Guest row only exists in the context of its parent
+    // booking — deleting the booking should take its guests with it.
+    booking        HotelBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+    @@map("guest")
 }
 
 model GuestPrices {
@@ -158,5 +176,14 @@ model GuestPrices {
     base_amount   Decimal  @db.Decimal(10, 2)
     tax_amount    Decimal  @db.Decimal(10, 2)
     currency      Currency @relation(fields: [currency_id], references: [id])
-    room          Rooms    @relation(fields: [room_id], references: [id])
+    room          Rooms    @relation(fields: [room_id], references: [id], onDelete: Cascade)
+
+    @@map("guest_prices")
+}
+
+enum HotelBookingStatus {
+    IN_PROGRESS 
+    CONFIRMED
+    CANCELLED
+    COMPLETED
 }
