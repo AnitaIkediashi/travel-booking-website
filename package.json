@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "generate_flights": "tsx create_data/flight_data.ts"
+    "generate_flights": "tsx create_data/flight_data.ts",
+    "generate_hotels": "tsx create_data/hotel_data.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

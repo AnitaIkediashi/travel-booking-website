@@ -1,0 +1,24 @@
+name: Generate Hotel Data
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # once a day, 3:00 AM UTC — adjust as needed
+  workflow_dispatch: {}   # lets you trigger it manually too, for testing
+
+jobs:
+  seed-hotels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Run hotel data seed script
+      - run: npx tsx create_data/hotel_data.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
