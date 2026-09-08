@@ -18,7 +18,7 @@ jobs:
       - run: npm ci
 
       - name: Run hotel data seed script
-      - run: npx tsx create_data/hotel_data.ts
+        run: npx tsx create_data/hotel_data.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
