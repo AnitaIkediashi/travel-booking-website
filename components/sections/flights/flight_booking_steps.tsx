@@ -64,7 +64,7 @@ export const FlightBookingSteps = ({
   const newTotalPrice = (totalPrice ?? 0) + liveSeatFeesTotal;
 
   const newPriceObj = {
-    currency_code: priceInfoObj?.currency_code,
+    currency_code: priceInfoObj?.currency_id,
     total_amount: totalPrice,
     base_amount: basefare,
     tax_amount: tax,

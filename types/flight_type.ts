@@ -111,7 +111,7 @@ export type FlightInfo = {
 
 type PriceBreakdown = {
   id?: number;
-  currency_code?: string | undefined;
+  currency_id?: string | undefined;
   total_amount?: number;
   base_amount?: number;
   tax_amount?: number;

@@ -29,7 +29,7 @@ export const randomCountriesAndPrice = async () => {
           price_breakdown: {
             select: {
               total_amount: true,
-              currency_code: true,
+              currency_id: true,
             }
           }
         },
@@ -43,7 +43,7 @@ export const randomCountriesAndPrice = async () => {
       const airportCode =
         item.flight_offers[0]?.segments[0]?.departure_airport_code;
       const price = item.flight_offers[0]?.price_breakdown?.total_amount;
-      const currencyCode = item.flight_offers[0]?.price_breakdown?.currency_code;
+      const currencyCode = item.flight_offers[0]?.price_breakdown?.currency_id;
 
       // Now we can safely await here
       const airportResponse = await prisma.airport.findFirst({
