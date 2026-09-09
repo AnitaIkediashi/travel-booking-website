@@ -266,7 +266,7 @@ async function seedNewHotel(activeCurrencies: { id: string; code: string }[]) {
       token: faker.string.alphanumeric(24),
       thumb_nails: Array.from(
         { length: faker.number.int({ min: 3, max: 6 }) },
-        () => faker.image.urlLoremFlickr({ category: "hotel" }),
+        () => faker.image.url(),
       ),
       amenities: randomSubset(HOTEL_AMENITIES_POOL, 4, 9),
     },
@@ -381,7 +381,7 @@ async function seedSingleReview(hotelId: string) {
       feedback: faker.lorem.sentences({ min: 1, max: 3 }),
       submit_time: faker.date.past({ years: 1 }),
       image: faker.datatype.boolean({ probability: 0.3 })
-        ? faker.image.urlLoremFlickr({ category: "hotel" })
+        ? faker.image.url()
         : null,
     },
   });
