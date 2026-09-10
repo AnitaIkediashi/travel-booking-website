@@ -181,6 +181,34 @@ const RULE_CATEGORIES = [
   },
 ];
 
+const HOTEL_TYPE_WORDS = [
+  "Hotel",
+  "Inn",
+  "Suites",
+  "Resort",
+  "Lodge",
+  "Plaza",
+  "Grand Hotel",
+  "Boutique Hotel",
+];
+
+function generateHotelName(city: string): string {
+  const pattern = faker.number.int({ min: 0, max: 3 });
+  const type = faker.helpers.arrayElement(HOTEL_TYPE_WORDS);
+
+  switch (pattern) {
+    case 0:
+      return `The ${city} ${type}`;
+    case 1:
+      return `${faker.person.lastName()} ${type}`;
+    case 2:
+      return `${city} ${type} & Spa`;
+    default:
+      return `${faker.company.name()} ${type}`;
+  }
+}
+
+
 // ============================================================
 // HELPERS
 // ============================================================
@@ -254,9 +282,11 @@ function pickActiveCurrencyId(
 async function seedNewHotel(activeCurrencies: { id: string; code: string }[]) {
   const country = faker.helpers.arrayElement(COUNTRIES);
   const currencyId = pickActiveCurrencyId(activeCurrencies);
+  const city = faker.location.city();
 
   const hotel = await prisma.hotels.create({
     data: {
+      name: generateHotelName(city),
       longitude: faker.location.longitude(),
       latitude: faker.location.latitude(),
       description: faker.lorem.paragraphs(2),

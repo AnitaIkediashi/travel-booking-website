@@ -29,6 +29,7 @@ model Currency {
 
 model Hotels {
     id          String    @id @default(uuid())
+    name        String
     created_at  DateTime  @default(now())
     updated_at  DateTime  @updatedAt
     longitude   Float
@@ -133,15 +134,15 @@ model BookingRooms {
 }
 
 model HotelBooking {
-    id              String         @id @default(uuid())
-    status          HotelBookingStatus  @default(IN_PROGRESS)
+    id              String             @id @default(uuid())
+    status          HotelBookingStatus @default(IN_PROGRESS)
     total_guests    Int // party size declared at booking time; may exceed guest.length until all guest details are collected
     hold_expires_at DateTime?
     created_at      DateTime
     updated_at      DateTime
     contact_email   String?
     contact_phoneNo String?
-    room_fee_total  Decimal?       @db.Decimal(10, 2)
+    room_fee_total  Decimal?           @db.Decimal(10, 2)
     booking_rooms   BookingRooms[]
     guests          Guest[]
 
@@ -182,7 +183,7 @@ model GuestPrices {
 }
 
 enum HotelBookingStatus {
-    IN_PROGRESS 
+    IN_PROGRESS
     CONFIRMED
     CANCELLED
     COMPLETED

@@ -1,0 +1,24 @@
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("query") || "";
+    const searchFields = ["country", "city", "state", "name"];
+
+    const orFilters = searchFields.map((field) => ({
+      [field]: { contains: query, mode: "insensitive" },
+    }));
+
+    try {
+      const airports = await prisma.hotels.findMany({
+        where: { OR: orFilters },
+      });
+      return NextResponse.json(airports);
+    } catch (error) {
+      return NextResponse.json(
+        { error: `Failed to fetch airports: ${error}` },
+        { status: 500 },
+      );
+    }
+}
