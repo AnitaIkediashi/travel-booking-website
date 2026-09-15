@@ -12,6 +12,7 @@ type HotelDropdownProps = {
   onChildrenDecrement: () => void;
   onRoomIncrement: () => void;
   onRoomDecrement: () => void;
+  searchHotels: () => void;
 };
 
 export const StaysDropdown = ({
@@ -26,6 +27,7 @@ export const StaysDropdown = ({
   onChildrenDecrement,
   onRoomIncrement,
   onRoomDecrement,
+  searchHotels,
 }: HotelDropdownProps) => {
   return (
     <div
@@ -109,7 +111,10 @@ export const StaysDropdown = ({
         type="button"
         label="confirm"
         className="w-full h-12 flex items-center justify-center capitalize text-blackish-green bg-mint-green-100 hover:bg-blackish-green-10/30 transition ease-in-out duration-300 font-medium text-sm rounded-sm mt-3"
-        onClick={onClose}
+        onClick={() => {
+          onClose?.();
+          searchHotels?.();
+        }}
       />
     </div>
   );

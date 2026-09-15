@@ -11,10 +11,17 @@ export async function GET(request: Request) {
     }));
 
     try {
-      const airports = await prisma.hotels.findMany({
+      const hotelList = await prisma.hotels.findMany({
+        select: {
+          id: true,
+          name: true,
+          country: true,
+          city: true,
+          state: true,
+        },
         where: { OR: orFilters },
       });
-      return NextResponse.json(airports);
+      return NextResponse.json(hotelList);
     } catch (error) {
       return NextResponse.json(
         { error: `Failed to fetch airports: ${error}` },
