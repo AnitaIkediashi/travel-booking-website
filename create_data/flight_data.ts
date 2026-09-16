@@ -91,7 +91,7 @@ function populateFakeAirports() {
   return Array.from({ length: faker.number.int({ min: 15, max: 25 }) }, () => {
     const airportName = faker.airline.airport().name;
     const airportCode = faker.airline.airport().iataCode;
-    const imageUrl = faker.image.url({ width: 100, height: 100 });
+    const imageUrl = faker.image.urlPicsumPhotos({ width: 100, height: 100 });
     const city = faker.location.city();
     const country = faker.location.country();
     return {
@@ -111,7 +111,10 @@ function populateFakeAirlines(): FakeAirlineSeed[] {
   return Array.from({ length: faker.number.int({ min: 6, max: 12 }) }, () => {
     const airlineName = faker.airline.airline().name;
     const airlineCode = faker.airline.airline().iataCode;
-    const airlineImageUrl = faker.image.url({ width: 100, height: 100 });
+    const airlineImageUrl = faker.image.urlPicsumPhotos({
+      width: 100,
+      height: 100,
+    });
 
     return {
       name: airlineName,

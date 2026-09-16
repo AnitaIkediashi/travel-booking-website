@@ -291,12 +291,12 @@ async function seedNewHotel(activeCurrencies: { id: string; code: string }[]) {
       latitude: faker.location.latitude(),
       description: faker.lorem.paragraphs(2),
       country,
-      city: faker.location.city(),
+      city,
       state: faker.location.state(),
       token: faker.string.alphanumeric(24),
       thumb_nails: Array.from(
         { length: faker.number.int({ min: 3, max: 6 }) },
-        () => faker.image.url(),
+        () => faker.image.urlPicsumPhotos(),
       ),
       amenities: randomSubset(HOTEL_AMENITIES_POOL, 4, 9),
     },
@@ -411,7 +411,7 @@ async function seedSingleReview(hotelId: string) {
       feedback: faker.lorem.sentences({ min: 1, max: 3 }),
       submit_time: faker.date.past({ years: 1 }),
       image: faker.datatype.boolean({ probability: 0.3 })
-        ? faker.image.url()
+        ? faker.image.avatar()
         : null,
     },
   });

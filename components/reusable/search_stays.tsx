@@ -53,11 +53,10 @@ export const SearchStays = () => {
   const router = useRouter();
 
   const handleDestinationClick = (destination: string) => {
-    const value = initialValues.destination;
-    if (!value) return;
+    
     setInitialValues((prevValues) => ({
       ...prevValues,
-      [value]: destination,
+      destination,
     }));
 
     setShowHotelSuggestions(false);
