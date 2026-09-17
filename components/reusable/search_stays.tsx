@@ -173,7 +173,6 @@ export const SearchStays = () => {
   const totalGuests = initialValues.adultCount + initialValues.childrenCount;
 
   function validateHotelEntries() {
-    // check for from and to entries if empty
     if (
       initialValues.destination.trim() === "" 
     ) {
@@ -189,12 +188,7 @@ export const SearchStays = () => {
     if (!initialValues.checkOutDate) {
       return false;
     }
-
-    if (
-      initialValues.roomCount === 0
-    ) {
-      return false;
-    }
+    
     return true;
   }
 
@@ -204,7 +198,7 @@ export const SearchStays = () => {
       setHotelValidate(false);
       startTransition(() => {
         router.push(
-          `/hotel-flow/hotel-search/listing?destination=${initialValues.destination}&checkIn=${initialValues.checkInDate?.format("YYYY-MM-DD")}&checkOut=${initialValues.checkOutDate?.format("YYYY-MM-DD")}adults=${initialValues.adultCount}&children=${initialValues.childrenCount}`,
+          `/hotel-flow/hotel-search/listing?destination=${initialValues.destination}&checkIn=${initialValues.checkInDate?.format("YYYY-MM-DD")}&checkOut=${initialValues.checkOutDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&rooms=${initialValues.roomCount}`,
         );
       })
     } else {
