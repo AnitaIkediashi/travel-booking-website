@@ -243,7 +243,7 @@ export const CardDetails = ({
                 <Button
                   type="button"
                   label={isLoading ? "Processing..." : "Pay now"}
-                  className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded"
+                  className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handlePayWithSavedCard}
                   disabled={isLoading}
                 />

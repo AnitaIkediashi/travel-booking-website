@@ -438,8 +438,9 @@ export const SearchFlights = ({ from }: FlightSearchParamsProps) => {
           />
           <Button
             label={`${isPending ? "Searching..." : "show flights"}`}
-            className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center hover:bg-blackish-green/30 transition ease-in-out duration-300"
+            className="capitalize text-blackish-green font-medium text-sm flex items-center gap-1 md:w-36 w-full bg-mint-green-100 rounded h-12 justify-center hover:bg-blackish-green/30 transition ease-in-out duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             icon={<PaperPlaneIcon />}
+            disabled={isPending}
             onClick={handleShowFlights}
           />
         </div>

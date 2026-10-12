@@ -239,7 +239,7 @@ export const AddCardForm = () => {
         </div>
         <Button
           type="submit"
-          className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white mb-4"
+          className="bg-mint-green-100 text-sm font-semibold w-full h-12 rounded hover:bg-blackish-green hover:text-white mb-4 disabled:opacity-60 disabled:cursor-not-allowed"
           label={isLoading ? "Processing..." : "Add payment method"}
           disabled={isLoading ? true : false}
         />

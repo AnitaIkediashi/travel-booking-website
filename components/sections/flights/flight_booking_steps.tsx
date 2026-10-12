@@ -26,6 +26,7 @@ type BookingStepsProps = {
   totalTravelers: number;
   segments: SegmentsPropsArray[];
   bookingId: string | undefined;
+  currencyCode: string | undefined;
   seatFeesTotal: number;
 };
 
@@ -51,6 +52,7 @@ export const FlightBookingSteps = ({
   segments,
   bookingId,
   seatFeesTotal,
+  currencyCode,
 }: BookingStepsProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [liveSeatFeesTotal, setLiveSeatFeesTotal] = useState(seatFeesTotal);
@@ -64,7 +66,7 @@ export const FlightBookingSteps = ({
   const newTotalPrice = (totalPrice ?? 0) + liveSeatFeesTotal;
 
   const newPriceObj = {
-    currency_code: priceInfoObj?.currency_id,
+    currency_code: currencyCode,
     total_amount: totalPrice,
     base_amount: basefare,
     tax_amount: tax,

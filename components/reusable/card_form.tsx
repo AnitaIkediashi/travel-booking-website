@@ -371,7 +371,7 @@ export const CardForm = ({
             <Button
               type="submit"
               label={isLoading ? "processing..." : "pay now"}
-              className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded"
+              className="bg-mint-green-100 capitalize text-sm font-semibold w-full mb-4 h-12 rounded disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={isLoading ? true : false}
             />
             <p className="text-center text-xs opacity-75">
