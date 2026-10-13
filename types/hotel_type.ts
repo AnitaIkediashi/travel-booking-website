@@ -1,65 +1,71 @@
 import { Prisma } from "@/app/generated/prisma/client";
 
-export type DestinationProp = {
-  id: string;
-  name: string;
-  country: string;
-  city: string;
-  state: string;
-};
+export type DestinationType = "city" | "state" | "country" | "hotel";
 
-export type HotelSearchParams = {
-  searchParams: Promise<HotelSearchProps>
+export type DestinationProp = {
+  type: DestinationType;
+  value: string; // city/state/country name, or hotel id
+  label: string; // what the input shows after selecting
+  sublabel: string;
 };
 
 export type HotelSearchProps = {
   destination: string;
+  destinationType?: string;
+  destinationValue?: string;
   checkIn: string;
   checkOut: string;
-  adults: number;
-  children: number;
-  rooms: number;
+  adults?: string;
+  children?: string;
+  rooms?: string;
+};
+
+export type HotelSearchParams = {
+  searchParams: Promise<HotelSearchProps>;
 };
 
 export type HotelListsProps = {
-  room_id: string;
-  room_type: string;
-  bed_count: number;
-  total_rooms: number;
-  rooms_booked: bigint;
+  // hotel
   hotel_id: string;
   hotel_name: string;
   hotel_thumb_nails: string[];
   hotel_amenities: string[];
-  room_amenities: string[];
-  room_left: number;
-  room_features: string[];
-  room_size: number;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   description: string;
   token: string;
   city: string;
+  state: string;
   country: string;
+
+  // room
+  room_id: string;
+  room_type: string;
+  bed_count: number;
+  total_rooms: number;
+  rooms_booked: number;
+  room_left: number;
+  room_amenities: string[];
+  room_features: string[];
+  room_size: number | null;
+  room_description: string;
+
+  // reviews (hotel-level summary)
   review_count: number;
-  star_count: number;
+  avg_rating: number | null;
+
+  // room price (display only)
   room_total_amount: Prisma.Decimal | null;
   room_base_amount: Prisma.Decimal | null;
   room_tax_amount: Prisma.Decimal | null;
   room_discount_amount: Prisma.Decimal | null;
-  per_guest_total_amount: Prisma.Decimal | null;
-  per_guest_base_amount: Prisma.Decimal | null;
-  per_guest_tax_amount: Prisma.Decimal | null;
-  per_guest_discount_amount: Prisma.Decimal | null;
+
+  // per-person pricing
+  adult_price: Prisma.Decimal | null;
+  child_price: Prisma.Decimal | null;
+  price_per_night: Prisma.Decimal | null;
+  stay_total: Prisma.Decimal | null;
+  nights: number;
   currency_symbol: string | null;
-  customer_name: string;
-  review_category: string;
-  customer_feedback: string;
-  customer_submit_time: string;
-  customer_image: string | null;
-  rule_checkin_time: string;
-  rule_checkout_time: string;
-  rule_category: string;
-  rule_description: string;
-  room_description: string;
+  currency_code: string | null;
 };

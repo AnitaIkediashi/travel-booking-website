@@ -48,17 +48,19 @@ export const SearchStays = () => {
 
   const [hotelValidate, setHotelValidate] = useState(false);
 
+  const [selectedDestination, setSelectedDestination] =
+    useState<DestinationProp | null>(null);
+
   const [isPending, startTransition] = useTransition();
 
   const router = useRouter();
 
-  const handleDestinationClick = (destination: string) => {
-    
+  const handleDestinationClick = (item: DestinationProp) => {
     setInitialValues((prevValues) => ({
       ...prevValues,
-      destination,
+      destination: item.label, // text shown in the input
     }));
-
+    setSelectedDestination(item); // keeps type + value for the search
     setShowHotelSuggestions(false);
     setDestinationList([]);
   };
@@ -71,7 +73,9 @@ export const SearchStays = () => {
         return;
       }
       try {
-        const response = await fetch(`/api/hotels/destination?query=${query}`);
+       const response = await fetch(
+         `/api/hotels/destination?query=${encodeURIComponent(query)}`,
+       );
         const data = await response.json();
         setDestinationList(data);
         setShowHotelSuggestions(true);
@@ -89,12 +93,11 @@ export const SearchStays = () => {
 
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setInitialValues((prevValues) => {
-      return {
-        ...prevValues,
-        destination: value,
-      };
-    });
+    setInitialValues((prevValues) => ({
+      ...prevValues,
+      destination: value,
+    }));
+    setSelectedDestination(null);
     debounceDestinationChange(value);
   };
 
@@ -197,10 +200,22 @@ export const SearchStays = () => {
     if(isValid) {
       setHotelValidate(false);
       startTransition(() => {
-        router.push(
-          `/hotel-flow/hotel-search/listing?destination=${initialValues.destination}&checkIn=${initialValues.checkInDate?.format("YYYY-MM-DD")}&checkOut=${initialValues.checkOutDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&children=${initialValues.childrenCount}&rooms=${initialValues.roomCount}`,
-        );
-      })
+        const qs = new URLSearchParams({
+          destination: initialValues.destination.trim(),
+          checkIn: initialValues.checkInDate!.format("YYYY-MM-DD"),
+          checkOut: initialValues.checkOutDate!.format("YYYY-MM-DD"),
+          adults: String(initialValues.adultCount),
+          children: String(initialValues.childrenCount),
+          rooms: String(initialValues.roomCount),
+        });
+
+        if (selectedDestination) {
+          qs.set("destinationType", selectedDestination.type);
+          qs.set("destinationValue", selectedDestination.value);
+        }
+
+        router.push(`/hotel-flow/hotel-search/listing?${qs}`);
+      });
     } else {
       setHotelValidate(true)
     }
