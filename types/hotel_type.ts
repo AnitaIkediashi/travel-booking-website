@@ -4,8 +4,8 @@ export type DestinationType = "city" | "state" | "country" | "hotel";
 
 export type DestinationProp = {
   type: DestinationType;
-  value: string; // city/state/country name, or hotel id
-  label: string; // what the input shows after selecting
+  value: string;
+  label: string;
   sublabel: string;
 };
 
@@ -25,7 +25,6 @@ export type HotelSearchParams = {
 };
 
 export type HotelListsProps = {
-  // hotel
   hotel_id: string;
   hotel_name: string;
   hotel_thumb_nails: string[];
@@ -37,8 +36,6 @@ export type HotelListsProps = {
   city: string;
   state: string;
   country: string;
-
-  // room
   room_id: string;
   room_type: string;
   bed_count: number;
@@ -49,18 +46,12 @@ export type HotelListsProps = {
   room_features: string[];
   room_size: number | null;
   room_description: string;
-
-  // reviews (hotel-level summary)
   review_count: number;
   avg_rating: number | null;
-
-  // room price (display only)
   room_total_amount: Prisma.Decimal | null;
   room_base_amount: Prisma.Decimal | null;
   room_tax_amount: Prisma.Decimal | null;
   room_discount_amount: Prisma.Decimal | null;
-
-  // per-person pricing
   adult_price: Prisma.Decimal | null;
   child_price: Prisma.Decimal | null;
   price_per_night: Prisma.Decimal | null;

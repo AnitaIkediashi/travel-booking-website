@@ -34,7 +34,7 @@ const HotelListingPage = async ({ searchParams }: HotelSearchParams) => {
   const results = await searchAvailableHotels(searchProps);
   const hotels = groupByHotel(results);
   
-  // console.log('hotel array>>>>>> ', hotels)
+  // console.log('hotel array>>>>>> ', hotels.splice(0,1))
   return <div>page</div>;
 };
 

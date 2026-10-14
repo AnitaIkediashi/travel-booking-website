@@ -3,32 +3,36 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const query = new URL(request.url).searchParams.get("query")?.trim() ?? "";
-  if (query.length < 2) return NextResponse.json([]);
+  if (query.length < 1) return NextResponse.json([]);
 
-  const match = { contains: query, mode: "insensitive" as const };
+  const prefix = { contains: query, mode: "insensitive" as const };
+  const contains = { contains: query, mode: "insensitive" as const };
 
   try {
     const [cities, states, countries, hotels] = await Promise.all([
-      prisma.hotels.findMany({
-        where: { city: match },
-        select: { city: true, state: true, country: true },
-        distinct: ["city", "state", "country"],
+      prisma.hotels.groupBy({
+        by: ["city", "state", "country"],
+        where: { city: prefix },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
         take: 4,
       }),
-      prisma.hotels.findMany({
-        where: { state: match },
-        select: { state: true, country: true },
-        distinct: ["state", "country"],
+      prisma.hotels.groupBy({
+        by: ["state", "country"],
+        where: { state: prefix },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
         take: 3,
       }),
-      prisma.hotels.findMany({
-        where: { country: match },
-        select: { country: true },
-        distinct: ["country"],
+      prisma.hotels.groupBy({
+        by: ["country"],
+        where: { country: prefix },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
         take: 2,
       }),
       prisma.hotels.findMany({
-        where: { name: match },
+        where: { name: query.length >= 3 ? contains : prefix },
         select: {
           id: true,
           name: true,
@@ -36,6 +40,7 @@ export async function GET(request: Request) {
           state: true,
           country: true,
         },
+        orderBy: { name: "asc" },
         take: 5,
       }),
     ]);
