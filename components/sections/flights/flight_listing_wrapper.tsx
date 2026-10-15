@@ -6,5 +6,5 @@ type FlightListingWrapperProps = {
 }
 
 export const FlightListingWrapper = ({ data }: FlightListingWrapperProps) => {
-  return <Listings data={data} />;
+  return <Listings data={data} kind="flight" />;
 };

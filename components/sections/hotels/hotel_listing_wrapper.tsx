@@ -1,3 +1,4 @@
+import { Listings } from "@/components/reusable/listings"
 import { HotelCard } from "@/types/hotel_type"
 
 type HotelListingProp = {
@@ -6,6 +7,6 @@ type HotelListingProp = {
 
 export const HotelListingWrapper = ({hotelData}: HotelListingProp) => {
   return (
-    <div>hotel_listing_wrapper</div>
+    <Listings data={hotelData} kind="hotel" />
   )
 }
