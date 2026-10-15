@@ -1,4 +1,3 @@
-import { Prisma } from "@/app/generated/prisma/client";
 
 export type DestinationType = "city" | "state" | "country" | "hotel";
 
@@ -48,14 +47,14 @@ export type HotelListsProps = {
   room_description: string;
   review_count: number;
   avg_rating: number | null;
-  room_total_amount: Prisma.Decimal | null;
-  room_base_amount: Prisma.Decimal | null;
-  room_tax_amount: Prisma.Decimal | null;
-  room_discount_amount: Prisma.Decimal | null;
-  adult_price: Prisma.Decimal | null;
-  child_price: Prisma.Decimal | null;
-  price_per_night: Prisma.Decimal | null;
-  stay_total: Prisma.Decimal | null;
+  room_total_amount: number | null;
+  room_base_amount: number | null;
+  room_tax_amount: number | null;
+  room_discount_amount: number | null;
+  adult_price: number | null;
+  child_price: number | null;
+  price_per_night: number | null;
+  stay_total: number | null;
   nights: number;
   currency_symbol: string | null;
   currency_code: string | null;

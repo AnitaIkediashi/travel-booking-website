@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const query = new URL(request.url).searchParams.get("query")?.trim() ?? "";
   if (query.length < 1) return NextResponse.json([]);
 
-  const prefix = { contains: query, mode: "insensitive" as const };
+  const prefix = { startsWith: query, mode: "insensitive" as const };
   const contains = { contains: query, mode: "insensitive" as const };
 
   try {
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       })),
       ...hotels.map((h) => ({
         type: "hotel" as const,
-        value: h.id, // pin to the exact hotel, not its name
+        value: h.id, 
         label: h.name,
         sublabel: [h.city, h.state, h.country].filter(Boolean).join(", "),
       })),

@@ -4,13 +4,11 @@ import { HotelSearchProps, HotelListsProps } from "@/types/hotel_type";
 
 const MS_PER_DAY = 86_400_000;
 
-// CHANGE 1 (new helper): escapes % and _ so typed text isn't treated as ILIKE wildcards
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, "\\$&");
 
 export async function searchAvailableHotels(
   params: HotelSearchProps,
 ): Promise<HotelListsProps[]> {
-  // CHANGE 2: destinationType and destinationValue added to the destructuring
   const {
     destination,
     destinationType,
@@ -50,12 +48,9 @@ export async function searchAvailableHotels(
     (checkOutDate.getTime() - checkInDate.getTime()) / MS_PER_DAY,
   );
 
-  // CHANGE 3: replaces `const destCon = ...`
-  // Builds the destination part of the WHERE clause.
   let destinationFilter: Prisma.Sql;
 
   if (destinationType && destinationValue) {
-    // user picked a suggestion: exact match on that entity
     switch (destinationType) {
       case "hotel":
         destinationFilter = Prisma.sql`h.id = ${destinationValue}`;
@@ -73,7 +68,6 @@ export async function searchAvailableHotels(
         return [];
     }
   } else {
-    // user typed text and didn't pick anything: fuzzy fallback
     const destCon = `%${escapeLike(destination.trim())}%`;
     destinationFilter = Prisma.sql`(
       h.city    ILIKE ${destCon}
@@ -88,16 +82,18 @@ export async function searchAvailableHotels(
       t.*,
       ${nights}::int AS nights,
 
-      -- price for the whole party, per night
-      (t.adult_price * ${adultCount}::int
-        + COALESCE(t.child_price, 0) * ${childrenCount}::int)
-        AS price_per_night,
+      ROUND(
+        (t.adult_price * ${adultCount}::int
+          + COALESCE(t.child_price, 0) * ${childrenCount}::int)::numeric,
+        2
+      )::float AS price_per_night,
 
-      -- price for the whole party, whole stay
-      (t.adult_price * ${adultCount}::int
-        + COALESCE(t.child_price, 0) * ${childrenCount}::int)
-        * ${nights}::int
-        AS stay_total
+      ROUND(
+        ((t.adult_price * ${adultCount}::int
+          + COALESCE(t.child_price, 0) * ${childrenCount}::int)
+          * ${nights}::int)::numeric,
+        2
+      )::float AS stay_total
     FROM (
       SELECT
         h.id                     AS hotel_id,
@@ -127,13 +123,13 @@ export async function searchAvailableHotels(
         COALESCE(rv.review_count, 0)                   AS review_count,
         rv.avg_rating                                  AS avg_rating,
 
-        rpb.total_amount         AS room_total_amount,
-        rpb.base_amount          AS room_base_amount,
-        rpb.tax_amount           AS room_tax_amount,
-        rpb.discount_amount      AS room_discount_amount,
+        rpb.total_amount::float       AS room_total_amount,
+        rpb.base_amount::float        AS room_base_amount,
+        rpb.tax_amount::float         AS room_tax_amount,
+        rpb.discount_amount::float    AS room_discount_amount,
 
-        gp_adult.total_per_pax   AS adult_price,
-        gp_child.total_per_pax   AS child_price,
+        gp_adult.total_per_pax::float AS adult_price,
+        gp_child.total_per_pax::float AS child_price,
         c.symbol                 AS currency_symbol,
         c.code                   AS currency_code
       FROM rooms r
@@ -173,7 +169,6 @@ export async function searchAvailableHotels(
             AND gp_child.currency_id = rpb.currency_id
             AND gp_child.guest_type = 'child'
 
-      -- CHANGE 4: the old (city ILIKE ... OR name ILIKE ...) block is replaced
       WHERE ${destinationFilter}
         AND (r.total_rooms - COALESCE(bk.rooms_booked, 0)) >= ${roomCount}::int
     ) t

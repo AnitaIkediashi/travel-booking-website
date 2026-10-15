@@ -58,9 +58,9 @@ export const SearchStays = () => {
   const handleDestinationClick = (item: DestinationProp) => {
     setInitialValues((prevValues) => ({
       ...prevValues,
-      destination: item.label, // text shown in the input
+      destination: item.label,
     }));
-    setSelectedDestination(item); // keeps type + value for the search
+    setSelectedDestination(item);
     setShowHotelSuggestions(false);
     setDestinationList([]);
   };
