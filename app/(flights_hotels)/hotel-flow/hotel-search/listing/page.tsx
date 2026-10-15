@@ -1,28 +1,6 @@
+import { HotelListingWrapper } from "@/components/sections/hotels/hotel_listing_wrapper";
 import { searchAvailableHotels } from "@/helpers/query_hotels";
-import { HotelListsProps, HotelSearchParams } from "@/types/hotel_type";
-
-type HotelCard = Pick<
-  HotelListsProps,
-  | "hotel_id"
-  | "hotel_name"
-  | "hotel_thumb_nails"
-  | "hotel_amenities"
-  | "latitude"
-  | "longitude"
-  | "description"
-  | "token"
-  | "city"
-  | "state"
-  | "country"
-  | "review_count"
-  | "avg_rating"
-  | "currency_symbol"
-  | "currency_code"
-  | "nights"
-> & {
-  fromPrice: number | null;
-  roomCount: number;
-};
+import { HotelCard, HotelListsProps, HotelSearchParams } from "@/types/hotel_type";
 
 function groupByHotel(rows: HotelListsProps[]): HotelCard[] {
   const map = new Map<string, HotelCard>();
@@ -72,9 +50,7 @@ const HotelListingPage = async ({ searchParams }: HotelSearchParams) => {
   const results = await searchAvailableHotels(searchProps);
   const hotels = groupByHotel(results);
 
-  // console.log('hotels>>>>>>>>> ', hotels.splice(0,1))
-
-  return <div>page</div>; // map over `hotels` and render a card for each
+  return <HotelListingWrapper hotelData={hotels} />; 
 };
 
 export default HotelListingPage;

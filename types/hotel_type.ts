@@ -59,3 +59,26 @@ export type HotelListsProps = {
   currency_symbol: string | null;
   currency_code: string | null;
 };
+
+export type HotelCard = Pick<
+  HotelListsProps,
+  | "hotel_id"
+  | "hotel_name"
+  | "hotel_thumb_nails"
+  | "hotel_amenities"
+  | "latitude"
+  | "longitude"
+  | "description"
+  | "token"
+  | "city"
+  | "state"
+  | "country"
+  | "review_count"
+  | "avg_rating"
+  | "currency_symbol"
+  | "currency_code"
+  | "nights"
+> & {
+  fromPrice: number | null;
+  roomCount: number;
+};
