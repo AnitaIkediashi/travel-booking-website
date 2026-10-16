@@ -23,7 +23,7 @@ export const AirlinesFilter = ({ airlines, openFilter, onClose, onChange, select
     })
   return (
     <div className="flex flex-col font-montserrat mt-8">
-      <FilterTitle title="airlines" onClick={onClose} />
+      <FilterTitle title="airlines" onClick={onClose} isOpen={openFilter} />
       {openFilter && (
         <Checkbox.Group
           options={airlineOptions}

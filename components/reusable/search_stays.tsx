@@ -119,6 +119,11 @@ export const SearchStays = () => {
     });
   };
 
+  const disabledCheckOut = (current: dayjs.Dayjs) => {
+      const min = initialValues.checkInDate ?? dayjs();
+      return current <= min.startOf("day");
+    };
+
   const handleAdultIncrement = () => {
     setInitialValues((prevValues) => {
       return {
@@ -277,7 +282,7 @@ export const SearchStays = () => {
                 format={dateFormat}
                 className="w-full text-blackish-green-10"
                 onChange={handleCheckoutDateChange}
-                disabledDate={disabledDate}
+                disabledDate={disabledCheckOut}
               />
             </fieldset>
           </div>

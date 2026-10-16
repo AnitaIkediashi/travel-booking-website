@@ -10,39 +10,37 @@ import { HotelDataFilters } from "../sections/hotels/hotel_data_filters";
 import { FlightDataProps } from "@/types/flight_type";
 import { HotelCard } from "@/types/hotel_type";
 
-
 type ListingProps =
   | { kind: "flight"; data: FlightDataProps[] | undefined }
   | { kind: "hotel"; data: HotelCard[] | undefined };
-
 
 export const Listings = (props: ListingProps) => {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-   const from = searchParams.get("from");
-   const to = searchParams.get("to");
-   const trip = searchParams.get("trip");
-   const departParam = searchParams.get("depart");
-   const depart = departParam ? dayjs(departParam) : null;
-   const returnParam = searchParams.get("return");
-   const returnDate = returnParam ? dayjs(returnParam) : null;
-   const adults = +(searchParams.get("adults") ?? 0);
-   const child = +(searchParams.get("child") ?? 0);
-   const infant = +(searchParams.get("infant") ?? 0);
-   const cabin = searchParams.get("cabin");
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const trip = searchParams.get("trip");
+  const departParam = searchParams.get("depart");
+  const depart = departParam ? dayjs(departParam) : null;
+  const returnParam = searchParams.get("return");
+  const returnDate = returnParam ? dayjs(returnParam) : null;
+  const adults = +(searchParams.get("adults") ?? 0);
+  const child = +(searchParams.get("child") ?? 0);
+  const infant = +(searchParams.get("infant") ?? 0);
+  const cabin = searchParams.get("cabin");
 
-   const flightQueryParams = {
-     from,
-     to,
-     trip,
-     depart,
-     return: returnDate,
-     adults,
-     child,
-     infant,
-     cabin,
-   };
+  const flightQueryParams = {
+    from,
+    to,
+    trip,
+    depart,
+    return: returnDate,
+    adults,
+    child,
+    infant,
+    cabin,
+  };
 
   const checkInParam = searchParams.get("checkIn");
   const checkOutParam = searchParams.get("checkOut");

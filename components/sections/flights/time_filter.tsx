@@ -14,7 +14,11 @@ type TimeFilterProps = {
 export const TimeFilter = ({min, max, onChange, timeRange, openFilter, onClose}: TimeFilterProps) => {
   return (
     <div className="flex flex-col font-montserrat mt-8">
-      <FilterTitle title="departure time" onClick={onClose} />
+      <FilterTitle
+        title="departure time"
+        onClick={onClose}
+        isOpen={openFilter}
+      />
       {openFilter && (
         <>
           <Slider

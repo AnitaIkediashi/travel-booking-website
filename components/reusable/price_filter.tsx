@@ -22,7 +22,7 @@ export const PriceFilter = ({
 
   return (
     <div className="flex flex-col font-montserrat">
-      <FilterTitle title="price" onClick={onClose} />
+      <FilterTitle title="price" onClick={onClose} isOpen={openFilter} />
       {openFilter && (
         <>
           <Slider

@@ -17,7 +17,7 @@ const options = [
 export const StopFilter = ({openFilter, onChange, onClose, selectedStops}: StopFilterProps) => {
   return (
     <div className="flex flex-col font-montserrat mt-8">
-      <FilterTitle title="stops" onClick={onClose} />
+      <FilterTitle title="stops" onClick={onClose} isOpen={openFilter} />
       {openFilter && (
         <Checkbox.Group
           options={options}

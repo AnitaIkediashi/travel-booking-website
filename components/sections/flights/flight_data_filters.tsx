@@ -1,7 +1,7 @@
 "use client";
 
 import { FlightDataProps, FlightOffer } from "@/types/flight_type";
-import { PriceFilter } from "./price_filter";
+import { PriceFilter } from "../../reusable/price_filter";
 import { useMemo, useState, useTransition } from "react";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import Image from "next/image";
@@ -10,7 +10,7 @@ import { AirlinesFilter } from "./airlines_filter";
 import { FlightDisplayData } from "./flight_display_data";
 import { Button } from "@/components/reusable/button";
 import { FilterIcon } from "@/components/icons/filter";
-import { Filters } from "./filters";
+import { Filters } from "../../reusable/filters";
 import { StopFilter } from "./stop_filter";
 import dayjs from "dayjs";
 
