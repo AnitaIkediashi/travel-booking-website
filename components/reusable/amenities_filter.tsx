@@ -57,7 +57,7 @@ export const AmenitiesFilter = ({
             <button
               type="button"
               onClick={() => setShowAll((prev) => !prev)}
-              className="self-start text-sm font-medium text-[#ff8682]" // swap for your coral token
+              className="self-start text-sm font-medium text-salmon-100"
             >
               {showAll ? "Show less" : `+${hiddenCount} more`}
             </button>
