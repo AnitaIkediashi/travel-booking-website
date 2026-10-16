@@ -1,10 +1,10 @@
-import { HotelCard } from "@/types/hotel_type";
+import { HotelCard, HotelSortValue } from "@/types/hotel_type";
 
 type HotelDisplayDataProps = {
   filteredSortedData: HotelCard[];
   totalCount: number;
   sortBy: string;
-  handleSortByChange: (value: string) => void;
+  handleSortByChange: (value: HotelSortValue) => void;
   isPendingFilter: boolean;
 };
 

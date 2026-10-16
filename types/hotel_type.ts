@@ -82,3 +82,28 @@ export type HotelCard = Pick<
   fromPrice: number | null;
   roomCount: number;
 };
+
+export type HotelSortValue =
+  | "recommended"
+  | "lowest_price"
+  | "highest_price"
+  | "star_rating";
+
+export const HOTEL_SORT_OPTIONS: {
+  value: HotelSortValue;
+  label: string;
+}[] = [
+  { value: "recommended", label: "Recommended"},
+  {
+    value: "lowest_price",
+    label: "Lowest price (incl. tax)",
+  },
+  {
+    value: "highest_price",
+    label: "Highest price (incl. tax)",
+  },
+  {
+    value: "star_rating",
+    label: "Star rating (high to low)",
+  },
+];

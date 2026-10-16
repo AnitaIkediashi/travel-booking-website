@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
-import { HotelCard } from "@/types/hotel_type";
+import { HotelCard, HotelSortValue } from "@/types/hotel_type";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import { Button } from "@/components/reusable/button";
 import { FilterIcon } from "@/components/icons/filter";
@@ -17,6 +17,13 @@ type HotelDataFilterProps = {
   data: HotelCard[] | undefined;
 };
 
+const comparePrice = (a: number | null, b: number | null, dir: "asc" | "desc") => {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return dir === "asc" ? a - b : b - a;
+};
+
 export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
@@ -27,7 +34,7 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
   const [openAmenitiesFilter, setOpenAmenitiesFilter] = useState(false);
 
   const [showFilters, setShowFilters] = useState(false); // small screens
-  const [sortBy, setSortBy] = useState("recommended");
+  const [sortBy, setSortBy] = useState<HotelSortValue>("recommended");
   const [isPendingFilter, startTransition] = useTransition();
 
   // Slider bounds come from the full (unfiltered) result set.
@@ -87,13 +94,19 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
         return true;
       })
       .sort((a, b) => {
-        const priceA = a.fromPrice ?? Infinity;
-        const priceB = b.fromPrice ?? Infinity;
-
-        if (sortBy === "cheapest") return priceA - priceB;
-        if (sortBy === "rating")
-          return (b.avg_rating ?? 0) - (a.avg_rating ?? 0);
-        return 0; // "recommended" keeps the server order
+        switch (sortBy) {
+          case "lowest_price":
+            return comparePrice(a.fromPrice, b.fromPrice, "asc");
+          case "highest_price":
+            return comparePrice(a.fromPrice, b.fromPrice, "desc");
+          case "star_rating":
+            return (
+              (b.avg_rating ?? 0) - (a.avg_rating ?? 0) ||
+              b.review_count - a.review_count // tie-breaker: more reviews first
+            );
+          default:
+            return 0; // "recommended" keeps the server order
+        }
       });
   }, [data, priceRange, selectedRating, selectedAmenities, sortBy]);
 
@@ -123,7 +136,7 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
     });
   };
 
-  const handleSortByChange = (value: string) => {
+  const handleSortByChange = (value: HotelSortValue) => {
     startTransition(() => {
       setSortBy(value);
     });
