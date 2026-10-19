@@ -9,7 +9,7 @@ import { AnimatedDots } from "@/components/loaders/animated_dots";
 
 type HotelDisplayDataProps = {
   filteredSortedData: HotelCard[];
-  totalCount: number;
+  // totalCount: number;
   sortBy: HotelSortValue;
   handleSortByChange: (value: HotelSortValue) => void;
   isPendingFilter: boolean;
@@ -17,7 +17,7 @@ type HotelDisplayDataProps = {
 
 export const HotelDisplayData = ({
   filteredSortedData,
-  totalCount,
+  // totalCount,
   sortBy,
   handleSortByChange,
   isPendingFilter,
@@ -84,7 +84,7 @@ export const HotelDisplayData = ({
         {currentCount.map((hotel, index) => (
           <BoxShadow
             key={index}
-            className={`w-full rounded-xl shadow-light py-6 md:py-0 px-4 ${isPendingFilter ? "opacity-40" : "opacity-100"}`}
+            className={`w-full rounded-xl shadow-light ${isPendingFilter ? "opacity-40" : "opacity-100"}`}
           >
             <HotelList hotel={hotel} />
           </BoxShadow>

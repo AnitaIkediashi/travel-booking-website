@@ -212,7 +212,7 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
 
       <HotelDisplayData
         filteredSortedData={filteredSortedData}
-        totalCount={data.length}
+        // totalCount={data.length}
         sortBy={sortBy}
         handleSortByChange={handleSortByChange}
         isPendingFilter={isPendingFilter}

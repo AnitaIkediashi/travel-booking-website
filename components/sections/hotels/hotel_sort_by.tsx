@@ -5,6 +5,7 @@ import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { ArrowDownIcon } from "@/components/icons/arrow_down";
 import { HOTEL_SORT_OPTIONS, HotelSortValue } from "@/types/hotel_type";
+import { CheckIcon } from "@/components/icons/check_icon";
 
 type HotelSortByProps = {
   sortBy: HotelSortValue;
@@ -26,22 +27,7 @@ export const HotelSortBy = ({ sortBy, onChange }: HotelSortByProps) => {
           {option.label}
         </span>
         {sortBy === option.value && (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-          >
-            <path
-              d="M5 13l4 4L19 7"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-blackish-green"
-            />
-          </svg>
+          <CheckIcon />
         )}
       </div>
     ),

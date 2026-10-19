@@ -46,7 +46,7 @@ export type HotelListsProps = {
   room_size: number | null;
   room_description: string;
   review_count: number;
-  avg_rating: number | null;
+  avg_rating: number;
   room_total_amount: number | null;
   room_base_amount: number | null;
   room_tax_amount: number | null;
