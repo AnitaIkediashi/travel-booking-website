@@ -147,6 +147,7 @@ export const FlightDisplayData = ({
         <PageCount
           currentCount={displaySlicedData.length}
           totalCount={totalFlightOffered}
+          type="flight"
         />
         {displaySlicedData.map((offer, index) => {
           return (

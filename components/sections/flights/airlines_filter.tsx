@@ -29,6 +29,7 @@ export const AirlinesFilter = ({ airlines, openFilter, onClose, onChange, select
           options={airlineOptions}
           onChange={(checkedValues) => onChange(checkedValues as string[])}
           value={selectedAirlines}
+          style={{ flexDirection: "column", gap: 8 }}
         />
       )}
       <div className="mt-8 w-full h-[0.5px] bg-blackish-green/25" />

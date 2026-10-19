@@ -23,6 +23,7 @@ export const StopFilter = ({openFilter, onChange, onClose, selectedStops}: StopF
           options={options}
           onChange={(checkedValues) => onChange(checkedValues as number[])}
           value={selectedStops}
+          style={{ flexDirection: "column", gap: 8 }}
         />
       )}
     </div>

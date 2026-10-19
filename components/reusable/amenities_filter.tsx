@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Checkbox } from "antd";
 import { FilterTitle } from "@/components/reusable/filter_title";
 
 type AmenitiesFilterProps = {
@@ -25,12 +26,16 @@ export const AmenitiesFilter = ({
     : amenities.slice(0, INITIAL_VISIBLE);
   const hiddenCount = amenities.length - INITIAL_VISIBLE;
 
-  const handleToggle = (amenity: string) => {
-    onChange(
-      selectedAmenities.includes(amenity)
-        ? selectedAmenities.filter((a) => a !== amenity)
-        : [...selectedAmenities, amenity],
+  const amenityOptions = visibleAmenities.map((amenity) => ({
+    label: amenity,
+    value: amenity,
+  }));
+
+  const handleChange = (checkedValues: string[]) => {
+    const hiddenSelected = selectedAmenities.filter(
+      (amenity) => !visibleAmenities.includes(amenity),
     );
+    onChange([...hiddenSelected, ...checkedValues]);
   };
 
   return (
@@ -38,20 +43,14 @@ export const AmenitiesFilter = ({
       <FilterTitle title="amenities" onClick={onClose} isOpen={openFilter} />
       {openFilter && (
         <div className="flex flex-col gap-3">
-          {visibleAmenities.map((amenity) => (
-            <label
-              key={amenity}
-              className="flex items-center gap-2 cursor-pointer text-sm text-blackish-green"
-            >
-              <input
-                type="checkbox"
-                checked={selectedAmenities.includes(amenity)}
-                onChange={() => handleToggle(amenity)}
-                className="w-5 h-5 rounded border border-blackish-green accent-blackish-green cursor-pointer"
-              />
-              {amenity}
-            </label>
-          ))}
+          <Checkbox.Group
+            options={amenityOptions}
+            value={selectedAmenities}
+            onChange={(checkedValues) =>
+              handleChange(checkedValues as string[])
+            }
+            style={{ flexDirection: "column", gap: 8 }}
+          />
 
           {hiddenCount > 0 && (
             <button

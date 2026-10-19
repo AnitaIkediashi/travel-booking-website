@@ -400,72 +400,50 @@ export const FlightDataFilters = ({
     });
   };
 
+  const filterControls = (
+    <>
+      <PriceFilter
+        min={minPrice}
+        max={maxPrice}
+        onChange={handlePriceChange}
+        priceRange={priceRange}
+        openFilter={openPriceFilter}
+        onClose={handleOpenPriceFilter}
+      />
+      <TimeFilter
+        min={minDuration}
+        max={maxDuration}
+        onChange={handleTimeChange}
+        timeRange={timeRange}
+        openFilter={openTimeFilter}
+        onClose={handleOpenTimeFilter}
+      />
+      <AirlinesFilter
+        airlines={airlines}
+        openFilter={openAirlinesFilter}
+        onClose={handleOpenAirlinesFilter}
+        onChange={handleAirlineChange}
+        selectedAirlines={selectedAirlines}
+      />
+      <StopFilter
+        openFilter={openStopsFilter}
+        onClose={handleOpenStopsFilter}
+        onChange={handleStopChange}
+        selectedStops={selectedStops}
+      />
+    </>
+  );
+
   return (
     <section className="w-full grid lg:grid-cols-[225px_1fr] xl:grid-cols-[343px_1fr] grid-cols-1 lg:gap-[15.5px] relative font-montserrat">
       <aside className="w-full lg:pr-6 lg:border-r lg:border-r-blackish-green hidden lg:block">
         <h3 className="pb-8 text-blackish-green font-semibold text-xl capitalize">
           filters
         </h3>
-        <PriceFilter
-          min={minPrice}
-          max={maxPrice}
-          onChange={handlePriceChange}
-          priceRange={priceRange}
-          openFilter={openPriceFilter}
-          onClose={handleOpenPriceFilter}
-        />
-        <TimeFilter
-          min={minDuration}
-          max={maxDuration}
-          onChange={handleTimeChange}
-          timeRange={timeRange}
-          openFilter={openTimeFilter}
-          onClose={handleOpenTimeFilter}
-        />
-        <AirlinesFilter
-          airlines={airlines}
-          openFilter={openAirlinesFilter}
-          onClose={handleOpenAirlinesFilter}
-          onChange={handleAirlineChange}
-          selectedAirlines={selectedAirlines}
-        />
-        <StopFilter
-          openFilter={openStopsFilter}
-          onClose={handleOpenStopsFilter}
-          onChange={handleStopChange}
-          selectedStops={selectedStops}
-        />
+        {filterControls}
       </aside>
       <Filters showFilters={showFilters} onClose={handleShowFilters}>
-        <PriceFilter
-          min={minPrice}
-          max={maxPrice}
-          onChange={handlePriceChange}
-          priceRange={priceRange}
-          openFilter={openPriceFilter}
-          onClose={handleOpenPriceFilter}
-        />
-        <TimeFilter
-          min={minDuration}
-          max={maxDuration}
-          onChange={handleTimeChange}
-          timeRange={timeRange}
-          openFilter={openTimeFilter}
-          onClose={handleOpenTimeFilter}
-        />
-        <AirlinesFilter
-          airlines={airlines}
-          openFilter={openAirlinesFilter}
-          onClose={handleOpenAirlinesFilter}
-          onChange={handleAirlineChange}
-          selectedAirlines={selectedAirlines}
-        />
-        <StopFilter
-          openFilter={openStopsFilter}
-          onClose={handleOpenStopsFilter}
-          onChange={handleStopChange}
-          selectedStops={selectedStops}
-        />
+        {filterControls}
       </Filters>
       <Button
         label="sort by"

@@ -6,7 +6,7 @@ import { HotelCard, HotelSortValue } from "@/types/hotel_type";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import { Button } from "@/components/reusable/button";
 import { FilterIcon } from "@/components/icons/filter";
-import { PriceFilter } from "@/components/reusable/price_filter"; // adjust path
+import { PriceFilter } from "@/components/reusable/price_filter";
 import { Filters } from "@/components/reusable/filters";
 import { RatingFilter } from "@/components/reusable/rating_filter";
 import { AmenitiesFilter } from "@/components/reusable/amenities_filter";
@@ -51,7 +51,6 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
     };
   }, [data]);
 
-  // Unique amenities across all results, most common first (ties alphabetical).
   const amenityOptions = useMemo(() => {
     const counts = new Map<string, number>();
     data?.forEach((hotel) => {
@@ -163,7 +162,6 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
     );
   }
 
-  // 3. Data exists
   const filterControls = (
     <>
       <PriceFilter

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
-import { ArrowDownIcon } from "@/components/icons/arrow_down"; // adjust path
+import { ArrowDownIcon } from "@/components/icons/arrow_down";
 import { HOTEL_SORT_OPTIONS, HotelSortValue } from "@/types/hotel_type";
 
 type HotelSortByProps = {

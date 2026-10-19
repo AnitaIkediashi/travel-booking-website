@@ -21,6 +21,7 @@ export const TripFilter = ({ trips, openFilter, onClose, onChange, selectedTrips
           options={trips}
           onChange={(values) => onChange(values as string[])}
           value={selectedTrips}
+          style={{ flexDirection: "column", gap: 8 }}
         />
       )}
     </div>

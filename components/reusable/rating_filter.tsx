@@ -28,7 +28,7 @@ export const RatingFilter = ({
               <button
                 key={rating}
                 type="button"
-                onClick={() => onChange(isActive ? null : rating)} // click again to clear
+                onClick={() => onChange(isActive ? null : rating)}
                 className={`min-w-10 h-8 px-2 rounded border text-xs font-medium transition-colors ${
                   isActive
                     ? "bg-blackish-green text-white border-blackish-green"
