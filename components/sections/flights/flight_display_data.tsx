@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { BoxShadow } from "@/components/reusable/box_shadow";
 import { PageCount } from "@/components/reusable/page_count";
@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Button } from "@/components/reusable/button";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatedDots } from "@/components/loaders/animated_dots";
+import { NoData } from "@/components/reusable/no_data";
 
 type FlightDisplayDataProps = {
   sortBy: string;
@@ -59,7 +60,7 @@ export const FlightDisplayData = ({
       } else {
         setShowScrollToTop(false);
       }
-      
+
       // Update the ref to the current position for the next event
       lastScrollY.current = currentScrollPos;
     };
@@ -67,7 +68,6 @@ export const FlightDisplayData = ({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isLoadMoreTriggered]);
-
 
   const totalFlightOffered = filteredSortedData
     .map((data) => data.flight_offers?.length ?? 0)
@@ -103,19 +103,10 @@ export const FlightDisplayData = ({
     )
   ) {
     return (
-      <div className="w-full flex items-center justify-center flex-col gap-3">
-        <Image
-          src="/illustrations/no-data-illustration.svg"
-          alt="no data"
-          width={400}
-          height={400}
-          className="w-[400px] h-[400px]"
-        />
-        <p className="font-medium text-blackish-green text-center text-sm">
-          No flight records found, <br /> try removing some filters to see more
-          results.
-        </p>
-      </div>
+      <NoData
+        type="flights"
+        content="No flight records found, <br /> try removing some filters to see more results."
+      />
     );
   }
 
@@ -185,4 +176,4 @@ export const FlightDisplayData = ({
       </div>
     </div>
   );
-};;
+};

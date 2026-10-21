@@ -107,7 +107,7 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
         token: hotel.token,
       });
 
-      router.push(`/hotel-flow/hotel-search/listing/hotel-detail?${query}`);
+      router.push(`/hotel-flow/hotel-search/listing/hotel-detail/${hotel.hotel_id}-${hotel.token}?${query}`);
     })
   }
 

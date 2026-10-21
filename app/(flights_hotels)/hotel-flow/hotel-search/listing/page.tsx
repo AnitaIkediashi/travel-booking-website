@@ -34,12 +34,12 @@ function groupByHotel(rows: HotelListsProps[]): HotelCard[] {
 
     card.roomCount += 1;
 
-    if (row.stay_total !== null) {
-      card.fromPrice =
-        card.fromPrice === null
-          ? row.stay_total
-          : Math.min(card.fromPrice, row.stay_total);
-    }
+     if (row.price_per_night !== null) {
+       card.fromPrice =
+         card.fromPrice === null
+           ? row.price_per_night
+           : Math.min(card.fromPrice, row.price_per_night);
+     }
   }
 
   return [...map.values()];

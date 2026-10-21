@@ -4,7 +4,6 @@ import { FlightDataProps, FlightOffer } from "@/types/flight_type";
 import { PriceFilter } from "../../reusable/price_filter";
 import { useMemo, useState, useTransition } from "react";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
-import Image from "next/image";
 import { TimeFilter } from "./time_filter";
 import { AirlinesFilter } from "./airlines_filter";
 import { FlightDisplayData } from "./flight_display_data";
@@ -13,6 +12,7 @@ import { FilterIcon } from "@/components/icons/filter";
 import { Filters } from "../../reusable/filters";
 import { StopFilter } from "./stop_filter";
 import dayjs from "dayjs";
+import { NoData } from "@/components/reusable/no_data";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -295,18 +295,10 @@ export const FlightDataFilters = ({
       returnDate.toDate() < depart.toDate())
   ) {
     return (
-      <div className="w-full flex items-center justify-center flex-col gap-3">
-        <Image
-          src="/illustrations/no-data-illustration.svg"
-          alt="no data"
-          width={400}
-          height={400}
-          className="w-[400px] h-[400px]"
-        />
-        <p className="font-medium text-blackish-green">
-          No flight records, ensure to search the appropriate flights
-        </p>
-      </div>
+      <NoData
+        type="flight"
+        content="No flight records, ensure to search the appropriate flights"
+      />
     );
   }
 

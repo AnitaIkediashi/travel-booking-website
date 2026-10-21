@@ -109,3 +109,51 @@ export const HOTEL_SORT_OPTIONS: {
     label: "Star rating (high to low)",
   },
 ];
+
+export type HotelDetailRoom = {
+  room_id: string;
+  room_type: string;
+  bed_count: number;
+  total_rooms: number;
+  room_left: number;
+  room_amenities: string[];
+  room_features: string[];
+  room_size: number | null;
+  room_description: string | null;
+
+  currency_symbol: string | null;
+  currency_code: string | null;
+
+  adult_price: number | null;
+  child_price: number | null;
+  room_base_amount: number | null;
+  room_tax_amount: number | null;
+  room_discount_amount: number | null;
+  room_total_amount: number | null;
+
+  price_per_night: number | null;
+  stay_total: number | null;
+  is_available?: boolean;
+};
+
+export type HotelDetailInfo = {
+  hotel_id: string;
+  hotel_name: string;
+  hotel_thumb_nails: string[];
+  hotel_amenities: string[];
+  latitude: number | null;
+  longitude: number | null;
+  description: string | null;
+  token: string;
+  city: string;
+  state: string;
+  country: string;
+  review_count: number;
+  avg_rating: number | null;
+};
+
+export type HotelDetail = {
+  hotel: HotelDetailInfo;
+  nights: number;
+  rooms: HotelDetailRoom[];
+};

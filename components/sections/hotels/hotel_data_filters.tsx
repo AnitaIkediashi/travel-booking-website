@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Image from "next/image";
 import { HotelCard, HotelSortValue } from "@/types/hotel_type";
 import { SkeletonSection } from "@/components/reusable/skeleton_section";
 import { Button } from "@/components/reusable/button";
@@ -12,6 +11,7 @@ import { RatingFilter } from "@/components/reusable/rating_filter";
 import { AmenitiesFilter } from "@/components/reusable/amenities_filter";
 import { HotelDisplayData } from "./hotel_display_data";
 import { Dayjs } from "dayjs";
+import { NoData } from "@/components/reusable/no_data";
 
 type HotelDataFilterProps = {
   isPending: boolean;
@@ -153,18 +153,10 @@ export const HotelDataFilters = ({ isPending, data, adultCount, childCount, room
   // 2. No data at all
   if (!data || data.length === 0) {
     return (
-      <div className="w-full flex items-center justify-center flex-col gap-3">
-        <Image
-          src="/illustrations/no-data-illustration.svg"
-          alt="no data"
-          width={400}
-          height={400}
-          className="w-[400px] h-[400px]"
-        />
-        <p className="font-medium text-blackish-green">
-          No hotel records, ensure to search for the appropriate stays
-        </p>
-      </div>
+      <NoData
+        type="hotel"
+        content="No hotel records, ensure to search the appropriate stays"
+      />
     );
   }
 

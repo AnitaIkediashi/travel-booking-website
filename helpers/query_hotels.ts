@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
-import { HotelSearchProps, HotelListsProps } from "@/types/hotel_type";
+import { HotelSearchProps, HotelListsProps, HotelDetail } from "@/types/hotel_type";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -8,6 +8,7 @@ const escapeLike = (s: string) => s.replace(/[\\%_]/g, "\\$&");
 
 export async function searchAvailableHotels(
   params: HotelSearchProps,
+  options: { includeSoldOut?: boolean } = {},
 ): Promise<HotelListsProps[]> {
   const {
     destination,
@@ -76,6 +77,10 @@ export async function searchAvailableHotels(
       OR h.name    ILIKE ${destCon}
     )`;
   }
+
+  const availabilityFilter = options.includeSoldOut
+    ? Prisma.empty
+    : Prisma.sql`AND (r.total_rooms - COALESCE(bk.rooms_booked, 0)) >= ${roomCount}::int`;
 
   return prisma.$queryRaw<HotelListsProps[]>(Prisma.sql`
     SELECT
@@ -170,8 +175,71 @@ export async function searchAvailableHotels(
             AND gp_child.guest_type = 'child'
 
       WHERE ${destinationFilter}
-        AND (r.total_rooms - COALESCE(bk.rooms_booked, 0)) >= ${roomCount}::int
+      ${availabilityFilter}
     ) t
     ORDER BY t.hotel_name, stay_total ASC NULLS LAST
   `);
+}
+
+export async function getHotelDetail(
+  params: HotelSearchProps,
+): Promise<HotelDetail | null> {
+  const { hotelId, token } = params;
+  if (!hotelId) return null;
+
+  const rows = await searchAvailableHotels(
+    {
+      ...params,
+      destinationType: "hotel",
+      destinationValue: hotelId,
+    },
+    { includeSoldOut: true },
+  );
+
+  if (rows.length === 0) return null;
+
+  const first = rows[0];
+
+  // optional guard: the token from the card must match the hotel
+  if (token && first.token !== token) return null;
+
+  return {
+    hotel: {
+      hotel_id: first.hotel_id,
+      hotel_name: first.hotel_name,
+      hotel_thumb_nails: first.hotel_thumb_nails,
+      hotel_amenities: first.hotel_amenities,
+      latitude: first.latitude,
+      longitude: first.longitude,
+      description: first.description,
+      token: first.token,
+      city: first.city,
+      state: first.state,
+      country: first.country,
+      review_count: first.review_count,
+      avg_rating: first.avg_rating,
+    },
+    nights: first.nights,
+    rooms: rows.map((row: HotelListsProps) => ({
+      room_id: row.room_id,
+      room_type: row.room_type,
+      bed_count: row.bed_count,
+      total_rooms: row.total_rooms,
+      room_left: row.room_left,
+      room_amenities: row.room_amenities,
+      room_features: row.room_features,
+      room_size: row.room_size,
+      room_description: row.room_description,
+      currency_symbol: row.currency_symbol,
+      currency_code: row.currency_code,
+      adult_price: row.adult_price,
+      child_price: row.child_price,
+      room_base_amount: row.room_base_amount,
+      room_tax_amount: row.room_tax_amount,
+      room_discount_amount: row.room_discount_amount,
+      room_total_amount: row.room_total_amount,
+      price_per_night: row.price_per_night,
+      stay_total: row.stay_total,
+    })),
+  };
 }
