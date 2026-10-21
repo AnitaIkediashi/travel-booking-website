@@ -6,7 +6,6 @@ type StarRatingProps = {
 };
 
 export const StarRating = ({ rating, max = 5 }: StarRatingProps) => {
-  // 2.7 -> 3, 4.2 -> 4, clamped to 0..max
   const stars = Math.min(max, Math.max(0, Math.round(rating)));
 
   if (stars === 0) return null;

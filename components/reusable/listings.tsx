@@ -84,7 +84,15 @@ export const Listings = (props: ListingProps) => {
             return={returnDate}
           />
         ) : (
-          <HotelDataFilters isPending={isPending} data={props.data} />
+          <HotelDataFilters
+            isPending={isPending}
+            data={props.data}
+            adultCount={hotelQueryParams.adults}
+            childCount={hotelQueryParams.children}
+            roomCount={hotelQueryParams.rooms}
+            checkIn={hotelQueryParams.checkIn}
+            checkOut={hotelQueryParams.checkOut}
+          />
         )}
       </div>
     </section>

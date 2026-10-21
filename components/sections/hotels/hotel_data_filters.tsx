@@ -11,10 +11,16 @@ import { Filters } from "@/components/reusable/filters";
 import { RatingFilter } from "@/components/reusable/rating_filter";
 import { AmenitiesFilter } from "@/components/reusable/amenities_filter";
 import { HotelDisplayData } from "./hotel_display_data";
+import { Dayjs } from "dayjs";
 
 type HotelDataFilterProps = {
   isPending: boolean;
   data: HotelCard[] | undefined;
+  adultCount: number;
+  childCount: number;
+  roomCount: number;
+  checkIn: Dayjs | null;
+  checkOut: Dayjs | null;
 };
 
 const comparePrice = (a: number | null, b: number | null, dir: "asc" | "desc") => {
@@ -24,7 +30,7 @@ const comparePrice = (a: number | null, b: number | null, dir: "asc" | "desc") =
   return dir === "asc" ? a - b : b - a;
 };
 
-export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
+export const HotelDataFilters = ({ isPending, data, adultCount, childCount, roomCount, checkIn, checkOut }: HotelDataFilterProps) => {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -212,10 +218,14 @@ export const HotelDataFilters = ({ isPending, data }: HotelDataFilterProps) => {
 
       <HotelDisplayData
         filteredSortedData={filteredSortedData}
-        // totalCount={data.length}
         sortBy={sortBy}
         handleSortByChange={handleSortByChange}
         isPendingFilter={isPendingFilter}
+        adultCount={adultCount}
+        childCount={childCount}
+        roomCount={roomCount}
+        checkIn={checkIn}
+        checkOut={checkOut}
       />
     </section>
   );

@@ -1,12 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { HotelCard } from "@/types/hotel_type";
 import Image from "next/image";
 import { LocationIcon } from "@/components/icons/location";
 import { StarRating } from "./star_rating";
 import { CupIcon } from "@/components/icons/cup";
+import { Button } from "@/components/reusable/button";
+import { HeartIcon } from "@/components/icons/heart";
+import { useRouter } from "next/navigation";
+import { Dayjs } from "dayjs";
 
 type HotelListProps = {
   hotel: HotelCard;
+  adultCount: number;
+  childCount: number;
+  roomCount: number;
+  checkIn: Dayjs | null;
+  checkOut: Dayjs | null;
 };
 
 const AUTO_SWIPE_MS = 4000;
@@ -20,7 +29,8 @@ const getRatingLabel = (rating: number) => {
   return "Poor";
 };
 
-export const HotelList = ({ hotel }: HotelListProps) => {
+export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, checkOut }: HotelListProps) => {
+  const router = useRouter()
   const thumbnails = hotel.hotel_thumb_nails ?? [];
   const total = thumbnails.length;
 
@@ -29,6 +39,7 @@ export const HotelList = ({ hotel }: HotelListProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const startX = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,12 +90,33 @@ export const HotelList = ({ hotel }: HotelListProps) => {
 
   const hasReviews = hotel.review_count > 0;
 
+  const handleLike =() => {
+    setIsLiked((prev) => !prev);
+  }
+
+  const handleHotelSearch = () => {
+    startTransition(() => {
+      const query = new URLSearchParams({
+        hotelId: hotel.hotel_id,
+        destination: hotel.hotel_name,
+        checkIn: String(checkIn?.format("YYYY-MM-DD")),
+        checkOut: String(checkOut?.format("YYYY-MM-DD")),
+        adults: String(adultCount),
+        children: String(childCount),
+        rooms: String(roomCount),
+        token: hotel.token,
+      });
+
+      router.push(`/hotel-flow/hotel-search/listing/hotel-detail?${query}`);
+    })
+  }
+
   return (
     <div className="w-full flex flex-col md:flex-row md:justify-between md:items-stretch gap-4 md:gap-0 font-montserrat">
       {/* Image carousel */}
       <div
         ref={containerRef}
-        className="relative w-full md:w-[42%] h-56 md:h-auto md:min-h-[280px] md:my-0 overflow-hidden rounded-xl select-none"
+        className="relative w-full md:w-[35%] h-56 md:h-auto md:min-h-[280px] md:my-0 overflow-hidden rounded-xl select-none"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -107,7 +139,7 @@ export const HotelList = ({ hotel }: HotelListProps) => {
               alt={`${hotel.hotel_name} - image ${i + 1}`}
               width={600}
               height={400}
-              sizes="(min-width: 768px) 42vw, 100vw"
+              sizes="(min-width: 768px) 35vw, 100vw"
               draggable={false}
               loading={i === 0 ? "eager" : "lazy"}
               className="min-w-full h-full object-cover"
@@ -141,22 +173,22 @@ export const HotelList = ({ hotel }: HotelListProps) => {
       </div>
 
       {/* Hotel prices and content */}
-      <div className="flex-1 flex flex-col justify-between md:p-6 gap-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
+      <div className="flex-1 flex flex-col justify-between md:p-6 p-3 gap-6">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
           <div className="flex flex-col gap-3">
             <h3 className="text-lg md:text-xl font-semibold text-blackish-green leading-tight">
               {hotel.hotel_name}
             </h3>
 
             <div className="flex flex-col gap-y-3 text-xs">
-              <p className="flex items-center gap-1.5">
+              <p className="flex items-center gap-1.5 opacity-75">
                 <LocationIcon />
                 {hotel.city}, {hotel.state}, {hotel.country}
               </p>
 
               <div className="flex items-center justify-between gap-3">
                 <StarRating rating={hotel.avg_rating} />
-                <div>
+                <div className="flex items-center">
                   <CupIcon />
                   <span className="ml-1 font-semibold">
                     {hotel.hotel_amenities.slice(0, 5).length}+
@@ -182,7 +214,7 @@ export const HotelList = ({ hotel }: HotelListProps) => {
           <div className="sm:text-right shrink-0">
             {hotel.fromPrice !== null ? (
               <>
-                <p className="text-xs font-medium">starting from</p>
+                <p className="text-xs font-medium opacity-75">starting from</p>
                 <p className="text-xl md:text-2xl font-bold text-salmon-100">
                   {hotel.currency_symbol}
                   {hotel.fromPrice.toLocaleString(undefined, {
@@ -190,43 +222,35 @@ export const HotelList = ({ hotel }: HotelListProps) => {
                   })}
                   <span className="text-sm">/night</span>
                 </p>
-                <p className="text-xs font-medium">excl. tax</p>
+                <p className="text-xs font-medium opacity-75">excl. tax</p>
               </>
             ) : (
-              <p className="text-xs font-medium">
+              <p className="text-xs font-medium opacity-75">
                 No availability for these dates
               </p>
             )}
           </div>
         </div>
 
-        <div className="border-t border-gray-200 pt-4 flex items-center gap-4">
-          <button
+        <div className="border-t border-blackish-green/25 pt-4 flex items-center gap-4">
+          <Button
             type="button"
             aria-label={
               isLiked ? "Remove from favourites" : "Add to favourites"
             }
             aria-pressed={isLiked}
-            onClick={() => setIsLiked((prev) => !prev)}
-            className="h-12 w-12 shrink-0 rounded border border-[#8dd3bb] flex items-center justify-center"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill={isLiked ? "#f9807a" : "currentColor"}
-              aria-hidden="true"
-            >
-              <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 5 6.4 5c2 0 3.5 1.1 4.3 2.4h2.6C14.1 6.1 15.6 5 17.6 5 21 5 23.1 8.4 21.6 11.8 19.5 16.4 12 21 12 21Z" />
-            </svg>
-          </button>
+            onClick={handleLike}
+            className="h-12 w-12 shrink-0 rounded border border-mint-green-100 flex items-center justify-center"
+            icon={<HeartIcon isLiked={isLiked} />}
+          />
 
-          <a
-            href={`/hotels/${hotel.hotel_id}`}
-            className="flex-1 h-12 rounded bg-[#8dd3bb] text-blackish-green text-sm font-semibold flex items-center justify-center hover:opacity-90 transition-opacity"
-          >
-            View Place
-          </a>
+          <Button
+            type="button"
+            onClick={handleHotelSearch}
+            className="flex-1 h-12 rounded bg-mint-green-100 text-blackish-green text-sm font-semibold flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+            label={isPending ? "Loading" :"View Place"}
+            disabled={isPending}
+          />
         </div>
       </div>
     </div>

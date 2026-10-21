@@ -11,6 +11,8 @@ type ButtonProps = {
   icon?: React.ReactNode;
   href?: Url;
   disabled?: boolean;
+  "aria-label"?: string | undefined;
+  "aria-pressed"?: boolean | "true" | "false" | "mixed" | undefined;
 };
 
 export const Button = ({
@@ -23,6 +25,8 @@ export const Button = ({
   icon,
   href,
   disabled,
+  "aria-label": ariaLabel,
+  "aria-pressed": ariaPressed
 }: ButtonProps) => {
   return !href ? (
     <button
@@ -30,6 +34,8 @@ export const Button = ({
       className={`cursor-pointer ${className}`}
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
     >
       {icon && <span className={iconClassName}>{icon}</span>}{" "}
       {label && <span className={labelClassName}>{label}</span>}

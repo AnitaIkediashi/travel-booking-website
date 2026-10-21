@@ -6,21 +6,30 @@ import { BoxShadow } from "@/components/reusable/box_shadow";
 import { HotelList } from "./hotel_list";
 import { Button } from "@/components/reusable/button";
 import { AnimatedDots } from "@/components/loaders/animated_dots";
+import { Dayjs } from "dayjs";
 
 type HotelDisplayDataProps = {
   filteredSortedData: HotelCard[];
-  // totalCount: number;
   sortBy: HotelSortValue;
   handleSortByChange: (value: HotelSortValue) => void;
   isPendingFilter: boolean;
+  adultCount: number;
+  childCount: number;
+  roomCount: number;
+  checkIn: Dayjs | null;
+  checkOut: Dayjs | null;
 };
 
 export const HotelDisplayData = ({
   filteredSortedData,
-  // totalCount,
   sortBy,
   handleSortByChange,
   isPendingFilter,
+  adultCount,
+  childCount,
+  roomCount,
+  checkIn,
+  checkOut
 }: HotelDisplayDataProps) => {
   const [visibleCount, setVisibleCount] = useState(10);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
@@ -86,7 +95,14 @@ export const HotelDisplayData = ({
             key={index}
             className={`w-full rounded-xl shadow-light ${isPendingFilter ? "opacity-40" : "opacity-100"}`}
           >
-            <HotelList hotel={hotel} />
+            <HotelList
+              hotel={hotel}
+              adultCount={adultCount}
+              childCount={childCount}
+              roomCount={roomCount}
+              checkIn={checkIn}
+              checkOut={checkOut}
+            />
           </BoxShadow>
         ))}
       </div>
