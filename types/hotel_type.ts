@@ -17,6 +17,8 @@ export type HotelSearchProps = {
   adults?: string;
   children?: string;
   rooms?: string;
+  token?: string;
+  hotelId?: string
 };
 
 export type HotelSearchParams = {
