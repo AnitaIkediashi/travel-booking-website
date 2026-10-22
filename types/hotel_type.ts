@@ -157,3 +157,11 @@ export type HotelDetail = {
   nights: number;
   rooms: HotelDetailRoom[];
 };
+
+export type GalleryReview = {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+  country?: string | null;
+};

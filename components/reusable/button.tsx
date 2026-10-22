@@ -1,5 +1,6 @@
 import { Url } from "next/dist/shared/lib/router/router";
 import Link from "next/link";
+import { RefObject } from "react";
 
 type ButtonProps = {
   className: string;
@@ -13,6 +14,7 @@ type ButtonProps = {
   disabled?: boolean;
   "aria-label"?: string | undefined;
   "aria-pressed"?: boolean | "true" | "false" | "mixed" | undefined;
+  ref?: RefObject<HTMLButtonElement | null>;
 };
 
 export const Button = ({
@@ -26,11 +28,13 @@ export const Button = ({
   href,
   disabled,
   "aria-label": ariaLabel,
-  "aria-pressed": ariaPressed
+  "aria-pressed": ariaPressed,
+  ref
 }: ButtonProps) => {
   return !href ? (
     <button
       type={type}
+      ref={ref}
       className={`cursor-pointer ${className}`}
       onClick={onClick}
       disabled={disabled}
