@@ -7,6 +7,7 @@ import type { HotelGalleryProps } from "../sections/hotels/hotel_gallery";
 import { ChevronIcon } from "../icons/chevron";
 import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
+import { Avatar } from "antd";
 
 type GalleryModalProps = Omit<HotelGalleryProps, "reviews"> & {
   reviews: GalleryReview[];
@@ -341,20 +342,37 @@ export const GalleryModal = ({
             <h3 className="mb-3 text-sm font-bold">Reviews</h3>
             {reviews.length > 0 ? (
               <ul className="flex flex-col">
-                {reviews.map((r) => (
-                  <li
-                    key={r.id}
-                    className="border-t border-gray-200 py-4 first:border-t-0 first:pt-0"
-                  >
-                    <p className="mb-2 text-sm leading-relaxed">
-                      “{r.comment}”
-                    </p>
-                    <p className="text-xs opacity-70">
-                      {r.rating.toFixed(1)} · {r.author}
-                      {r.country ? `, ${r.country}` : ""}
-                    </p>
-                  </li>
-                ))}
+                {reviews.map((r) => {
+                  const firstInitial = r.author.charAt(0).toUpperCase();
+                  const lastInitial = r.author.includes(" ")
+                    ? r.author?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
+                    : "";
+                    const initials = `${firstInitial}${lastInitial}`;
+                  return (
+                    <li
+                      key={r.id}
+                      className="border-t border-gray-200 py-4 first:border-t-0 first:pt-0"
+                    >
+                      <p className="mb-2 text-sm leading-relaxed">
+                        “{r.comment}”
+                      </p>
+
+                      <div className="flex items-center ml-1 gap-1">
+                        <p className="text-xs opacity-70">
+                          {r.rating != null ? `${r.rating.toFixed(1)} · ` : ""}
+                          {r.category}
+                        </p>
+                        <p className="text-xs opacity-70">
+                          {r.image === null ? (
+                            <Avatar size={30} style={{fontSize: "12px"}}>{initials}</Avatar>
+                          ) : (
+                            <Avatar src={r.image} size={30} />
+                          )} {r.author}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="text-sm opacity-70">No reviews to show yet.</p>

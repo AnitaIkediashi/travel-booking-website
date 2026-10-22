@@ -14,6 +14,7 @@ type ButtonProps = {
   disabled?: boolean;
   "aria-label"?: string | undefined;
   "aria-pressed"?: boolean | "true" | "false" | "mixed" | undefined;
+  ["aria-expanded"]?: boolean | undefined;
   ref?: RefObject<HTMLButtonElement | null>;
 };
 
@@ -29,7 +30,8 @@ export const Button = ({
   disabled,
   "aria-label": ariaLabel,
   "aria-pressed": ariaPressed,
-  ref
+  "aria-expanded": ariaExpanded,
+  ref,
 }: ButtonProps) => {
   return !href ? (
     <button
@@ -40,6 +42,7 @@ export const Button = ({
       disabled={disabled}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
+      aria-expanded={ariaExpanded}
     >
       {icon && <span className={iconClassName}>{icon}</span>}{" "}
       {label && <span className={labelClassName}>{label}</span>}

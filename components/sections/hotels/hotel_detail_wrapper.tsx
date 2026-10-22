@@ -8,6 +8,8 @@ import { SparkleIcon } from "@/components/icons/sparkle";
 import Image from "next/image";
 import { Button } from "@/components/reusable/button";
 import Link from "next/link";
+import { HotelAmenities } from "./hotel_amenities";
+import { Avatar } from "antd";
 
 type HotelDetailWrapperProps = {
   hotel: HotelDetail;
@@ -94,6 +96,7 @@ export const HotelDetailWrapper = ({
             ratingLabel={getRatingLabel(hotel.hotel.avg_rating)}
             reviewCount={hotel.hotel.review_count}
             amenities={hotel.hotel.hotel_amenities ?? []}
+            reviews={hotel.reviews}
           />
           <div className="mt-10 md:mt-16 border-t border-t-blackish-green/25">
             <div className="pt-10 md:pt-16 pb-8">
@@ -206,6 +209,7 @@ export const HotelDetailWrapper = ({
               </ul>
             </div>
             <div className="w-full my-10 md:my-16 border-t border-t-blackish-green/25" />
+            {/* map */}
             <div>
               <div className="mb-5 flex items-center justify-between gap-4 md:mb-8">
                 <h3 className="text-lg font-bold md:text-xl">Location/Map</h3>
@@ -215,7 +219,7 @@ export const HotelDetailWrapper = ({
                     href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 rounded bg-mint-green-100 px-4 py-[15.5px] text-xs font-medium sm:text-sm"
+                    className="shrink-0 rounded bg-mint-green-100 px-4 py-[15.5px] text-xs font-semibold sm:text-sm"
                   >
                     View on google maps
                   </Link>
@@ -243,6 +247,79 @@ export const HotelDetailWrapper = ({
                 <LocationIcon />
                 {hotel.hotel.city}, {hotel.hotel.state}, {hotel.hotel.country}
               </p>
+            </div>
+            <div className="w-full my-10 md:my-16 border-t border-t-blackish-green/25" />
+            <div>
+              <h3 className="capitalize text-lg md:text-xl font-bold mb-5 md:mb-8">
+                amenities
+              </h3>
+              <HotelAmenities amenities={hotel.hotel.hotel_amenities ?? []} />
+            </div>
+            <div className="w-full my-10 md:my-16 border-t border-t-blackish-green/25" />
+            {/* reviews */}
+            <div>
+              <div className="flex items-center justify-between mb-5 md:mb-8">
+                <h3 className="capitalize text-lg md:text-xl font-bold">
+                  reviews
+                </h3>
+                <Button
+                  className="rounded bg-mint-green-100 px-4 py-[15.5px] text-xs font-semibold sm:text-sm shrink-0"
+                  label="Give your review"
+                />
+              </div>
+              <div className="mb-3 md:mb-6 flex gap-x-2 md:gap-x-4">
+                {hasReviews && (
+                  <>
+                    <h1 className="text-3xl md:text-[50px] font-bold">
+                      {hotel.hotel.avg_rating?.toFixed(1)}
+                    </h1>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-lg md:text-xl font-semibold">
+                        {getRatingLabel(hotel.hotel.avg_rating)}
+                      </p>
+                      <p className="text-xs md:text-sm">
+                        {hotel.hotel.review_count} verified reviews
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div>
+                {hasReviews && hotel.reviews && hotel.reviews.length > 0 ? (
+                  <div className="divide-y divide-blackish-green/25">
+                    {hotel.reviews.map((review) => {
+                      const firstInitial = review.author.charAt(0).toUpperCase();
+                  const lastInitial = review.author.includes(" ")
+                    ? review.author?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
+                    : "";
+                    const initials = `${firstInitial}${lastInitial}`;
+                      return (
+                        <div
+                          key={review.id}
+                          className="py-4 md:py-6 flex items-start justify-between gap-4"
+                        >
+                          {review.image === null ? (
+                            <Avatar size={45} style={{ fontSize: "14px" }}>
+                              {initials}
+                            </Avatar>
+                          ) : (
+                            <Avatar src={review.image} size={45} />
+                          )}
+                          <div>
+
+                          </div>
+                        </div>
+                      );
+                    }
+                  )
+                  }
+                  </div>
+                ) : (
+                  <p className="text-sm opacity-75">
+                    No reviews available yet.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 export type DestinationType = "city" | "state" | "country" | "hotel";
 
 export type DestinationProp = {
@@ -18,7 +17,7 @@ export type HotelSearchProps = {
   children?: string;
   rooms?: string;
   token?: string;
-  hotelId?: string
+  hotelId?: string;
 };
 
 export type HotelSearchParams = {
@@ -95,7 +94,7 @@ export const HOTEL_SORT_OPTIONS: {
   value: HotelSortValue;
   label: string;
 }[] = [
-  { value: "recommended", label: "Recommended"},
+  { value: "recommended", label: "Recommended" },
   {
     value: "lowest_price",
     label: "Lowest price (incl. tax)",
@@ -152,16 +151,21 @@ export type HotelDetailInfo = {
   avg_rating: number | null;
 };
 
+export type HotelReview = {
+  id: string;
+  author: string;
+  category: string;
+  comment: string;
+  rating: number | null;
+  submitted_at: string;
+  image: string | null;
+};
+
 export type HotelDetail = {
   hotel: HotelDetailInfo;
   nights: number;
   rooms: HotelDetailRoom[];
+  reviews: HotelReview[];
 };
 
-export type GalleryReview = {
-  id: string;
-  author: string;
-  rating: number;
-  comment: string;
-  country?: string | null;
-};
+export type GalleryReview = HotelReview;

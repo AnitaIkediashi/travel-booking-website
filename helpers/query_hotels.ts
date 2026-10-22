@@ -6,6 +6,8 @@ const MS_PER_DAY = 86_400_000;
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, "\\$&");
 
+const REVIEW_LIMIT = 50;
+
 export async function searchAvailableHotels(
   params: HotelSearchProps,
   options: { includeSoldOut?: boolean } = {},
@@ -187,20 +189,22 @@ export async function getHotelDetail(
   const { hotelId, token } = params;
   if (!hotelId) return null;
 
-  const rows = await searchAvailableHotels(
-    {
-      ...params,
-      destinationType: "hotel",
-      destinationValue: hotelId,
-    },
-    { includeSoldOut: true },
-  );
+  const [rows, reviewRows] = await Promise.all([
+    searchAvailableHotels(
+      { ...params, destinationType: "hotel", destinationValue: hotelId },
+      { includeSoldOut: true },
+    ),
+    prisma.reviews.findMany({
+      where: { hotel_id: hotelId },
+      orderBy: { submit_time: "desc" },
+      take: REVIEW_LIMIT,
+      include: { rating: true },
+    }),
+  ]);
 
   if (rows.length === 0) return null;
 
   const first = rows[0];
-
-  // optional guard: the token from the card must match the hotel
   if (token && first.token !== token) return null;
 
   return {
@@ -240,6 +244,15 @@ export async function getHotelDetail(
       room_total_amount: row.room_total_amount,
       price_per_night: row.price_per_night,
       stay_total: row.stay_total,
+    })),
+    reviews: reviewRows.map((r) => ({
+      id: r.id,
+      author: r.customer_name,
+      category: r.category,
+      comment: r.feedback,
+      rating: r.rating ? Number(r.rating.stars) : null,
+      submitted_at: r.submit_time.toISOString(),
+      image: r.image,
     })),
   };
 }
