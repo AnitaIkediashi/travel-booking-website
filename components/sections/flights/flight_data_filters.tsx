@@ -296,7 +296,6 @@ export const FlightDataFilters = ({
   ) {
     return (
       <NoData
-        type="flight"
         content="No flight records, ensure to search the appropriate flights"
       />
     );

@@ -1,11 +1,10 @@
 import Image from "next/image"
 
 type NoDataProps = {
-    type: string
     content: string
 }
 
-export const NoData = ({type, content}: NoDataProps) => {
+export const NoData = ({content}: NoDataProps) => {
   return (
     <div className="w-full flex items-center justify-center flex-col gap-3">
             <Image

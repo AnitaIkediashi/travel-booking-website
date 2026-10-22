@@ -10,12 +10,11 @@ const HotelDetailPage = async ({ searchParams }: HotelSearchParams) => {
     if(!hotel) {
       return (
         <NoData
-          type="hotel"
           content="No hotel record found"
         />
       );
     }
-  return <HotelDetailWrapper hotel={hotel} />;
+  return <HotelDetailWrapper hotel={hotel} searchProps={searchProps} />;
 };
 
 export default HotelDetailPage

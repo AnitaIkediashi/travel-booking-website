@@ -8,6 +8,7 @@ import { Button } from "@/components/reusable/button";
 import { HeartIcon } from "@/components/icons/heart";
 import { useRouter } from "next/navigation";
 import { Dayjs } from "dayjs";
+import { getRatingLabel } from "@/utils/getRating";
 
 type HotelListProps = {
   hotel: HotelCard;
@@ -21,13 +22,6 @@ type HotelListProps = {
 const AUTO_SWIPE_MS = 4000;
 const SWIPE_THRESHOLD = 0.15; // fraction of the width needed to change slide
 
-const getRatingLabel = (rating: number) => {
-  if (rating >= 4.5) return "Excellent";
-  if (rating >= 4) return "Very Good";
-  if (rating >= 3) return "Good";
-  if (rating >= 2) return "Fair";
-  return "Poor";
-};
 
 export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, checkOut }: HotelListProps) => {
   const router = useRouter()
@@ -181,7 +175,7 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
             </h3>
 
             <div className="flex flex-col gap-y-3 text-xs">
-              <p className="flex items-center gap-1.5 opacity-75">
+              <p className="flex items-center gap-0.5 opacity-75">
                 <LocationIcon />
                 {hotel.city}, {hotel.state}, {hotel.country}
               </p>

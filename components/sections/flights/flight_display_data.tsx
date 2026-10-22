@@ -5,7 +5,6 @@ import { PageCount } from "@/components/reusable/page_count";
 import { SortByPrice } from "@/components/reusable/sort_by_price";
 import { FlightDataProps } from "@/types/flight_type";
 import { SegmentData } from "./segment_data";
-import Image from "next/image";
 import { Button } from "@/components/reusable/button";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatedDots } from "@/components/loaders/animated_dots";
@@ -104,7 +103,6 @@ export const FlightDisplayData = ({
   ) {
     return (
       <NoData
-        type="flights"
         content="No flight records found, <br /> try removing some filters to see more results."
       />
     );
@@ -160,7 +158,8 @@ export const FlightDisplayData = ({
           type="button"
           icon={isPending ? <AnimatedDots /> : undefined}
           label={isPending ? "" : "Show more results"}
-          className={`w-full h-12 bg-blackish-green text-white text-sm font-semibold rounded flex items-center justify-center ${visibleCount >= totalFlightOffered ? "hidden" : ""}`}
+          disabled={isPending}
+          className={`w-full h-12 bg-blackish-green text-white text-sm font-semibold rounded flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${visibleCount >= totalFlightOffered ? "hidden" : ""}`}
           onClick={handleShowMore}
         />
         <Button

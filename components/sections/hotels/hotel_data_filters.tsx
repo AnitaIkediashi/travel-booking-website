@@ -154,7 +154,6 @@ export const HotelDataFilters = ({ isPending, data, adultCount, childCount, room
   if (!data || data.length === 0) {
     return (
       <NoData
-        type="hotel"
         content="No hotel records, ensure to search the appropriate stays"
       />
     );
