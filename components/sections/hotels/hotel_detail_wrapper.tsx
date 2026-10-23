@@ -22,7 +22,6 @@ export const HotelDetailWrapper = ({
   hotel,
   searchProps,
 }: HotelDetailWrapperProps) => {
-  
   const cheapest = useMemo(() => {
     const rooms = hotel.rooms ?? [];
     const priced = rooms.filter(
@@ -47,6 +46,12 @@ export const HotelDetailWrapper = ({
   const hasCoords = latitude != null && longitude != null;
 
   const reviewsList = hotel?.reviews || [];
+
+  const {adults, children} = searchProps
+
+  const totalGuests = parseInt(adults ?? '0', 10) + parseInt(children ?? '0', 10) 
+
+  const bookingUrl = ``
   
 
   return (

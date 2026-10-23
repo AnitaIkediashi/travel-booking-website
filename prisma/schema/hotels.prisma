@@ -131,6 +131,7 @@ model BookingRooms {
     booking       HotelBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
     @@map("booking_rooms")
+    @@index([room_id, checkin_time, checkout_time])
 }
 
 model HotelBooking {
@@ -138,8 +139,8 @@ model HotelBooking {
     status          HotelBookingStatus @default(IN_PROGRESS)
     total_guests    Int // party size declared at booking time; may exceed guest.length until all guest details are collected
     hold_expires_at DateTime?
-    created_at      DateTime
-    updated_at      DateTime
+    created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
     contact_email   String?
     contact_phoneNo String?
     room_fee_total  Decimal?           @db.Decimal(10, 2)

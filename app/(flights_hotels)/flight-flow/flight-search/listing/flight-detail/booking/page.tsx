@@ -1,11 +1,10 @@
 import { BookingWrapper } from "@/components/sections/flights/booking_wrapper";
 import { FlightBooking } from "@/components/sections/flights/flight_booking";
-import { HotelBooking } from "@/components/sections/hotels/hotel_booking";
 import { queryFlightToken } from "@/helpers/query_flights";
 import { FlightSearchParams } from "@/types/flight_type";
 import { redirect } from "next/navigation";
 
-const BookingPage = async ({ searchParams }: FlightSearchParams) => {
+const FlightBookingPage = async ({ searchParams }: FlightSearchParams) => {
   const searchProps = await searchParams;
 
   const {
@@ -66,6 +65,7 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
 
   return (
     <BookingWrapper
+    type="flight"
       flightChild={
         <FlightBooking
           offers={flightData}
@@ -73,9 +73,8 @@ const BookingPage = async ({ searchParams }: FlightSearchParams) => {
           bookingId={bookingId}
         />
       }
-      hotelChild={<HotelBooking />}
     />
   );
 };
 
-export default BookingPage;
+export default FlightBookingPage;

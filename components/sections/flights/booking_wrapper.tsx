@@ -1,24 +1,20 @@
-"use client";
-import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 type BookingWrapperProps = {
-  flightChild: ReactNode;
-  hotelChild: ReactNode;
+  type: string
+  flightChild?: ReactNode;
+  hotelChild?: ReactNode;
 };
 
 export const BookingWrapper = ({
   flightChild,
   hotelChild,
+  type
 }: BookingWrapperProps) => {
-  const pathname = usePathname();
-
-  const isFlight = pathname.includes("/flight-flow/");
-  const isHotel = pathname.includes("/hotel-flow/");
-
+ 
   return (
     <>
-      {isFlight ? flightChild : isHotel ? hotelChild : null}
+      {type === "flight" ? flightChild : hotelChild }
     </>
   );
 };
