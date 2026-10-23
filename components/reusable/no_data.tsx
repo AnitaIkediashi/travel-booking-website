@@ -15,7 +15,7 @@ export const NoData = ({content}: NoDataProps) => {
               className="w-[400px] h-[400px]"
             />
             <p className="font-medium text-blackish-green">
-              ${content}
+              {content}
             </p>
           </div>
   )

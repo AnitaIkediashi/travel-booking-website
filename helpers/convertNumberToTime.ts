@@ -67,3 +67,15 @@ export const formateToReadableDate = (date: Date | undefined) => {
   const tempDate = new Date(date)
   return tempDate.toDateString().slice(0, 10)
  }
+
+ export const formatToLongDate = (dateString: string) => {
+  const formattedDate = new Date(dateString)
+    .toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+    ;
+    return formattedDate
+ }

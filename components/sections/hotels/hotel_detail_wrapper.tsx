@@ -9,7 +9,7 @@ import Image from "next/image";
 import { Button } from "@/components/reusable/button";
 import Link from "next/link";
 import { HotelAmenities } from "./hotel_amenities";
-import { Avatar } from "antd";
+import { HotelReviews } from "./hotel_reviews";
 
 type HotelDetailWrapperProps = {
   hotel: HotelDetail;
@@ -22,6 +22,7 @@ export const HotelDetailWrapper = ({
   hotel,
   searchProps,
 }: HotelDetailWrapperProps) => {
+  
   const cheapest = useMemo(() => {
     const rooms = hotel.rooms ?? [];
     const priced = rooms.filter(
@@ -44,6 +45,9 @@ export const HotelDetailWrapper = ({
   );
   const { latitude, longitude } = hotel.hotel;
   const hasCoords = latitude != null && longitude != null;
+
+  const reviewsList = hotel?.reviews || [];
+  
 
   return (
     <>
@@ -130,7 +134,7 @@ export const HotelDetailWrapper = ({
                   className="flex min-h-28 w-[calc(50%-0.375rem)] shrink-0 flex-col justify-between rounded-lg border border-mint-green-100 p-4 sm:w-40 md:min-h-32 md:w-44"
                 >
                   <SparkleIcon />
-                  <p className="text-sm">{item}</p>
+                  <p className="md:text-sm text-xs">{item}</p>
                 </div>
               ))}
             </div>
@@ -168,9 +172,9 @@ export const HotelDetailWrapper = ({
                           )}
                         </div>
 
-                        <p className="font-medium">
+                        <p className="font-medium text-sm md:text-base">
                           {room.room_type} - {room.bed_count}{" "}
-                          {room.bed_count === 1 ? "bed" : "beds"} ·{" "}
+                          {room.bed_count === 1 ? "bed" : "beds"} {" "}
                           {!soldOut && room.room_left <= 3 && (
                             <span className="font-medium text-salmon-100">
                               {" "}
@@ -200,7 +204,7 @@ export const HotelDetailWrapper = ({
                           // onClick={() => {
                           //   // handleBook(room.room_id)
                           // }}
-                          className="rounded-md bg-mint-green-100 px-6 py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 sm:px-8"
+                          className="rounded-md bg-mint-green-100 px-6 py-2.5 md:text-sm text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 sm:px-8"
                         />
                       </div>
                     </li>
@@ -239,7 +243,7 @@ export const HotelDetailWrapper = ({
                   />
                 </div>
               ) : (
-                <div className="grid h-64 place-items-center rounded-xl bg-gray-100 text-sm opacity-75">
+                <div className="grid h-64 place-items-center rounded-xl bg-gray-100 text-xs md:text-sm opacity-75">
                   Map unavailable
                 </div>
               )}
@@ -284,42 +288,7 @@ export const HotelDetailWrapper = ({
                   </>
                 )}
               </div>
-              <div>
-                {hasReviews && hotel.reviews && hotel.reviews.length > 0 ? (
-                  <div className="divide-y divide-blackish-green/25">
-                    {hotel.reviews.map((review) => {
-                      const firstInitial = review.author.charAt(0).toUpperCase();
-                  const lastInitial = review.author.includes(" ")
-                    ? review.author?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
-                    : "";
-                    const initials = `${firstInitial}${lastInitial}`;
-                      return (
-                        <div
-                          key={review.id}
-                          className="py-4 md:py-6 flex items-start justify-between gap-4"
-                        >
-                          {review.image === null ? (
-                            <Avatar size={45} style={{ fontSize: "14px" }}>
-                              {initials}
-                            </Avatar>
-                          ) : (
-                            <Avatar src={review.image} size={45} />
-                          )}
-                          <div>
-
-                          </div>
-                        </div>
-                      );
-                    }
-                  )
-                  }
-                  </div>
-                ) : (
-                  <p className="text-sm opacity-75">
-                    No reviews available yet.
-                  </p>
-                )}
-              </div>
+              <HotelReviews hasReviews={hasReviews} reviewsList={reviewsList} />
             </div>
           </div>
         </div>
