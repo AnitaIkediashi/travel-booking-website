@@ -123,11 +123,7 @@ model BookingRooms {
     booking_id    String
     checkin_time  DateTime
     checkout_time DateTime
-    // Restrict: deleting a Rooms row must not silently wipe booking
-    // history. Retire a room type via a soft-delete flag instead.
     room          Rooms        @relation(fields: [room_id], references: [id], onDelete: Restrict)
-    // Cascade: a BookingRooms row only exists in the context of its
-    // parent booking — deleting the booking should take it with it.
     booking       HotelBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
     @@map("booking_rooms")
@@ -137,13 +133,19 @@ model BookingRooms {
 model HotelBooking {
     id              String             @id @default(uuid())
     status          HotelBookingStatus @default(IN_PROGRESS)
-    total_guests    Int // party size declared at booking time; may exceed guest.length until all guest details are collected
+    total_guests    Int
+    adults          Int                @default(1)
+    children        Int                @default(0)
     hold_expires_at DateTime?
-    created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+    created_at      DateTime           @default(now())
+    updated_at      DateTime           @updatedAt
     contact_email   String?
     contact_phoneNo String?
-    room_fee_total  Decimal?           @db.Decimal(10, 2)
+    currency_symbol String             @default("$")
+    currency_code   String             @default("USD")
+    room_base_total Decimal?           @db.Decimal(10, 2)
+    room_tax_total  Decimal?           @db.Decimal(10, 2)
+    room_fee_total  Decimal?           @db.Decimal(10, 2) // base + tax - discount for the stay (the amount to pay)
     booking_rooms   BookingRooms[]
     guests          Guest[]
 
@@ -161,8 +163,6 @@ model Guest {
     date_of_birth  String
     checked_in_at  DateTime?
     checked_out_at DateTime?
-    // Cascade: a Guest row only exists in the context of its parent
-    // booking — deleting the booking should take its guests with it.
     booking        HotelBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
     @@map("guest")

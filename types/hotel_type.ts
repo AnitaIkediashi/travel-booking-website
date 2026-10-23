@@ -169,3 +169,21 @@ export type HotelDetail = {
 };
 
 export type GalleryReview = HotelReview;
+
+export type QuoteInput = {
+  roomId: string;
+  checkIn: Date;
+  checkOut: Date;
+  adults: number;
+  children: number;
+};
+
+export type RoomQuote = {
+  nights: number;
+  currency_symbol: string;
+  currency_code: string;
+  price_per_night: number;
+  base: number;
+  tax: number;
+  total: number; // same as stay_total in the search query
+};

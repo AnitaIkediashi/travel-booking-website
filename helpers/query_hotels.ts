@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/app/generated/prisma/client";
-import { HotelSearchProps, HotelListsProps, HotelDetail } from "@/types/hotel_type";
+import { HotelSearchProps, HotelListsProps, HotelDetail, QuoteInput, RoomQuote } from "@/types/hotel_type";
 
 const MS_PER_DAY = 86_400_000;
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, "\\$&");
 
@@ -254,5 +255,71 @@ export async function getHotelDetail(
       submitted_at: r.submit_time.toISOString(),
       image: r.image,
     })),
+  };
+}
+
+export async function getRoomQuote({
+  roomId,
+  checkIn,
+  checkOut,
+  adults,
+  children,
+}: QuoteInput): Promise<RoomQuote | null> {
+  const nights = Math.round(
+    (checkOut.getTime() - checkIn.getTime()) / MS_PER_DAY,
+  );
+  if (nights < 1) return null;
+
+  const rows = await prisma.$queryRaw<
+    {
+      symbol: string;
+      code: string;
+      adult_total: number;
+      adult_base: number;
+      adult_tax: number;
+      child_total: number | null;
+      child_base: number | null;
+      child_tax: number | null;
+    }[]
+  >(Prisma.sql`
+    SELECT
+      c.symbol,
+      c.code,
+      ga.total_per_pax::float AS adult_total,
+      ga.base_amount::float   AS adult_base,
+      ga.tax_amount::float    AS adult_tax,
+      gc.total_per_pax::float AS child_total,
+      gc.base_amount::float   AS child_base,
+      gc.tax_amount::float    AS child_tax
+    FROM rooms r
+    JOIN room_price_breakdown rpb ON rpb.rooms_id = r.id
+    JOIN currency c ON c.id = rpb.currency_id
+    JOIN guest_prices ga
+      ON ga.room_id = r.id
+     AND ga.currency_id = rpb.currency_id
+     AND ga.guest_type = 'adult'
+    LEFT JOIN guest_prices gc
+      ON gc.room_id = r.id
+     AND gc.currency_id = rpb.currency_id
+     AND gc.guest_type = 'child'
+    WHERE r.id = ${roomId}
+  `);
+
+  const row = rows[0];
+  if (!row) return null;
+
+  const perNight = (adult: number, child: number | null) =>
+    adult * adults + (child ?? 0) * children;
+
+  const price_per_night = perNight(row.adult_total, row.child_total);
+
+  return {
+    nights,
+    currency_symbol: row.symbol,
+    currency_code: row.code,
+    price_per_night: round2(price_per_night),
+    base: round2(perNight(row.adult_base, row.child_base) * nights),
+    tax: round2(perNight(row.adult_tax, row.child_tax) * nights),
+    total: round2(price_per_night * nights),
   };
 }
