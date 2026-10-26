@@ -17,10 +17,13 @@ import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "./button";
 import { CardForm } from "./card_form";
+import { getPassengersForBooking } from "@/lib/actions/flight-booking-actions";
+import { getGuestsForBooking } from "@/lib/actions/hotel_booking";
 import {
-  confirmBookingAndNotify,
-  getPassengersForBooking,
-} from "@/lib/actions/flight-booking-actions";
+  buildBookingPayload,
+  confirmBookingByFlow,
+  getSuccessPath,
+} from "@/lib/booking_flow";
 
 type CardDetailsProps = {
   priceInfo: PriceInfoProps;
@@ -67,20 +70,23 @@ export const CardDetails = ({
     let ignore = false;
     (async () => {
       try {
-        const passengers = await getPassengersForBooking(bookingId);
+        const people =
+          flowType === "hotel"
+            ? await getGuestsForBooking(bookingId)
+            : await getPassengersForBooking(bookingId);
         if (ignore) return;
         setPassengerNames(
-          passengers.map((p) => `${p.first_name} ${p.last_name}`.trim()),
+          people.map((p) => `${p.first_name} ${p.last_name}`.trim()),
         );
-        setTotalTravelers(passengers.length);
+        setTotalTravelers(people.length);
       } catch (err) {
-        console.error("Failed to load passengers:", err);
+        console.error("Failed to load travelers:", err);
       }
     })();
     return () => {
       ignore = true;
     };
-  }, [bookingId]);
+  }, [bookingId, flowType]);
 
   const handleOpenCardForm = () => {
     setShowCardForm(true);
@@ -116,7 +122,8 @@ export const CardDetails = ({
 
       if (result.status === "succeeded") {
         if (bookingId) {
-          const confirmResult = await confirmBookingAndNotify(
+          const confirmResult = await confirmBookingByFlow(
+            flowType,
             bookingId,
             result.paymentIntentId,
           );
@@ -129,46 +136,25 @@ export const CardDetails = ({
         }
 
         toast.success("Payment successful!");
-        const currentParams = new URLSearchParams(searchParams.toString());
-        const from = currentParams.get("from");
-        const to = currentParams.get("to");
-        const trip = currentParams.get("trip");
-        const depart = currentParams.get("depart");
-        const returnDate = currentParams.get("return");
-        const adults = +(currentParams.get("adults") ?? 0); //convert to number
-        const child = +(currentParams.get("child") ?? 0);
-        const infant = +(currentParams.get("infant") ?? 0);
-        const cabin = currentParams.get("cabin");
-        const token = currentParams.get("token");
-        const paymentIntentId = result.paymentIntentId;
 
-        const bookingPayLoad = {
-          flowType,
-          from,
-          to,
-          depart,
-          return: returnDate,
-          adults,
-          child,
-          infant,
-          cabin,
-          trip,
-          token,
-          paymentIntentId,
-          liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
-          passengerNames,
-          bookingId,
-          totalTravelers,
-        };
+        const paymentIntentId = result.paymentIntentId
+
+        const bookingPayLoad = buildBookingPayload(
+          {
+            flowType,
+            passengerNames,
+            totalTravelers,
+            paymentIntentId,
+            liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
+            bookingId,
+          },
+          searchParams,
+        );
 
         const urlResponse = await getSecureBookingUrl(bookingPayLoad);
 
         if (urlResponse.success && urlResponse.bookingId) {
-          const successPath =
-            flowType === "flight"
-              ? "/flight-flow/flight-search/booking-success"
-              : "/hotel-flow/flight-search/booking-success";
-
+          const successPath = getSuccessPath(flowType);
           router.push(
             `${successPath}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
           );

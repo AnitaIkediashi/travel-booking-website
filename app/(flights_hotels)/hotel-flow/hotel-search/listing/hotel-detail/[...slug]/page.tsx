@@ -10,7 +10,7 @@ const HotelDetailPage = async ({ searchParams }: HotelSearchParams) => {
     if(!hotel) {
       return (
         <NoData
-          content="No hotel record found"
+          content="No hotel record found" goBack={true}
         />
       );
     }

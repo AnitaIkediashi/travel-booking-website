@@ -8,7 +8,7 @@ const HotelBookingPage = async ({
   searchParams: Promise<{ bookingId?: string }>;
 }) => {
     const { bookingId } = await searchParams;
-    if(!bookingId) <NoData content="No rooms booked" />
+    if(!bookingId) <NoData content="No rooms booked" goBack={true} />
   return (
     <BookingWrapper
       type="hotel"

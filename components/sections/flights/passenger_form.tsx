@@ -19,6 +19,8 @@ type PassengerFormProps = {
   onChange: (passenger: Passenger) => void;
   onSubmit: () => void;
   onBack?: () => void;
+  personLabel?: string;
+  lastButtonLabel?: string;
 };
 
 type PassengerFormErrors = Partial<Record<keyof Omit<Passenger, "id">, string>>;
@@ -31,7 +33,9 @@ export const PassengerForm = ({
   onChange,
   onSubmit,
   onBack,
-  isMainPassenger
+  isMainPassenger,
+  personLabel = "Passenger",
+  lastButtonLabel = "Continue to seats",
 }: PassengerFormProps) => {
   const CountryOptions = useMemo(() => countryList().getData(), []);
 
@@ -77,7 +81,9 @@ export const PassengerForm = ({
       className="flex flex-col gap-4 w-full max-w-lg"
     >
       <h3 className="font-semibold text-lg">
-        {isMainPassenger ? "Main passenger" : `Passenger ${passengerNumber}`}
+        {isMainPassenger
+          ? `Main ${personLabel.toLowerCase()}`
+          : `${personLabel} ${passengerNumber}`}
       </h3>
 
       {/* First name */}
@@ -193,8 +199,8 @@ export const PassengerForm = ({
             isSaving
               ? "Saving..."
               : isLastPassenger
-                ? "Continue to seats"
-                : "Next passenger"
+                ? lastButtonLabel
+                : `Next ${personLabel.toLowerCase()}`
           }
         />
       </div>

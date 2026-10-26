@@ -1,5 +1,4 @@
 import { HotelDetail, HotelSearchProps } from "@/types/hotel_type";
-import { useMemo } from "react";
 import { StarRating } from "./star_rating";
 import { getRatingLabel } from "@/utils/getRating";
 import { LocationIcon } from "@/components/icons/location";
@@ -10,6 +9,8 @@ import { Button } from "@/components/reusable/button";
 import Link from "next/link";
 import { HotelAmenities } from "./hotel_amenities";
 import { HotelReviews } from "./hotel_reviews";
+import { parseSearchProps } from "@/utils/parse_search_props";
+import { BookRoomButton } from "./book_room_button";
 
 type HotelDetailWrapperProps = {
   hotel: HotelDetail;
@@ -22,20 +23,17 @@ export const HotelDetailWrapper = ({
   hotel,
   searchProps,
 }: HotelDetailWrapperProps) => {
-  const cheapest = useMemo(() => {
-    const rooms = hotel.rooms ?? [];
-    const priced = rooms.filter(
-      (r): r is PricedRoom => r.price_per_night != null,
-    );
-    const bookable = priced.filter((r) => r.room_left > 0);
-    const pool = bookable.length ? bookable : priced;
-
-    return pool.length
-      ? pool.reduce((min, r) =>
-          r.price_per_night < min.price_per_night ? r : min,
-        )
-      : null;
-  }, [hotel.rooms]);
+  const roomList = hotel.rooms ?? [];
+  const priced = roomList.filter(
+    (r): r is PricedRoom => r.price_per_night != null,
+  );
+  const bookable = priced.filter((r) => r.room_left > 0);
+  const pool = bookable.length ? bookable : priced;
+  const cheapest = pool.length
+    ? pool.reduce((min, r) =>
+        r.price_per_night < min.price_per_night ? r : min,
+      )
+    : null;
 
   const hasReviews = hotel.hotel.review_count > 0;
   const highlights = (hotel.hotel.hotel_amenities ?? []).slice(
@@ -47,11 +45,8 @@ export const HotelDetailWrapper = ({
 
   const reviewsList = hotel?.reviews || [];
 
-  const {adults, children} = searchProps
-
-  const totalGuests = parseInt(adults ?? '0', 10) + parseInt(children ?? '0', 10) 
-
-  const bookingUrl = ``
+  const { checkIn, checkOut, adults, children, rooms } =
+    parseSearchProps(searchProps);
   
 
   return (
@@ -94,7 +89,18 @@ export const HotelDetailWrapper = ({
                 {cheapest?.price_per_night.toFixed(0)}
                 <span className="text-sm">/night</span>
               </p>
-              <form action=""></form>
+              {cheapest && (
+                <BookRoomButton
+                  roomId={cheapest.room_id}
+                  soldOut={cheapest.room_left < 1}
+                  disabled={cheapest.room_left < 1}
+                  checkIn={checkIn}
+                  checkOut={checkOut}
+                  adults={adults}
+                  childCount={children}
+                  rooms={rooms}
+                />
+              )}
             </div>
           </div>
           {/* images and the modal */}
@@ -179,7 +185,7 @@ export const HotelDetailWrapper = ({
 
                         <p className="font-medium text-sm md:text-base">
                           {room.room_type} - {room.bed_count}{" "}
-                          {room.bed_count === 1 ? "bed" : "beds"} {" "}
+                          {room.bed_count === 1 ? "bed" : "beds"}{" "}
                           {!soldOut && room.room_left <= 3 && (
                             <span className="font-medium text-salmon-100">
                               {" "}
@@ -202,14 +208,15 @@ export const HotelDetailWrapper = ({
                           <span className="text-sm">/night</span>
                         </p>
 
-                        <Button
-                          type="button"
+                        <BookRoomButton
+                          roomId={room.room_id}
+                          soldOut={soldOut}
                           disabled={soldOut || noPrice}
-                          label={soldOut ? "Sold out" : "Book now"}
-                          // onClick={() => {
-                          //   // handleBook(room.room_id)
-                          // }}
-                          className="rounded-md bg-mint-green-100 px-6 py-2.5 md:text-sm text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 sm:px-8"
+                          checkIn={checkIn}
+                          checkOut={checkOut}
+                          adults={adults}
+                          childCount={children}
+                          rooms={rooms}
                         />
                       </div>
                     </li>

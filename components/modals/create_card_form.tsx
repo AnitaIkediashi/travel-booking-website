@@ -23,7 +23,11 @@ import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useCurrentUser } from "@/lib/auth-context";
-import { confirmBookingAndNotify } from "@/lib/actions/flight-booking-actions";
+import {
+  buildBookingPayload,
+  confirmBookingByFlow,
+  getSuccessPath,
+} from "@/lib/booking_flow";
 
 type CreateCardFormProps = {
   showCardForm: boolean;
@@ -196,7 +200,8 @@ export const CreateCardForm = ({
 
         // confirm booking server-side (re-verifies payment, flips status, sends email)
         if (bookingId) {
-          const confirmResult = await confirmBookingAndNotify(
+          const confirmResult = await confirmBookingByFlow(
+            flowType,
             bookingId,
             paymentIntentId,
           );
@@ -209,37 +214,17 @@ export const CreateCardForm = ({
           }
         }
 
-        const currentParams = new URLSearchParams(searchParams.toString());
-
-        const from = currentParams.get("from");
-        const to = currentParams.get("to");
-        const trip = currentParams.get("trip");
-        const depart = currentParams.get("depart");
-        const returnDate = currentParams.get("return");
-        const adults = +(currentParams.get("adults") ?? 0); //convert to number
-        const child = +(currentParams.get("child") ?? 0);
-        const infant = +(currentParams.get("infant") ?? 0);
-        const cabin = currentParams.get("cabin");
-        const token = currentParams.get("token");
-
-        const bookingPayLoad = {
-          flowType,
-          passengerNames,
-          totalTravelers,
-          from,
-          to,
-          depart,
-          return: returnDate,
-          adults,
-          child,
-          infant,
-          cabin,
-          trip,
-          token,
-          paymentIntentId,
-          liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
-          bookingId,
-        };
+        const bookingPayLoad = buildBookingPayload(
+          {
+            flowType,
+            passengerNames,
+            totalTravelers,
+            paymentIntentId,
+            liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
+            bookingId,
+          },
+          searchParams,
+        );
 
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
@@ -262,10 +247,7 @@ export const CreateCardForm = ({
         const urlResponse = await getSecureBookingUrl(bookingPayLoad);
 
         if (urlResponse.success && urlResponse.bookingId) {
-          const successPath =
-            flowType === "flight"
-              ? "/flight-flow/flight-search/booking-success"
-              : "/hotel-flow/flight-search/booking-success";
+          const successPath = getSuccessPath(flowType);
 
           setCardFormData({ cardName: "", country: "", saveCard: false });
 

@@ -25,91 +25,52 @@ type FlightPayload = {
   bookingId: string | undefined;
 };
 
-type HotelPayload = {
-  flowType: "hotel";
-  // cardName: string;
-  destination: string;
-  checkInDate: string | null;
-  checkOutDate: string | null;
-  roomCount: number;
-  adultCount: number;
-  childrenCount: number;
-  paymentIntentId: string;
-};
-
-type BookingPayload = FlightPayload | HotelPayload;
-
-const BookingSuccessPage = async ({
+const FlightBookingSuccessPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ bookingId: string }>; 
+  searchParams: Promise<{ bookingId: string }>;
 }) => {
   const encryptedBookingId = (await searchParams).bookingId;
 
   if (!encryptedBookingId)
     return <div className={classStyle}>Invalid Booking</div>;
 
-  const bookingResponse = decryptObject<BookingPayload>(
+  const bookingResponse = decryptObject<FlightPayload>(
     decodeURIComponent(encryptedBookingId),
   );
+
+  if (bookingResponse.flowType !== "flight") {
+    return <div className={classStyle}>Unknown Booking Type</div>;
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  //   console.log("Decrypted Booking ID:", bookingId); // Debug log to check the decrypted booking ID
-
-  if (bookingResponse.flowType === "flight") {
-    const departDate = new Date(bookingResponse.depart);
-
-    if (departDate < today) {
-      redirect("/flight-flow/flight-search/listing");
-    }
-
-    // Check return date too if it's a round trip
-    if (bookingResponse.return) {
-      const returnDate = new Date(bookingResponse.return);
-      if (returnDate < today) {
-        redirect("/flight-flow/flight-search/listing");
-      }
-    }
-
-    const newParams = {
-      adults: bookingResponse.adults,
-      child: bookingResponse.child,
-      infant: bookingResponse.infant,
-      token: bookingResponse.token,
-    };
-
-    const flightData = await queryFlightToken(newParams);
-    
-    return (
-      <FlightBookingSuccess
-        offers={flightData}
-        totalTravelers={bookingResponse.totalTravelers}
-        passengerNames={bookingResponse.passengerNames}
-        paymentIntentId={bookingResponse.paymentIntentId}
-        liveSeatFeesTotal={bookingResponse.liveSeatFeesTotal ?? 0}
-        bookingId={bookingResponse.bookingId}
-      />
-    );
-  } else if (bookingResponse.flowType === "hotel") {
-    if (bookingResponse.checkInDate) {
-      const checkInDate = new Date(bookingResponse.checkInDate);
-      if (checkInDate < today) {
-        redirect("/hotel-flow/hotel-search/listing");
-      }
-    }
-
-    if (bookingResponse.checkOutDate) {
-      const checkOutDate = new Date(bookingResponse.checkOutDate);
-      if (checkOutDate < today) {
-        redirect("/hotel-flow/hotel-search/listing");
-      }
-    }
-    return;
+  if (new Date(bookingResponse.depart) < today) {
+    redirect("/flight-flow/flight-search/listing");
   }
 
-  return <div className={classStyle}>Unknown Booking Type</div>;
+  if (bookingResponse.return && new Date(bookingResponse.return) < today) {
+    redirect("/flight-flow/flight-search/listing");
+  }
+
+  const flightData = await queryFlightToken({
+    adults: bookingResponse.adults,
+    child: bookingResponse.child,
+    infant: bookingResponse.infant,
+    token: bookingResponse.token,
+  });
+
+  return (
+    <FlightBookingSuccess
+      offers={flightData}
+      totalTravelers={bookingResponse.totalTravelers}
+      passengerNames={bookingResponse.passengerNames}
+      paymentIntentId={bookingResponse.paymentIntentId}
+      liveSeatFeesTotal={bookingResponse.liveSeatFeesTotal ?? 0}
+      bookingId={bookingResponse.bookingId}
+    />
+  );
 };
 
-export default BookingSuccessPage;
+export default FlightBookingSuccessPage;
