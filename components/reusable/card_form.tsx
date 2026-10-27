@@ -10,7 +10,7 @@ import {
   saveCardToDatabase,
 } from "@/lib/actions/card-actions";
 import { ToastContainer, toast } from "react-toastify";
-import { CardFormDataPayload, PriceInfoProps } from "@/types/card_type";
+import { CardFormDataPayload } from "@/types/card_type";
 import {
   CardNumberElement,
   CardExpiryElement,
@@ -19,21 +19,16 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { z } from "zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useCurrentUser } from "@/lib/auth-context";
 import {
-  buildBookingPayload,
   confirmBookingByFlow,
   getSuccessPath,
 } from "@/lib/booking_flow";
 
 type CardFormProps = {
-  priceInfo: PriceInfoProps;
   flowType: string;
-  passengerNames: string[];
-  totalTravelers: number;
-  liveSeatFeesTotal: number | undefined;
   bookingId: string | undefined;
 };
 
@@ -54,15 +49,10 @@ const stripeClasses = {
 };
 
 export const CardForm = ({
-  priceInfo,
   flowType,
-  passengerNames,
-  totalTravelers,
-  liveSeatFeesTotal,
   bookingId,
 }: CardFormProps) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const stripe = useStripe();
   const elements = useElements();
   const CountryOptions = useMemo(() => countryList().getData(), []);
@@ -126,6 +116,10 @@ export const CardForm = ({
   const handleCardSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+    if (!bookingId) {
+      toast.error("Booking not found.");
+      return;
+    }
 
     setIsLoading(true);
     setErrors(null);
@@ -134,7 +128,8 @@ export const CardForm = ({
       // 1. Initialize the Payment Intent on the server
       const intentResponse = await processPaymentIntent(
         cardFormData,
-        priceInfo,
+        bookingId,
+        flowType,
       );
 
       if (!intentResponse.success) {
@@ -173,35 +168,18 @@ export const CardForm = ({
 
       // 3. Finalize DB saving if successful and saveCard was checked
       if (paymentIntent.status === "succeeded") {
-        const paymentIntentId = paymentIntent.id;
-
-        if (bookingId) {
-          const confirmResult = await confirmBookingByFlow(
-            flowType,
-            bookingId,
-            paymentIntentId,
-          );
-          if (!confirmResult.success) {
-            toast.error(
-              "Payment succeeded but booking confirmation failed. Please contact support.",
-            );
-            setIsLoading(false);
-            return;
-          }
-        }
-
-       
-        const bookingPayLoad = buildBookingPayload(
-          {
-            flowType,
-            passengerNames,
-            totalTravelers,
-            paymentIntentId,
-            liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
-            bookingId,
-          },
-          searchParams,
+        const confirmResult = await confirmBookingByFlow(
+          flowType,
+          bookingId,
+          paymentIntent.id,
         );
+        if (!confirmResult.success) {
+          toast.error(
+            "Payment succeeded but booking confirmation failed. Please contact support.",
+          );
+          setIsLoading(false);
+          return;
+        }
 
         if (cardFormData.saveCard) {
           const saveResult = await saveCardToDatabase(paymentIntent.id);
@@ -221,15 +199,15 @@ export const CardForm = ({
 
         toast.success("Payment successful!");
 
-        const urlResponse = await getSecureBookingUrl(bookingPayLoad);
+        const urlResponse = await getSecureBookingUrl(
+          bookingId,
+          flowType === "hotel" ? "hotel" : "flight",
+        );
 
         if (urlResponse.success && urlResponse.bookingId) {
-          const successPath = getSuccessPath(flowType);
-
           setCardFormData({ cardName: "", country: "", saveCard: false });
-
           router.push(
-            `${successPath}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
+            `${getSuccessPath(flowType)}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
           );
         }
       }

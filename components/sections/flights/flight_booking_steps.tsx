@@ -26,7 +26,6 @@ type BookingStepsProps = {
   totalTravelers: number;
   segments: SegmentsPropsArray[];
   bookingId: string | undefined;
-  currencyCode: string | undefined;
   seatFeesTotal: number;
 };
 
@@ -52,7 +51,6 @@ export const FlightBookingSteps = ({
   segments,
   bookingId,
   seatFeesTotal,
-  currencyCode,
 }: BookingStepsProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [liveSeatFeesTotal, setLiveSeatFeesTotal] = useState(seatFeesTotal);
@@ -64,15 +62,6 @@ export const FlightBookingSteps = ({
   const discount = priceInfoObj?.discount_amount;
 
   const newTotalPrice = (totalPrice ?? 0) + liveSeatFeesTotal;
-
-  const newPriceObj = {
-    currency_code: currencyCode,
-    total_amount: totalPrice,
-    base_amount: basefare,
-    tax_amount: tax,
-    discount_amount: discount,
-    seat_fees_total: liveSeatFeesTotal,
-  };
 
   const cabin = offer.branded_fareinfo?.cabin_class;
 
@@ -243,7 +232,6 @@ export const FlightBookingSteps = ({
               )}
               {currentStep === 2 && (
                 <CardDetails
-                  priceInfo={newPriceObj}
                   flowType="flight"
                   bookingId={bookingId!}
                   liveSeatFeesTotal={liveSeatFeesTotal}

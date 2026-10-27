@@ -5,7 +5,6 @@ import { AddCard } from "./add_card";
 import { CreateCardForm } from "../modals/create_card_form";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import { PriceInfoProps } from "@/types/card_type";
 import { useCurrentUser } from "@/lib/auth-context";
 import { CardDetails as CardDetailsType } from "@/app/generated/prisma/client";
 import {
@@ -14,19 +13,15 @@ import {
 } from "@/lib/actions/card-actions";
 import { toast, ToastContainer } from "react-toastify";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "./button";
 import { CardForm } from "./card_form";
-import { getPassengersForBooking } from "@/lib/actions/flight-booking-actions";
-import { getGuestsForBooking } from "@/lib/actions/hotel_booking";
 import {
-  buildBookingPayload,
   confirmBookingByFlow,
   getSuccessPath,
 } from "@/lib/booking_flow";
 
 type CardDetailsProps = {
-  priceInfo: PriceInfoProps;
   flowType: string;
   bookingId: string | undefined;
   liveSeatFeesTotal?: number;
@@ -37,20 +32,15 @@ const stripePromise = loadStripe(
 );
 
 export const CardDetails = ({
-  priceInfo,
   flowType,
   bookingId,
-  liveSeatFeesTotal,
 }: CardDetailsProps) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { isAuthenticated } = useCurrentUser();
   const [showCardForm, setShowCardForm] = useState(false);
   const [cards, setCards] = useState<CardDetailsType[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [passengerNames, setPassengerNames] = useState<string[]>([]);
-  const [totalTravelers, setTotalTravelers] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -66,28 +56,6 @@ export const CardDetails = ({
     fetchCards();
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    let ignore = false;
-    (async () => {
-      try {
-        const people =
-          flowType === "hotel"
-            ? await getGuestsForBooking(bookingId)
-            : await getPassengersForBooking(bookingId);
-        if (ignore) return;
-        setPassengerNames(
-          people.map((p) => `${p.first_name} ${p.last_name}`.trim()),
-        );
-        setTotalTravelers(people.length);
-      } catch (err) {
-        console.error("Failed to load travelers:", err);
-      }
-    })();
-    return () => {
-      ignore = true;
-    };
-  }, [bookingId, flowType]);
-
   const handleOpenCardForm = () => {
     setShowCardForm(true);
   };
@@ -101,67 +69,55 @@ export const CardDetails = ({
       toast.error("Please select a card.");
       return;
     }
+    if (!bookingId) {
+      toast.error("Booking not found.");
+      return;
+    }
 
     setIsLoading(true);
-
     try {
       const result = await processPaymentWithSavedCard(
         selectedCardId,
-        priceInfo,
+        bookingId,
+        flowType,
       );
 
       if (result.redirect) {
         router.push(result.redirect);
         return;
       }
-
       if (!result.success) {
         toast.error(result.message);
         return;
       }
 
       if (result.status === "succeeded") {
-        if (bookingId) {
-          const confirmResult = await confirmBookingByFlow(
-            flowType,
-            bookingId,
-            result.paymentIntentId,
+        const confirmResult = await confirmBookingByFlow(
+          flowType,
+          bookingId,
+          result.paymentIntentId,
+        );
+        if (!confirmResult.success) {
+          toast.error(
+            "Payment succeeded but booking confirmation failed. Please contact support.",
           );
-          if (!confirmResult.success) {
-            toast.error(
-              "Payment succeeded but booking confirmation failed. Please contact support.",
-            );
-            return;
-          }
+          return;
         }
 
         toast.success("Payment successful!");
 
-        const paymentIntentId = result.paymentIntentId
-
-        const bookingPayLoad = buildBookingPayload(
-          {
-            flowType,
-            passengerNames,
-            totalTravelers,
-            paymentIntentId,
-            liveSeatFeesTotal: liveSeatFeesTotal ?? 0,
-            bookingId,
-          },
-          searchParams,
+        const urlResponse = await getSecureBookingUrl(
+          bookingId,
+          flowType === "hotel" ? "hotel" : "flight",
         );
-
-        const urlResponse = await getSecureBookingUrl(bookingPayLoad);
-
         if (urlResponse.success && urlResponse.bookingId) {
-          const successPath = getSuccessPath(flowType);
           router.push(
-            `${successPath}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
+            `${getSuccessPath(flowType)}?bookingId=${encodeURIComponent(urlResponse.bookingId)}`,
           );
         }
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
@@ -242,25 +198,14 @@ export const CardDetails = ({
             <CreateCardForm
               showCardForm={showCardForm}
               onClose={handleCloseCardForm}
-              priceInfo={priceInfo}
               flowType={flowType}
-              passengerNames={passengerNames}
-              totalTravelers={totalTravelers}
-              liveSeatFeesTotal={liveSeatFeesTotal ?? 0}
               bookingId={bookingId}
             />
           </Elements>
         </div>
       ) : (
         <Elements stripe={stripePromise}>
-          <CardForm
-            priceInfo={priceInfo}
-            flowType={flowType}
-            passengerNames={passengerNames}
-            totalTravelers={totalTravelers}
-            liveSeatFeesTotal={liveSeatFeesTotal ?? 0}
-            bookingId={bookingId}
-          />
+          <CardForm flowType={flowType} bookingId={bookingId} />
         </Elements>
       )}
       <ToastContainer position="top-center" theme="dark" closeOnClick={true} />
@@ -268,13 +213,3 @@ export const CardDetails = ({
   );
 };
 
-{
-  /* <Elements stripe={stripePromise}>
-  <CreateCardForm
-    showCardForm={showCardForm}
-    onClose={handleCloseCardForm}
-    priceInfo={priceInfo}
-    flowType={flowType}
-  />
-</Elements>; */
-}

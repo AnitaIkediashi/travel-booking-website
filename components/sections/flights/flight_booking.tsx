@@ -3,7 +3,6 @@ import { fetchCountryName } from "@/helpers/query_flights";
 import { NewFlightOffer } from "@/types/flight_type";
 import { FlightBookingSteps } from "./flight_booking_steps";
 import { getBookingSeatFeesTotal } from "@/helpers/getBookingSeatsTotal";
-import { prisma } from "@/lib/prisma";
 
 type FlightBookingProps = {
   offers: NewFlightOffer | null;
@@ -30,16 +29,7 @@ export const FlightBooking = async ({offers, totalTravelers, bookingId}: FlightB
   );
 
   const seatFeesTotal = await getBookingSeatFeesTotal(bookingId);
-
-  const pricebreakdown = offers.price_breakdown
-
-  const currency_id = pricebreakdown?.currency_id
-
-  const currencyObj = currency_id
-    ? await prisma.currency.findUnique({ where: { id: currency_id } })
-    : null;
-
-  const currency_code = currencyObj?.code.toLowerCase()
+  
 
   return (
     <FlightBookingSteps
@@ -48,7 +38,6 @@ export const FlightBooking = async ({offers, totalTravelers, bookingId}: FlightB
       totalTravelers={totalTravelers}
       bookingId={bookingId}
       seatFeesTotal={seatFeesTotal}
-      currencyCode={currency_code}
     />
   );
 }

@@ -251,6 +251,10 @@ model Booking {
   seat_fees_total Decimal?      @default(0) @db.Decimal(10, 2)
   passengers      Passenger[]
   seats           Seat[]
+  adults            Int      @default(1)
+  children          Int      @default(0)
+  infants           Int      @default(0)
+  payment_intent_id String?  @unique
 
   @@map("bookings")
 }

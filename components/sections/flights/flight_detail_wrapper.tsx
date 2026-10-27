@@ -83,13 +83,13 @@ export const FlightDetailWrapper = async ({
     token,
   } = searchProps;
 
-  let bookingUrl = "";
+  // let bookingUrl = "";
 
-  if (trip === "round-trip") {
-    bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&return=${returnDate}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
-  } else {
-    bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
-  }
+  // if (trip === "round-trip") {
+  //   bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&return=${returnDate}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
+  // } else {
+  //   bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
+  // }
 
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
@@ -124,13 +124,16 @@ export const FlightDetailWrapper = async ({
               ${totalPrice}
             </p>
             <form action={createBookingAction}>
-              <input type="hidden" name="flightOfferId" value={offers.id} />
-              <input
-                type="hidden"
-                name="totalTravelers"
-                value={totalTravelers}
-              />
-              <input type="hidden" name="redirectUrl" value={bookingUrl} />
+              <input type="hidden" name="token" value={token ?? ""} />
+              <input type="hidden" name="adults" value={adults ?? 0} />
+              <input type="hidden" name="child" value={child ?? 0} />
+              <input type="hidden" name="infant" value={infant ?? 0} />
+              <input type="hidden" name="from" value={from ?? ""} />
+              <input type="hidden" name="to" value={to ?? ""} />
+              <input type="hidden" name="depart" value={depart ?? ""} />
+              <input type="hidden" name="return" value={returnDate ?? ""} />
+              <input type="hidden" name="trip" value={trip ?? ""} />
+              <input type="hidden" name="cabin" value={cabinType ?? ""} />
               <SubmitButton />
             </form>
           </div>
