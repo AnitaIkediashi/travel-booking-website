@@ -1,28 +1,15 @@
 import { FlightBookingSuccess } from "@/components/sections/flights/flight_booking_success";
 import { queryFlightToken } from "@/helpers/query_flights";
 import { decryptObject } from "@/utils/crypto";
-import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 const classStyle =
   "pt-[137px] md:pb-[120px] pb-12 text-center font-semibold font-montserrat";
 
-type FlightPayload = {
-  flowType: "flight";
-  passengerNames: string[];
-  totalTravelers: number;
-  from: string;
-  to: string;
-  depart: string;
-  return: string | undefined;
-  adults: number;
-  child: number;
-  infant: number;
-  cabin: string;
-  trip: string;
-  token: string;
-  paymentIntentId: string;
-  liveSeatFeesTotal: number | undefined;
-  bookingId: string | undefined;
+type SuccessToken = {
+  bookingId: string;
+  flowType: "flight" | "hotel";
+  iat: number;
 };
 
 const FlightBookingSuccessPage = async ({
@@ -30,45 +17,55 @@ const FlightBookingSuccessPage = async ({
 }: {
   searchParams: Promise<{ bookingId: string }>;
 }) => {
-  const encryptedBookingId = (await searchParams).bookingId;
+  const encrypted = (await searchParams).bookingId;
+  if (!encrypted) return <div className={classStyle}>Invalid Booking</div>;
 
-  if (!encryptedBookingId)
+  // any failure (malformed, tampered, wrong key) gets the same response
+  let payload: SuccessToken;
+  try {
+    payload = decryptObject<SuccessToken>(decodeURIComponent(encrypted));
+  } catch {
     return <div className={classStyle}>Invalid Booking</div>;
+  }
 
-  const bookingResponse = decryptObject<FlightPayload>(
-    decodeURIComponent(encryptedBookingId),
-  );
-
-  if (bookingResponse.flowType !== "flight") {
+  if (payload.flowType !== "flight" || !payload.bookingId) {
     return <div className={classStyle}>Unknown Booking Type</div>;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const booking = await prisma.booking.findFirst({
+    where: { id: payload.bookingId, status: "CONFIRMED" },
+    include: {
+      passengers: {
+        orderBy: { passenger_index: "asc" },
+        select: { first_name: true, last_name: true },
+      },
+      seats: { select: { extra_fee: true } },
+      flightOffer: { select: { token: true } },
+    },
+  });
 
-  if (new Date(bookingResponse.depart) < today) {
-    redirect("/flight-flow/flight-search/listing");
-  }
-
-  if (bookingResponse.return && new Date(bookingResponse.return) < today) {
-    redirect("/flight-flow/flight-search/listing");
-  }
+  if (!booking) return <div className={classStyle}>Booking not found</div>;
 
   const flightData = await queryFlightToken({
-    adults: bookingResponse.adults,
-    child: bookingResponse.child,
-    infant: bookingResponse.infant,
-    token: bookingResponse.token,
+    adults: booking.adults,
+    child: booking.children,
+    infant: booking.infants,
+    token: booking.flightOffer.token,
   });
+
+  const passengerNames = booking.passengers.map((p) =>
+    `${p.first_name} ${p.last_name}`.trim(),
+  );
+  const seatFees = booking.seats.reduce((sum, s) => sum + s.extra_fee, 0);
 
   return (
     <FlightBookingSuccess
       offers={flightData}
-      totalTravelers={bookingResponse.totalTravelers}
-      passengerNames={bookingResponse.passengerNames}
-      paymentIntentId={bookingResponse.paymentIntentId}
-      liveSeatFeesTotal={bookingResponse.liveSeatFeesTotal ?? 0}
-      bookingId={bookingResponse.bookingId}
+      totalTravelers={booking.total_travelers}
+      passengerNames={passengerNames}
+      paymentIntentId={booking.payment_intent_id ?? ""}
+      liveSeatFeesTotal={seatFees}
+      bookingId={booking.id}
     />
   );
 };

@@ -21,56 +21,6 @@ import Stripe from "stripe";
  * 7. By adding the **expand property**, you are telling Stripe: "Don't just give me the ID string; go fetch the full object and embed it right here." With expansion, your result becomes a nested object:
  */
 
-// export async function processPaymentIntent(
-//   rawData: unknown,
-//   priceInfo: PriceInfoProps,
-// ) {
-//   // 1. Re-validate on server (Security check)
-//   const validated = cardSchema.safeParse(rawData);
-
-//   if (!validated.success) {
-//     console.error("error message prettify: ", z.prettifyError(validated.error));
-//     return {
-//       success: false,
-//       // errors: validated.error.format(), // deprecated
-//       errors: z.treeifyError(validated.error), // replaced the format() in the new version of zod
-//     };
-//   }
-
-//   try {
-//     const priceDetails = priceInfo;
-
-//     const baseFare = priceDetails.base_amount || 0;
-//     const tax = priceDetails.tax_amount || 0;
-//     const discount = priceDetails.discount_amount || 0;
-//     const seatFees = priceDetails.seat_fees_total || 0;
-
-//     const totalAmount = baseFare + tax + discount + seatFees;
-//     const currency = (priceDetails.currency_code ?? "usd").toLowerCase();
-
-//     const paymentIntent = await stripe.paymentIntents.create({
-//       amount: Math.round(totalAmount * 100), // Stripe expects amount in cents
-//       currency,
-//       // If saveCard is true, Stripe prepares the card for future "off-session" use
-//       setup_future_usage: validated.data.saveCard ? "off_session" : undefined,
-//       metadata: {
-//         cardName: validated.data.cardName,
-//         country: validated.data.country,
-//         saveCard: String(validated.data.saveCard),
-//       },
-//     });
-
-//     return {
-//       success: true,
-//       clientSecret: paymentIntent.client_secret,
-//       paymentIntentId: paymentIntent.id,
-//     };
-//   } catch (error) {
-//     console.error("Payment Error:", error);
-//     return { success: false, message: "Internal Server Error" };
-//   }
-// }
-
 export async function processPaymentIntent(
   rawData: unknown,
   bookingId: string,
@@ -272,68 +222,6 @@ export async function getCardInfo() {
     return { success: false, cards: [] };
   }
 }
-
-// export async function processPaymentWithSavedCard(
-//   savedCardId: string,
-//   priceInfo: PriceInfoProps,
-// ) {
-//   const session = await getServerSession(authOptions);
-
-//   if (!session?.user?.id) {
-//     return { success: false, redirect: "/signin" };
-//   }
-
-//   try {
-//     const card = await prisma.cardDetails.findFirst({
-//       where: { id: savedCardId, userId: session.user.id },
-//     });
-
-//     if (!card) {
-//       return { success: false, message: "Card not found." };
-//     }
-
-//     // stripeCustomerId should already exist — created when card was saved
-//     const user = await prisma.user.findUnique({
-//       where: { id: session.user.id },
-//       select: { stripeCustomerId: true },
-//     });
-
-//     if (!user?.stripeCustomerId) {
-//       return { success: false, message: "No Stripe customer found." };
-//     }
-
-//     const baseFare = priceInfo.base_amount || 0;
-//     const tax = priceInfo.tax_amount || 0;
-//     const discount = priceInfo.discount_amount || 0;
-//     const seatFees = priceInfo.seat_fees_total || 0;
-
-//     const totalAmount = baseFare + tax + discount + seatFees;
-//     const currency = (priceInfo.currency_code ?? "usd").toLowerCase();
-
-//     const paymentIntent = await stripe.paymentIntents.create({
-//       amount: Math.round(totalAmount * 100),
-//       currency,
-//       customer: user.stripeCustomerId, // ← already exists ✓
-//       payment_method: card.stripePaymentMethodId,
-//       confirm: true,
-//       off_session: true,
-//       metadata: {
-//         cardName: card.cardName,
-//         country: card.country,
-//         userId: session.user.id,
-//       },
-//     });
-
-//     return {
-//       success: true,
-//       paymentIntentId: paymentIntent.id,
-//       status: paymentIntent.status,
-//     };
-//   } catch (error) {
-//     console.error("Saved card payment error:", error);
-//     return { success: false, message: "Payment failed. Please try again." };
-//   }
-// }
 
 export async function processPaymentWithSavedCard(
   savedCardId: string,

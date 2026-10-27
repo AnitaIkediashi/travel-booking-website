@@ -38,7 +38,6 @@ export async function getFlightTotal(bookingId: string) {
     booking.flightOffer.price_breakdown?.currency.code.toLowerCase();
   if (!currency) throw new Error("Offer has no price");
 
-  // Same maths as queryFlightToken: rate per passenger type x count
   const fareCents = booking.flightOffer.traveler_price.reduce(
     (sum, t) =>
       sum + toCents(t.total_per_pax) * (counts[t.passenger_type] ?? 0),
@@ -46,7 +45,6 @@ export async function getFlightTotal(bookingId: string) {
   );
   const seatCents = booking.seats.reduce((s, x) => s + x.extra_fee * 100, 0);
 
-  // Discounts: decide per-person or per-booking, then SUBTRACT here.
   return { fareCents, seatCents, amountCents: fareCents + seatCents, currency };
 }
 

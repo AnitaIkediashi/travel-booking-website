@@ -22,59 +22,16 @@ const FlightBookingPage = async ({ searchParams }: FlightSearchParams) => {
     bookingId
   } = searchProps;
 
-  // if (!depart) return []; // to check it depart exists or not
-
-  // const currentDate = new Date();
-
-  // currentDate.setHours(0, 0, 0, 0);
-
-  // const departDate = new Date(depart);
-
-  // const isPastDate = departDate < currentDate;
-
-  // const isReturnDateValid =
-  //   trip === "round-trip" && returnDate && new Date(returnDate) < departDate;
-
-  // const adultCount = +(adults ?? 0);
-  // const childCount = +(child ?? 0);
-  // const infantCount = +(infant ?? 0);
-  // const totalTravelers = adultCount + childCount + infantCount;
-
-  // const isValidQuery =
-  //   from &&
-  //   to &&
-  //   depart &&
-  //   trip &&
-  //   cabin &&
-  //   token &&
-  //   !isPastDate &&
-  //   !isReturnDateValid &&
-  //   (adultCount > 0 || childCount > 0 || infantCount > 0);
-
-  // if (!isValidQuery) {
-  //   redirect("/flight-flow/flight-search/listing");
-  // }
-
-  // const newParams = {
-  //   adults: adultCount,
-  //   child: childCount,
-  //   infant: infantCount,
-  //   token,
-  // };
-
-  // const flightData = await queryFlightToken(newParams);
-
-  if (!depart) redirect("/flight-flow/flight-search/listing"); // was: return []
+  if (!depart) redirect("/flight-flow/flight-search/listing");
 
   const currentDate = new Date();
-  currentDate.setUTCHours(0, 0, 0, 0); // was setHours, to match queryFlightData
+  currentDate.setUTCHours(0, 0, 0, 0);
 
   const departDate = new Date(depart);
   const isPastDate = departDate < currentDate;
   const isReturnDateInvalid =
     trip === "round-trip" && returnDate && new Date(returnDate) < departDate;
 
-  // the stored booking decides the counts, not the editable URL
   const booking = bookingId
     ? await prisma.booking.findUnique({
         where: { id: bookingId },
