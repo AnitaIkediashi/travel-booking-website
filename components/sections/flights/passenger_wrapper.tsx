@@ -8,7 +8,7 @@ import {
   savePassenger,
 } from "@/lib/actions/flight-booking-actions";
 import { useEffect, useState } from "react";
-import { PassengerForm } from "./passenger_form";
+import { PassengerForm } from "@/components/reusable/passenger_form";
 import { contactInfoSchema } from "@/lib/zod_schema";
 import { z } from "zod";
 import { ContactInfoSection } from "./contact_info_section";
@@ -129,49 +129,51 @@ export const PassengerWrapper = ({
   };
 
   const handlePassengerSubmit = async () => {
-      if (currentIndex === 0 && !validateContactInfo()) {
-        return; // block progression until contact info is valid
-      }
-  
-      setIsSaving(true);
-      try {
-        if (currentIndex === 0) {
-          const contactResult = await saveContactInfo(bookingId, contactInfo);
-          if (!contactResult.success) {
-            console.error("Contact info save failed:", contactResult.errors);
-            return;
-          }
-        }
-  
-        const current = passengers[currentIndex];
-        const result = await savePassenger(
-          bookingId,
-          {
-            firstName: current.firstName,
-            lastName: current.lastName,
-            gender: current.gender as "MALE" | "FEMALE",
-            nationality: current.nationality,
-            dateOfBirth: current.dateOfBirth,
-          },
-          currentIndex,
-          current.id,
-        );
-  
-        if (!result.success) {
-          console.error("Server validation failed:", result.errors);
+    if (currentIndex === 0 && !validateContactInfo()) {
+      return; // block progression until contact info is valid
+    }
+
+    setIsSaving(true);
+    try {
+      if (currentIndex === 0) {
+        const contactResult = await saveContactInfo(bookingId, contactInfo);
+        if (!contactResult.success) {
+          console.error("Contact info save failed:", contactResult.errors);
           return;
         }
-        setPassengers((prev) => prev.map((p, i) => (i === currentIndex ? { ...p, id: result.id } : p)));
-  
-        if (currentIndex < totalTravelers - 1) {
-          setCurrentIndex((prev) => prev + 1);
-        } else {
-          nextStep();
-        }
-      } finally {
-        setIsSaving(false);
       }
-    };
+
+      const current = passengers[currentIndex];
+      const result = await savePassenger(
+        bookingId,
+        {
+          firstName: current.firstName,
+          lastName: current.lastName,
+          gender: current.gender as "MALE" | "FEMALE",
+          nationality: current.nationality,
+          dateOfBirth: current.dateOfBirth,
+        },
+        currentIndex,
+        current.id,
+      );
+
+      if (!result.success) {
+        console.error("Server validation failed:", result.errors);
+        return;
+      }
+      setPassengers((prev) =>
+        prev.map((p, i) => (i === currentIndex ? { ...p, id: result.id } : p)),
+      );
+
+      if (currentIndex < totalTravelers - 1) {
+        setCurrentIndex((prev) => prev + 1);
+      } else {
+        nextStep();
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!isLoaded) {
     return (

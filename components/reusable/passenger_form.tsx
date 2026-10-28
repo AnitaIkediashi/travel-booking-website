@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Passenger } from "./passenger_wrapper";
+import { Passenger } from "../sections/flights/passenger_wrapper";
 import { Button } from "@/components/reusable/button";
 import { passengerSchema } from "@/lib/zod_schema";
 import { DatePicker, Select } from "antd";

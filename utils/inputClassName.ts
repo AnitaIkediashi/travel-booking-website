@@ -4,3 +4,6 @@ export const inputClassName =
 export const autoCapitalizeWords = (value: string): string => {
   return value.replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+export const cleanCardName = (v: string) =>
+  v.replace(/[^\p{L}\p{M} '’.-]/gu, "").replace(/\s{2,}/g, " ");

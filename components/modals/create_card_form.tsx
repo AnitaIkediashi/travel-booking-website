@@ -5,7 +5,11 @@ import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
+import {
+  autoCapitalizeWords,
+  cleanCardName,
+  inputClassName,
+} from "@/utils/inputClassName";
 import {
   processPaymentIntent,
   saveCardToDatabase,
@@ -23,10 +27,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useCurrentUser } from "@/lib/auth-context";
-import {
-  confirmBookingByFlow,
-  getSuccessPath,
-} from "@/lib/booking_flow";
+import { confirmBookingByFlow, getSuccessPath } from "@/lib/booking_flow";
 
 type CreateCardFormProps = {
   showCardForm: boolean;
@@ -81,11 +82,8 @@ export const CreateCardForm = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const countrySearch = (value: string) => {
-    setCardFormData((prev) => ({
-      ...prev,
-      country: value,
-    }));
+  const countrySearch = (value?: string) => {
+    setCardFormData((prev) => ({ ...prev, country: value ?? "" }));
   };
 
   const handleCheckedInfo = (e: CheckboxChangeEvent) => {
@@ -98,7 +96,9 @@ export const CreateCardForm = ({
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setCardFormData((prev) => ({ ...prev, [name]: value }));
+    const cleaned = name === "cardName" ? cleanCardName(value) : value;
+
+    setCardFormData((prev) => ({ ...prev, [name]: cleaned }));
 
     // 1. Cast name to a key of the properties object
     /**
@@ -131,7 +131,7 @@ export const CreateCardForm = ({
     const { name, value } = e.target;
     setCardFormData((prev) => ({
       ...prev,
-      [name]: autoCapitalizeWords(value),
+      [name]: autoCapitalizeWords(value.trim()),
     }));
   };
 
@@ -190,7 +190,6 @@ export const CreateCardForm = ({
 
       // 3. Finalize DB saving if successful and saveCard was checked
       if (paymentIntent.status === "succeeded") {
-
         const confirmResult = await confirmBookingByFlow(
           flowType,
           bookingId,
@@ -324,6 +323,7 @@ export const CreateCardForm = ({
                       type="text"
                       placeholder="Type your name"
                       name="cardName"
+                      maxLength={50}
                       autoCapitalize="words"
                       className={inputClassName}
                       value={cardFormData.cardName}
@@ -344,7 +344,8 @@ export const CreateCardForm = ({
                     </legend>
                     <Select
                       options={CountryOptions}
-                      value={cardFormData.country}
+                      value={cardFormData.country || undefined}
+                      placeholder="Select country"
                       allowClear
                       showSearch={{
                         optionFilterProp: "label",

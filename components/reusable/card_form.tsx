@@ -4,7 +4,11 @@ import { Checkbox, CheckboxChangeEvent, Select } from "antd";
 import { Button } from "../reusable/button";
 import countryList from "react-select-country-list";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
+import {
+  autoCapitalizeWords,
+  cleanCardName,
+  inputClassName,
+} from "@/utils/inputClassName";
 import {
   processPaymentIntent,
   saveCardToDatabase,
@@ -22,10 +26,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { getSecureBookingUrl } from "@/lib/actions/encrypt-url-action";
 import { useCurrentUser } from "@/lib/auth-context";
-import {
-  confirmBookingByFlow,
-  getSuccessPath,
-} from "@/lib/booking_flow";
+import { confirmBookingByFlow, getSuccessPath } from "@/lib/booking_flow";
 
 type CardFormProps = {
   flowType: string;
@@ -48,10 +49,7 @@ const stripeClasses = {
   invalid: "border-red-500 text-red-500",
 };
 
-export const CardForm = ({
-  flowType,
-  bookingId,
-}: CardFormProps) => {
+export const CardForm = ({ flowType, bookingId }: CardFormProps) => {
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
@@ -70,11 +68,8 @@ export const CardForm = ({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const countrySearch = (value: string) => {
-    setCardFormData((prev) => ({
-      ...prev,
-      country: value,
-    }));
+  const countrySearch = (value?: string) => {
+    setCardFormData((prev) => ({ ...prev, country: value ?? "" }));
   };
 
   const handleCheckedInfo = (e: CheckboxChangeEvent) => {
@@ -87,7 +82,9 @@ export const CardForm = ({
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setCardFormData((prev) => ({ ...prev, [name]: value }));
+    const cleaned = name === "cardName" ? cleanCardName(value) : value;
+
+    setCardFormData((prev) => ({ ...prev, [name]: cleaned }));
 
     const fieldName = name as keyof NonNullable<typeof errors>["properties"];
 
@@ -109,7 +106,7 @@ export const CardForm = ({
     const { name, value } = e.target;
     setCardFormData((prev) => ({
       ...prev,
-      [name]: autoCapitalizeWords(value),
+      [name]: autoCapitalizeWords(value.trim()),
     }));
   };
 
@@ -279,6 +276,7 @@ export const CardForm = ({
                   type="text"
                   placeholder="Type your name"
                   name="cardName"
+                  maxLength={50}
                   autoCapitalize="words"
                   className={inputClassName}
                   value={cardFormData.cardName}
@@ -299,7 +297,8 @@ export const CardForm = ({
                 </legend>
                 <Select
                   options={CountryOptions}
-                  value={cardFormData.country}
+                  value={cardFormData.country || undefined}
+                  placeholder="Select country"
                   allowClear
                   showSearch={{
                     optionFilterProp: "label",

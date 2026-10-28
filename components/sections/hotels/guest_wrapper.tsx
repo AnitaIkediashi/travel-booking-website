@@ -1,15 +1,18 @@
 "use client";
 
-
 import type { ContactInfoInput } from "@/lib/actions/flight-booking-actions";
 import { useEffect, useState } from "react";
 import { contactInfoSchema } from "@/lib/zod_schema";
 import { z } from "zod";
 import { Passenger } from "../flights/passenger_wrapper";
 import { ContactInfoSection } from "../flights/contact_info_section";
-import { PassengerForm } from "../flights/passenger_form";
-import { getContactInfoForHotelBooking, getGuestsForBooking, saveGuest, saveHotelContactInfo } from "@/lib/actions/hotel_booking";
-
+import { PassengerForm } from "@/components/reusable/passenger_form";
+import {
+  getContactInfoForHotelBooking,
+  getGuestsForBooking,
+  saveGuest,
+  saveHotelContactInfo,
+} from "@/lib/actions/hotel_booking";
 
 type GuestWrapperProps = {
   nextStep: () => void;
@@ -76,7 +79,6 @@ export const GuestWrapper = ({
         }
 
         if (savedContact?.contact_email || savedContact?.contact_phoneNo) {
-          
           setContactInfo({
             email: savedContact.contact_email ?? "",
             phoneNo: savedContact.contact_phoneNo ?? "",

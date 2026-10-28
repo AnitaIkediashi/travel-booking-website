@@ -78,7 +78,7 @@ export const SignUpForm = () => {
 
   const handleAutoCapitalizeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSignUpData((prev) => ({ ...prev, [name]: autoCapitalizeWords(value) }));
+    setSignUpData((prev) => ({ ...prev, [name]: autoCapitalizeWords(value.trim()) }));
   };
 
   const handleGoogleSignIn = async () => {
@@ -135,7 +135,7 @@ export const SignUpForm = () => {
   return (
     <div className="lg:w-[60%] w-full h-full ">
       <div className="flex flex-col justify-between gap-6">
-        <Link href= "/">
+        <Link href="/">
           <Image
             src="/logos/logo_mint.svg"
             alt="golobe logo"

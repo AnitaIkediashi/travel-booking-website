@@ -2,7 +2,11 @@
 
 import { Select } from "antd";
 import { Button } from "../reusable/button";
-import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
+import {
+  autoCapitalizeWords,
+  cleanCardName,
+  inputClassName,
+} from "@/utils/inputClassName";
 import {
   CardCvcElement,
   CardExpiryElement,
@@ -51,17 +55,17 @@ export const AddCardForm = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const countrySearch = (value: string) => {
-    setCardFormData((prev) => ({
-      ...prev,
-      country: value,
-    }));
+  const countrySearch = (value?: string) => {
+    setCardFormData((prev) => ({ ...prev, country: value ?? "" }));
   };
 
   const handleCardInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setCardFormData((prev) => ({ ...prev, [name]: value }));
+    const cleaned = name === "cardName" ? cleanCardName(value) : value;
+
+    setCardFormData((prev) => ({ ...prev, [name]: cleaned }));
+
     const fieldName = name as keyof NonNullable<typeof errors>["properties"];
 
     if (errors?.properties && fieldName in errors.properties) {
@@ -82,7 +86,7 @@ export const AddCardForm = () => {
     const { name, value } = e.target;
     setCardFormData((prev) => ({
       ...prev,
-      [name]: autoCapitalizeWords(value),
+      [name]: autoCapitalizeWords(value.trim()),
     }));
   };
 
@@ -202,6 +206,7 @@ export const AddCardForm = () => {
                 type="text"
                 placeholder="Type your name"
                 name="cardName"
+                maxLength={50}
                 className={inputClassName}
                 value={cardFormData.cardName}
                 onChange={handleCardInputChange}
@@ -221,7 +226,8 @@ export const AddCardForm = () => {
               </legend>
               <Select
                 options={CountryOptions}
-                value={cardFormData.country}
+                value={cardFormData.country || undefined}
+                placeholder="Select country"
                 allowClear
                 showSearch={{
                   optionFilterProp: "label",
