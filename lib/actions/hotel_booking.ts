@@ -10,13 +10,23 @@ import { getRoomQuote } from "@/helpers/query_hotels";
 import { stripe } from "../stripe";
 import { contactInfoSchema, passengerSchema } from "../zod_schema";
 import z from "zod";
+import { HotelSearchProps } from "@/types/hotel_type";
 
 const HOLD_MINUTES = 15;
 
-type CreateBookingInput = {
+const BOOKING = "/hotel-flow/hotel-search/listing/hotel-detail/booking";
+
+type CreateBookingInput = Pick<
+  HotelSearchProps,
+  | "destination"
+  | "destinationType"
+  | "destinationValue"
+  | "checkIn"
+  | "checkOut"
+  | "token"
+  | "hotelId"
+> & {
   roomId: string;
-  checkIn: string; // "YYYY-MM-DD"
-  checkOut: string;
   adults: number;
   children: number;
   rooms: number;
@@ -124,7 +134,28 @@ export async function createHotelBooking(input: CreateBookingInput) {
   }
 
   // redirect() throws internally, so it stays outside the try/catch
-  redirect(`/hotel-flow/hotel-search/hotel-detail/booking?bookingId=${bookingId}`);
+  const params = new URLSearchParams({
+    bookingId,
+    destination: input.destination,
+    checkIn: input.checkIn,
+    checkOut: input.checkOut,
+    adults: String(adults),
+    children: String(children),
+    rooms: String(rooms),
+  });
+
+  // optional ones: only add them when they exist
+  const optional = {
+    destinationType: input.destinationType,
+    destinationValue: input.destinationValue,
+    token: input.token,
+    hotelId: input.hotelId,
+  };
+  for (const [key, value] of Object.entries(optional)) {
+    if (value) params.set(key, value);
+  }
+
+  redirect(`${BOOKING}?${params.toString()}`);
 }
 
 async function getEditableBooking(bookingId: string | undefined) {

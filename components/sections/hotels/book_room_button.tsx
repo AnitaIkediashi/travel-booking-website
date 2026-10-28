@@ -3,19 +3,32 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/reusable/button";
 import { createHotelBooking } from "@/lib/actions/hotel_booking";
+import type { HotelSearchProps } from "@/types/hotel_type";
 
-type Props = {
+type Props = Pick<
+  HotelSearchProps,
+  | "destination"
+  | "destinationType"
+  | "destinationValue"
+  | "checkIn"
+  | "checkOut"
+  | "token"
+  | "hotelId"
+> & {
   roomId: string;
   soldOut: boolean;
   disabled: boolean;
-  checkIn: string;
-  checkOut: string;
   adults: number;
-  childCount: number;
+  childCount: number; // "children" is reserved by React props
   rooms: number;
 };
 
-export const BookRoomButton = ({ soldOut, disabled,childCount, ...booking }: Props) => {
+export const BookRoomButton = ({
+  soldOut,
+  disabled,
+  childCount,
+  ...booking
+}: Props) => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +37,7 @@ export const BookRoomButton = ({ soldOut, disabled,childCount, ...booking }: Pro
     startTransition(async () => {
       const res = await createHotelBooking({
         ...booking,
-        children: childCount, // the action still expects "children"
+        children: childCount, // the action expects "children"
       });
       // on success the action redirects, so we only get here on error
       if (res?.error) setError(res.error);

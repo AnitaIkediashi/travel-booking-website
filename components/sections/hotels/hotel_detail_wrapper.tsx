@@ -23,6 +23,7 @@ export const HotelDetailWrapper = ({
   hotel,
   searchProps,
 }: HotelDetailWrapperProps) => {
+  // console.log(hotel.rooms)
   const roomList = hotel.rooms ?? [];
   const priced = roomList.filter(
     (r): r is PricedRoom => r.price_per_night != null,
@@ -48,6 +49,18 @@ export const HotelDetailWrapper = ({
   const { checkIn, checkOut, adults, children, rooms } =
     parseSearchProps(searchProps);
   
+  const bookingContext = {
+    destination: searchProps.destination,
+    destinationType: searchProps.destinationType,
+    destinationValue: searchProps.destinationValue,
+    token: searchProps.token,
+    hotelId: searchProps.hotelId,
+    checkIn,
+    checkOut,
+    adults,
+    childCount: children,
+    rooms,
+  };
 
   return (
     <>
@@ -94,11 +107,7 @@ export const HotelDetailWrapper = ({
                   roomId={cheapest.room_id}
                   soldOut={cheapest.room_left < 1}
                   disabled={cheapest.room_left < 1}
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  adults={adults}
-                  childCount={children}
-                  rooms={rooms}
+                  {...bookingContext}
                 />
               )}
             </div>
@@ -186,10 +195,22 @@ export const HotelDetailWrapper = ({
                         <p className="font-medium text-sm md:text-base">
                           {room.room_type} - {room.bed_count}{" "}
                           {room.bed_count === 1 ? "bed" : "beds"}{" "}
-                          {!soldOut && room.room_left <= 3 && (
+                          {soldOut ? (
                             <span className="font-medium text-salmon-100">
                               {" "}
-                              · Only {room.room_left} left
+                              · Sold out
+                            </span>
+                          ) : (
+                            <span
+                              className={`font-medium ${
+                                room.room_left <= 3
+                                  ? "text-salmon-100"
+                                  : "opacity-75"
+                              }`}
+                            >
+                              {" "}
+                              · {room.room_left}{" "}
+                              {room.room_left === 1 ? "room" : "rooms"} left
                             </span>
                           )}
                         </p>
@@ -212,11 +233,7 @@ export const HotelDetailWrapper = ({
                           roomId={room.room_id}
                           soldOut={soldOut}
                           disabled={soldOut || noPrice}
-                          checkIn={checkIn}
-                          checkOut={checkOut}
-                          adults={adults}
-                          childCount={children}
-                          rooms={rooms}
+                          {...bookingContext}
                         />
                       </div>
                     </li>

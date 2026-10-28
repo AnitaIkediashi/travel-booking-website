@@ -49,20 +49,21 @@ export const HotelBookingSteps = ({
     ),
   );
 
-  // The payment actions compute base + tax + discount + seatFees, so the
-  // discount is passed negative to land on room_fee_total.
-  const priceInfo = {
-    currency_code: booking.currencyCode,
-    total_amount: pricing.total,
-    base_amount: pricing.base,
-    tax_amount: pricing.tax,
-    discount_amount: -pricing.discount,
-    seat_fees_total: 0,
-  };
-
   const location = [hotel.city, hotel.state, hotel.country]
     .filter(Boolean)
     .join(", ");
+
+  const groupedRooms = Object.values(
+    booking.rooms.reduce<
+      Record<string, (typeof booking.rooms)[number] & { count: number }>
+    >((acc, r) => {
+      const key = `${r.roomType}-${r.bedCount}-${r.sizeSqft}`;
+      acc[key] = acc[key]
+        ? { ...acc[key], count: acc[key].count + 1 }
+        : { ...r, count: 1 };
+      return acc;
+    }, {}),
+  );
 
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
@@ -111,7 +112,7 @@ export const HotelBookingSteps = ({
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {booking.rooms.map((r) => (
+                  {groupedRooms.map((r) => (
                     <small
                       key={r.id}
                       className="opacity-78 font-medium border p-1.5 rounded block border-blackish-green/30 w-fit"
@@ -135,7 +136,6 @@ export const HotelBookingSteps = ({
               </div>
               {currentStep === 1 && (
                 <CardDetails
-                  priceInfo={priceInfo}
                   flowType="hotel"
                   bookingId={booking.id}
                   liveSeatFeesTotal={0}
