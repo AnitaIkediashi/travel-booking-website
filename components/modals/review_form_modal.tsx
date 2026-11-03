@@ -225,13 +225,12 @@ export const ReviewFormModal = ({ hotelId }: ReviewFormModalProps) => {
                   </p>
                 )}
 
-                <button
+                <Button
                   type="submit"
                   disabled={isPending}
+                  label={isPending ? "Submitting…" : "Submit review"}
                   className="rounded bg-mint-green-100 px-4 py-3 text-sm font-semibold disabled:opacity-50"
-                >
-                  {isPending ? "Submitting…" : "Submit review"}
-                </button>
+                />
               </form>
             )}
           </div>
