@@ -5,12 +5,12 @@ import { LocationIcon } from "@/components/icons/location";
 import { HotelGallery } from "./hotel_gallery";
 import { SparkleIcon } from "@/components/icons/sparkle";
 import Image from "next/image";
-import { Button } from "@/components/reusable/button";
 import Link from "next/link";
 import { HotelAmenities } from "./hotel_amenities";
 import { HotelReviews } from "./hotel_reviews";
 import { parseSearchProps } from "@/utils/parse_search_props";
 import { BookRoomButton } from "./book_room_button";
+import { ReviewFormModal } from "@/components/modals/review_form_modal";
 
 type HotelDetailWrapperProps = {
   hotel: HotelDetail;
@@ -295,10 +295,7 @@ export const HotelDetailWrapper = ({
                 <h3 className="capitalize text-lg md:text-xl font-bold">
                   reviews
                 </h3>
-                <Button
-                  className="rounded bg-mint-green-100 px-4 py-[15.5px] text-xs font-semibold sm:text-sm shrink-0"
-                  label="Give your review"
-                />
+                <ReviewFormModal hotelId={hotel.hotel.hotel_id} />
               </div>
               <div className="mb-3 md:mb-6 flex gap-x-2 md:gap-x-4">
                 {hasReviews && (

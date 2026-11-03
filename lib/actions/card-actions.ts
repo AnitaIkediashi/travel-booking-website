@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { prisma } from "../prisma";
-import { PriceInfoProps, SaveCardOnSignupPayload } from "@/types/card_type";
+import { SaveCardOnSignupPayload } from "@/types/card_type";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import { cardSchema } from "../zod_schema";

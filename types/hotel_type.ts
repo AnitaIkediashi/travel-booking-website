@@ -185,5 +185,15 @@ export type RoomQuote = {
   price_per_night: number;
   base: number;
   tax: number;
-  total: number; // same as stay_total in the search query
+  total: number;
 };
+
+export const REVIEW_CATEGORIES = [
+  "Cleanliness",
+  "Comfort",
+  "Location",
+  "Facilities",
+  "Staff",
+  "Value for Money",
+  "Free Wi-Fi",
+] as const;
