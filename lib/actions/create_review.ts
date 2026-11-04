@@ -1,8 +1,11 @@
+"use server";
+
 import { revalidatePath } from "next/cache";
 import { prisma } from "../prisma";
 import { REVIEW_CATEGORIES } from "@/types/hotel_type";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
+import { Prisma } from "@/app/generated/prisma/client";
 
 type CreateReviewInput = {
   hotelId: string;
@@ -41,19 +44,35 @@ export async function createReview(
   });
   if (!hotel) return { ok: false, error: "Hotel not found." };
 
+  const userId = session.user.id;
+
+  const existing = await prisma.reviews.findUnique({
+    where: { user_id_hotel_id: { user_id: userId, hotel_id: hotelId } },
+    select: { id: true },
+  });
+  if (existing) {
+    return { ok: false, error: "You've already reviewed this hotel." };
+  }
+
   try {
     await prisma.reviews.create({
       data: {
         hotel_id: hotelId,
+        user_id: userId,
         customer_name: session.user.name ?? "Guest",
         category,
         feedback: trimmed,
         submit_time: new Date(),
-        // Rating is a 1:1 relation, so create it in the same transaction
         rating: { create: { stars, count: 1 } },
       },
     });
   } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
+    ) {
+      return { ok: false, error: "You've already reviewed this hotel." };
+    }
     console.error("createReview failed", e);
     return { ok: false, error: "Something went wrong. Please try again." };
   }

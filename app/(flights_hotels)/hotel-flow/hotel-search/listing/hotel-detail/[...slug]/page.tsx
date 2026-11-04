@@ -2,6 +2,7 @@ import { NoData } from "@/components/reusable/no_data";
 import { HotelDetailWrapper } from "@/components/sections/hotels/hotel_detail_wrapper";
 import { getHotelDetail } from "@/helpers/query_hotels";
 import { HotelSearchParams } from "@/types/hotel_type";
+import { classStyle } from "@/utils/inputClassName";
 
 
 const HotelDetailPage = async ({ searchParams }: HotelSearchParams) => {
@@ -9,9 +10,9 @@ const HotelDetailPage = async ({ searchParams }: HotelSearchParams) => {
     const hotel = await getHotelDetail(searchProps);
     if(!hotel) {
       return (
-        <NoData
-          content="No hotel record found" goBack={true}
-        />
+        <div className={classStyle}>
+          <NoData content="No hotel record found" goBack={true} />
+        </div>
       );
     }
   return <HotelDetailWrapper hotel={hotel} searchProps={searchProps} />;

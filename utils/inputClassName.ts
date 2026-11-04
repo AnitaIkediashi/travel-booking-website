@@ -7,3 +7,6 @@ export const autoCapitalizeWords = (value: string): string => {
 
 export const cleanCardName = (v: string) =>
   v.replace(/[^\p{L}\p{M} '’.-]/gu, "").replace(/\s{2,}/g, " ");
+
+export const classStyle =
+  "pt-[137px] md:pb-[120px] pb-12 text-center font-semibold font-montserrat";

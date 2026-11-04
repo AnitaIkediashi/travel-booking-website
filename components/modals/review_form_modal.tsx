@@ -124,14 +124,13 @@ export const ReviewFormModal = ({ hotelId }: ReviewFormModalProps) => {
               <h3 id="review-title" className="text-lg font-bold">
                 Write a review
               </h3>
-              <button
+              <Button
                 type="button"
                 onClick={close}
                 aria-label="Close"
                 className="text-xl leading-none opacity-60 hover:opacity-100"
-              >
-                ×
-              </button>
+                icon={<CloseIcon />}
+              />
             </div>
 
             {isLoading ? (
@@ -144,7 +143,7 @@ export const ReviewFormModal = ({ hotelId }: ReviewFormModalProps) => {
                 <Button
                   label="Sign in"
                   href={`/signin?callbackUrl=${encodeURIComponent(currentUrl)}`}
-                  className="rounded bg-mint-green-100 px-4 py-3 text-sm font-semibold"
+                  className="rounded bg-mint-green-100 px-4 py-3 text-sm font-semibold text-center"
                 />
               </div>
             ) : success ? (
@@ -157,7 +156,6 @@ export const ReviewFormModal = ({ hotelId }: ReviewFormModalProps) => {
                   onClick={close}
                   className="rounded bg-mint-green-100 px-4 py-3 text-sm font-semibold"
                   label="Close"
-                  icon={<CloseIcon />}
                 />
               </div>
             ) : (

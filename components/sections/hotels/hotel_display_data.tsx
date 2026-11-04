@@ -111,7 +111,7 @@ export const HotelDisplayData = ({
         icon={isPending ? <AnimatedDots /> : undefined}
         label={isPending ? "" : "Show more results"}
         disabled={isPending}
-        className={`w-full h-12 bg-blackish-green text-white text-sm font-semibold rounded flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${visibleCount >= totalHotelCount ? "hidden" : ""}`}
+        className={`w-full h-12 mt-6 bg-blackish-green text-white text-sm font-semibold rounded flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${visibleCount >= totalHotelCount ? "hidden" : ""}`}
         onClick={handleShowMore}
       />
       <Button

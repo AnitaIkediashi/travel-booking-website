@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Button } from "../reusable/button";
 import { autoCapitalizeWords, inputClassName } from "@/utils/inputClassName";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleIcon } from "../icons/google";
 import { Checkbox } from "antd";
 import Link from "next/link";
@@ -16,9 +16,13 @@ import { signUpUser } from "@/lib/actions/auth-actions";
 import { ToastContainer, toast } from "react-toastify";
 import { signIn } from "next-auth/react";
 import PhoneInput from "react-phone-number-input";
+import { getSafeCallbackUrl } from "@/utils/callbackUrl";
 
 export const SignUpForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
+  const paymentStepUrl = `/signup?step=add-payment&callbackUrl=${encodeURIComponent(callbackUrl)}`;
 
   const [seePassword, setSeePassword] = useState(false);
   const [seeConfirmPassword, setSeeConfirmPassword] = useState(false);
@@ -84,7 +88,7 @@ export const SignUpForm = () => {
   const handleGoogleSignIn = async () => {
     try {
       await signIn("google", {
-        callbackUrl: "/signup?step=add-payment", // where to go after Google auth
+        callbackUrl: paymentStepUrl, // where to go after Google auth
       });
     } catch (error) {
       console.error("Google sign in failed", error);
@@ -122,7 +126,7 @@ export const SignUpForm = () => {
 
       if (formResponse.success) {
         toast.success("Account created successfully!");
-        router.push("/signup?step=add-payment");
+        router.push(paymentStepUrl); // Redirect to the payment step after successful sign-up;
       }
     } catch (error) {
       console.error("Sign up form submission failed", error);
@@ -311,7 +315,7 @@ export const SignUpForm = () => {
                 <p className="text-center text-sm font-semibold">
                   Already have an account?{" "}
                   <Link
-                    href="/signin"
+                    href={`/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`}
                     className="capitalize text-salmon-100 hover:underline hover:underline-offset-4"
                   >
                     login

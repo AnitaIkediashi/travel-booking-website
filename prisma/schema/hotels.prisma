@@ -66,13 +66,16 @@ model Reviews {
     id            String   @id @default(uuid())
     hotel_id      String
     customer_name String
+    user_id       String?
     category      String
     feedback      String
     submit_time   DateTime
     image         String?
     rating        Rating?
     hotel         Hotels   @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+    user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
+    @@unique([user_id, hotel_id])
     @@map("reviews")
 }
 
@@ -126,8 +129,8 @@ model BookingRooms {
     room          Rooms        @relation(fields: [room_id], references: [id], onDelete: Restrict)
     booking       HotelBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
-    @@map("booking_rooms")
     @@index([room_id, checkin_time, checkout_time])
+    @@map("booking_rooms")
 }
 
 model HotelBooking {

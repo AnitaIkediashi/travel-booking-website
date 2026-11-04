@@ -1,6 +1,7 @@
 import { NoData } from "@/components/reusable/no_data";
 import { prisma } from "@/lib/prisma";
 import { HotelBookingSteps } from "./hotel_booking_steps";
+import { classStyle } from "@/utils/inputClassName";
 
 type HotelBookingProps = {
   bookingId: string | undefined;
@@ -14,7 +15,11 @@ export const HotelBooking = async ({ bookingId }: HotelBookingProps) => {
     },
   });
   if (!booking || booking.booking_rooms.length === 0) {
-    return <NoData content="No records found" goBack={true} />;
+    return (
+      <div className={classStyle}>
+        <NoData content="No records found" goBack={true} />
+      </div>
+    );
   }
 
   const { room } = booking.booking_rooms[0];

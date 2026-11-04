@@ -9,6 +9,7 @@ import { Button } from "@/components/reusable/button";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatedDots } from "@/components/loaders/animated_dots";
 import { NoData } from "@/components/reusable/no_data";
+import { classStyle } from "@/utils/inputClassName";
 
 type FlightDisplayDataProps = {
   sortBy: string;
@@ -102,9 +103,11 @@ export const FlightDisplayData = ({
     )
   ) {
     return (
+      <div className={classStyle}>
       <NoData
         content="No flight records found, <br /> try removing some filters to see more results."
       />
+      </div>
     );
   }
 

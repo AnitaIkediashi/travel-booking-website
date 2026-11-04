@@ -2,9 +2,7 @@ import { FlightBookingSuccess } from "@/components/sections/flights/flight_booki
 import { queryFlightToken } from "@/helpers/query_flights";
 import { decryptObject } from "@/utils/crypto";
 import { prisma } from "@/lib/prisma";
-
-const classStyle =
-  "pt-[137px] md:pb-[120px] pb-12 text-center font-semibold font-montserrat";
+import { classStyle } from "@/utils/inputClassName";
 
 type SuccessToken = {
   bookingId: string;

@@ -12,4 +12,5 @@ model User {
     cards               CardDetails[]
     accounts            Account[]
     passwordResetTokens PasswordResetToken[]
+    reviews             Reviews[]
 }

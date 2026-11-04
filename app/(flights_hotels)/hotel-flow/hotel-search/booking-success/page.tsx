@@ -1,9 +1,7 @@
 import { decryptObject } from "@/utils/crypto";
 import { prisma } from "@/lib/prisma";
 import { HotelBookingSuccess } from "@/components/sections/hotels/hotel_booking_success";
-
-const classStyle =
-  "pt-[137px] md:pb-[120px] pb-12 text-center font-semibold font-montserrat";
+import { classStyle } from "@/utils/inputClassName";
 
 type HotelPayload = {
   flowType: "hotel";

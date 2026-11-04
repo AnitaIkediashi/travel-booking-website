@@ -18,9 +18,10 @@ import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import countryList from "react-select-country-list";
 import { CardFormDataPayload } from "@/types/card_type";
 import z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import { saveCardOnSignup } from "@/lib/actions/card-actions";
+import { getSafeCallbackUrl } from "@/utils/callbackUrl";
 
 const stripeStyle = {
   base: {
@@ -40,6 +41,9 @@ const stripeClasses = {
 
 export const AddCardForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
+  const signInUrl = `/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
   const stripe = useStripe();
   const elements = useElements();
   const CountryOptions = useMemo(() => countryList().getData(), []);
@@ -141,7 +145,7 @@ export const AddCardForm = () => {
       }
 
       toast.success("Card saved successfully!");
-      router.push("/signin"); // wherever after signup completes
+      router.push(signInUrl); // wherever after signup completes
     } catch (error) {
       console.error("Card setup failed", error);
       toast.error("An unexpected error occurred.");

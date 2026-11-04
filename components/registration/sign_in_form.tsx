@@ -12,15 +12,14 @@ import { toast, ToastContainer } from "react-toastify";
 import { signIn } from "next-auth/react";
 import { EyeIcon } from "../icons/eye";
 import { EyeOffIcon } from "../icons/eye_off";
+import { getSafeCallbackUrl } from "@/utils/callbackUrl";
 
 export const SignInForm = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // console.log("searchParams", searchParams)
-
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -147,7 +146,7 @@ export const SignInForm = () => {
                 <p className="text-center text-sm font-semibold">
                   Don’t have an account?{" "}
                   <Link
-                    href="/signup"
+                    href={`/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`}
                     className="capitalize text-salmon-100 hover:underline hover:underline-offset-4"
                   >
                     Sign up

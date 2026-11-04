@@ -13,6 +13,7 @@ import { Filters } from "../../reusable/filters";
 import { StopFilter } from "./stop_filter";
 import dayjs from "dayjs";
 import { NoData } from "@/components/reusable/no_data";
+import { classStyle } from "@/utils/inputClassName";
 
 type FlightFilterProps = {
   isPending: boolean;
@@ -295,9 +296,11 @@ export const FlightDataFilters = ({
       returnDate.toDate() < depart.toDate())
   ) {
     return (
-      <NoData
-        content="No flight records, ensure to search the appropriate flights"
-      />
+      <div className={classStyle}>
+        <NoData
+          content="No flight records, ensure to search the appropriate flights"
+        />
+      </div>
     );
   }
 

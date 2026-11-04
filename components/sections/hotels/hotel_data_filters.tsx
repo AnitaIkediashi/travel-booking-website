@@ -12,6 +12,7 @@ import { AmenitiesFilter } from "@/components/reusable/amenities_filter";
 import { HotelDisplayData } from "./hotel_display_data";
 import { Dayjs } from "dayjs";
 import { NoData } from "@/components/reusable/no_data";
+import { classStyle } from "@/utils/inputClassName";
 
 type HotelDataFilterProps = {
   isPending: boolean;
@@ -153,9 +154,11 @@ export const HotelDataFilters = ({ isPending, data, adultCount, childCount, room
   // 2. No data at all
   if (!data || data.length === 0) {
     return (
+      <div className={classStyle}>
       <NoData
         content="No hotel records, ensure to search the appropriate stays"
       />
+      </div>
     );
   }
 
