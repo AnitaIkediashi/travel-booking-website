@@ -30,9 +30,9 @@ export const disabledDate = (current: dayjs.Dayjs) => {
   return current < dayjs().startOf("day");
 };
 
-export const SearchStays = () => {
+export const SearchStays = ({destination}: {destination?: string}) => {
   const [initialValues, setInitialValues] = useState<InitialState>({
-    destination: "",
+    destination: destination || "",
     checkInDate: null,
     checkOutDate: null,
     roomCount: 1,

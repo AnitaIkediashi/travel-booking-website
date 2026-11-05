@@ -1,7 +1,6 @@
-import { SearchPlaces } from "@/components/reusable/search_places";
-import { FlightSearchParamsProps } from "@/types/flight_type";
+import { SearchFlights } from "@/components/reusable/search_flights";
 
-export const SearchHomeWrapper = ({from}: FlightSearchParamsProps) => {
+export const SearchHomeWrapper = ({ from }: { from?: string | undefined }) => {
   return (
     <section className="w-full">
       <div className="pt-[90px] w-full lg:h-[537px] h-[462px] bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.7)),url(/flights/flight-hero.jpg)] bg-no-repeat bg-top bg-cover font-montserrat">
@@ -14,9 +13,14 @@ export const SearchHomeWrapper = ({from}: FlightSearchParamsProps) => {
           </p>
         </div>
         <div className="relative top-[109px]">
-          <SearchPlaces from={from} />
+          <div className="lg:w-[77%] md:w-[80%] w-full mx-auto rounded-2xl bg-white shadow-light px-6 pt-4 pb-8 font-montserrat">
+            <h4 className="capitalize md:text-xl text-lg font-semibold md:mb-8 mb-6">
+              Where are you flying?
+            </h4>
+            <SearchFlights from={from} />
+          </div>
         </div>
       </div>
     </section>
   );
-}
+};

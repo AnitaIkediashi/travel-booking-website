@@ -7,7 +7,7 @@ import logo from "@/public/logos/light/Logo_light.svg";
 import logoDark from "@/public/logos/logo_mint.svg";
 import { Button } from "../reusable/button";
 import { useEffect, useState } from "react";
-import { SearchPlaces } from "../reusable/search_places";
+import { SearchPlaces } from "../sections/home/search_places";
 import Link from "next/link";
 import { useCurrentUser } from "@/lib/auth-context";
 import { Avatar } from "antd";

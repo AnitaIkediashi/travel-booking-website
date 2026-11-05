@@ -19,8 +19,8 @@ export const PlanTrip = async () => {
           width="md:w-[149px]"
         />
       </div>
-      <div className="flex flex-wrap gap-8 justify-between">
-        {randomData.map((item, index) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {randomData.map((item) => {
           const shortenCountryLength =
             item.country.length > 15
               ? `${item.country.slice(0, 15)}...`
@@ -29,9 +29,8 @@ export const PlanTrip = async () => {
             item.city.length > 9 ? `${item.city.slice(0, 9)}...` : item.city;
           return (
             <RandomLocationCard
-              key={index}
+              key={`${item.kind}-${item.city}-${item.country}`}
               item={item}
-              index={index}
               shortenCountryLength={shortenCountryLength}
               shortenCityLength={shortenCityLength}
             />

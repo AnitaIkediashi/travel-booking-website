@@ -1,14 +1,12 @@
 "use client"; //for readability although there is no need writing it here since its parent is already a client component
 
 import { useState } from "react";
-import { FlightIcon } from "../icons/flight";
-import { BedIcon } from "../icons/bed";
-import { SearchFlights } from "./search_flights";
-import { SearchStays } from "./search_stays";
-import { FlightSearchParamsProps } from "@/types/flight_type";
+import { FlightIcon } from "../../icons/flight";
+import { BedIcon } from "../../icons/bed";
+import { SearchFlights } from "../../reusable/search_flights";
+import { SearchStays } from "../../reusable/search_stays";
 
-
-export const SearchPlaces = ({ from }: FlightSearchParamsProps) => {
+export const SearchPlaces = () => {
   const [activeTab, setActiveTab] = useState("flights");
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -42,11 +40,7 @@ export const SearchPlaces = ({ from }: FlightSearchParamsProps) => {
           </div>
         </div>
         <div className="w-full mt-12">
-          {activeTab === "flights" ? (
-            <SearchFlights from={from} />
-          ) : (
-            <SearchStays />
-          )}
+          {activeTab === "flights" ? <SearchFlights /> : <SearchStays />}
         </div>
       </div>
     </div>

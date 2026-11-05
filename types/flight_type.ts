@@ -8,13 +8,6 @@ export type AirportProps = {
   country: string;
 };
 
-export type LocationProps = {
-  airport_code?: string;
-  image_url: string | null;
-  city: string;
-  country: string;
-};
-
 export type ReviewContentProps = {
   title: string;
   desc: string;

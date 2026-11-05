@@ -1,38 +1,41 @@
-'use client'
+"use client";
 
-import { LocationProps } from "@/types/flight_type";
+import { RandomLocation } from "@/helpers/random_flights";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 type LocationCardProp = {
-  item: LocationProps;
-  index: number;
+  item: RandomLocation;
   shortenCountryLength: string;
-  shortenCityLength: string
+  shortenCityLength: string;
 };
 
 export const RandomLocationCard = ({
   item,
-  index,
   shortenCountryLength,
   shortenCityLength,
 }: LocationCardProp) => {
   const router = useRouter();
 
-  const handleCardClick = (code: string) => {
-    router.push(`/flight-flow/flight-search?from=${code}`);
+  const handleCardClick = () => {
+    const href =
+      item.kind === "flight"
+        ? `/flight-flow/flight-search?from=${encodeURIComponent(item.airport_code)}`
+        : `/hotel-flow/hotel-search?destination=${encodeURIComponent(item.city)}`;
+    router.push(href);
   };
+
   return (
     <div
-      className="min-w-[241px] flex-1 flex items-center gap-4 p-4 rounded-2xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] bg-white cursor-pointer hover:bg-mint-green-50"
-      onClick={() => handleCardClick(item.airport_code!)}
+      className="flex items-center gap-4 p-4 rounded-2xl shadow-[0px_4px_4px_rgba(0,0,0,0.25)] bg-white cursor-pointer hover:bg-mint-green-50"
+      onClick={handleCardClick}
     >
       <Image
         src={item.image_url || "/illustrations/broken-image.png"}
-        alt={`item image ${index}`}
+        alt={`${item.city}, ${item.country}`}
         width={90}
         height={90}
-        className="rounded-lg"
+        className="w-[90px] h-[90px] shrink-0 rounded-lg object-cover"
       />
       <div className="flex flex-col gap-y-2">
         <h6 className="text-blackish-green font-semibold">
