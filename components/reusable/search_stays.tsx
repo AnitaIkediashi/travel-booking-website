@@ -233,7 +233,7 @@ export const SearchStays = ({destination}: {destination?: string}) => {
   return (
     <>
       <div className="flex flex-col gap-8 font-montserrat">
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[258px_minmax(0,240px)_minmax(0,240px)_minmax(0,240px)] xl:grid-cols-[300px_minmax(0,240px)_minmax(0,240px)_minmax(0,240px)] gap-6">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-6">
           <div className="relative">
             <fieldset className="h-14 border border-blackish-green-20 rounded-tl-sm rounded-tr-sm pl-3 relative">
               <legend className="text-blackish-green text-sm capitalize">
@@ -342,7 +342,7 @@ export const SearchStays = ({destination}: {destination?: string}) => {
       <ValidateHotelInputEntries
         hotelInputEntries={initialValues}
         onClose={closeModal}
-        showModal={hotelValidate} 
+        showModal={hotelValidate}
       />
     </>
   );
