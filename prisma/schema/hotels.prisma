@@ -192,3 +192,22 @@ enum HotelBookingStatus {
     CANCELLED
     COMPLETED
 }
+
+model HotelRecentSearch {
+  id               String   @id @default(uuid())
+  ownerId          String   // userId if logged in, otherwise the guest cookie id
+  destination      String
+  destinationType  String?
+  destinationValue String?
+  checkIn          String?
+  checkOut         String?
+  adults           Int?
+  children         Int?
+  rooms            Int?
+  updatedAt        DateTime @updatedAt
+
+  @@unique([ownerId, destination])
+  @@index([ownerId, updatedAt])
+
+  @@map("hotel_recent_searches")
+}

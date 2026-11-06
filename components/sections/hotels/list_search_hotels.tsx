@@ -16,6 +16,7 @@ import { useDebouncedCallback } from "@/utils/debounceCallback";
 import { HotelSuggestions } from "@/components/dropdowns/hotel_suggestions";
 import { ValidateHotelInputEntries } from "@/components/modals/validate_hotel_input_entries";
 import { InitialState, disabledDate } from "@/components/reusable/search_stays";
+import { saveHotelRecentSearch } from "@/lib/actions/hotel_recent_searches";
 
 type ListSearchHotelProps = {
   queryParams?: HotelQueryParams;
@@ -170,13 +171,24 @@ export const ListSearchHotels = ({
     setHotelValidate(false);
     setShowDropDown(false);
 
-    const qs = new URLSearchParams({
+    const search = {
       destination: initialValues.destination.trim(),
       checkIn: initialValues.checkInDate!.format("YYYY-MM-DD"),
       checkOut: initialValues.checkOutDate!.format("YYYY-MM-DD"),
-      adults: String(initialValues.adultCount),
-      children: String(initialValues.childrenCount),
-      rooms: String(initialValues.roomCount),
+      adults: initialValues.adultCount,
+      children: initialValues.childrenCount,
+      rooms: initialValues.roomCount,
+      destinationType: selectedDestination?.type,
+      destinationValue: selectedDestination?.value,
+    };
+
+    const qs = new URLSearchParams({
+      destination: search.destination,
+      checkIn: search.checkIn,
+      checkOut: search.checkOut,
+      adults: String(search.adults),
+      children: String(search.children),
+      rooms: String(search.rooms),
     });
 
     if (selectedDestination) {
@@ -184,7 +196,12 @@ export const ListSearchHotels = ({
       qs.set("destinationValue", selectedDestination.value);
     }
 
-    startTransition(() => {
+    startTransition(async () => {
+      try {
+        await saveHotelRecentSearch(search);
+      } catch (e) {
+        console.error("Failed to save recent search", e); // never block the search
+      }
       router.push(`?${qs.toString()}`, { scroll: false });
     });
   }

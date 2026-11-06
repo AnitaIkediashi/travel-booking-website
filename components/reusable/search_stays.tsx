@@ -16,6 +16,7 @@ import { DestinationProp } from "@/types/hotel_type";
 import { useDebouncedCallback } from "@/utils/debounceCallback";
 import { HotelSuggestions } from "../dropdowns/hotel_suggestions";
 import { ValidateHotelInputEntries } from "../modals/validate_hotel_input_entries";
+import { saveHotelRecentSearch } from "@/lib/actions/hotel_recent_searches";
 
 export type InitialState = {
   destination: string;
@@ -202,28 +203,44 @@ export const SearchStays = ({destination}: {destination?: string}) => {
 
   function handleShowHotels() {
     const isValid = validateHotelEntries();
-    if(isValid) {
-      setHotelValidate(false);
-      startTransition(() => {
-        const qs = new URLSearchParams({
-          destination: initialValues.destination.trim(),
-          checkIn: initialValues.checkInDate!.format("YYYY-MM-DD"),
-          checkOut: initialValues.checkOutDate!.format("YYYY-MM-DD"),
-          adults: String(initialValues.adultCount),
-          children: String(initialValues.childrenCount),
-          rooms: String(initialValues.roomCount),
-        });
+     if (!isValid) {
+       setHotelValidate(true);
+       return;
+     }
+     setHotelValidate(false);
+    
+     const search = {
+       destination: initialValues.destination.trim(),
+       checkIn: initialValues.checkInDate!.format("YYYY-MM-DD"),
+       checkOut: initialValues.checkOutDate!.format("YYYY-MM-DD"),
+       adults: initialValues.adultCount,
+       children: initialValues.childrenCount,
+       rooms: initialValues.roomCount,
+       destinationType: selectedDestination?.type,
+       destinationValue: selectedDestination?.value,
+     };
 
-        if (selectedDestination) {
-          qs.set("destinationType", selectedDestination.type);
-          qs.set("destinationValue", selectedDestination.value);
-        }
+     const qs = new URLSearchParams({
+       destination: search.destination,
+       checkIn: search.checkIn,
+       checkOut: search.checkOut,
+       adults: String(search.adults),
+       children: String(search.children),
+       rooms: String(search.rooms),
+     });
+     if (selectedDestination) {
+       qs.set("destinationType", selectedDestination.type);
+       qs.set("destinationValue", selectedDestination.value);
+     }
 
-        router.push(`/hotel-flow/hotel-search/listing?${qs}`);
-      });
-    } else {
-      setHotelValidate(true)
-    }
+     startTransition(async () => {
+       try {
+         await saveHotelRecentSearch(search);
+       } catch (e) {
+         console.error("Failed to save recent search", e); // never block the search
+       }
+       router.push(`/hotel-flow/hotel-search/listing?${qs}`);
+     });
   }
 
   function closeModal() {
