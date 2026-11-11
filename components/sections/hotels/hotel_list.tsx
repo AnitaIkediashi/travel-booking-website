@@ -110,12 +110,12 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
       {/* Image carousel */}
       <div
         ref={containerRef}
-        className="relative w-full md:w-[35%] h-56 md:h-auto md:min-h-[280px] md:my-0 overflow-hidden rounded-xl select-none"
+        className="relative w-full md:w-[35%] h-56 md:h-auto md:min-h-[280px] overflow-hidden rounded-xl select-none"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div
-          className={`flex h-full touch-pan-y cursor-grab active:cursor-grabbing ${
+          className={`absolute inset-0 flex touch-pan-y cursor-grab active:cursor-grabbing ${
             isDragging ? "" : "transition-transform duration-500 ease-out"
           }`}
           style={{
@@ -136,7 +136,7 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
               sizes="(min-width: 768px) 35vw, 100vw"
               draggable={false}
               loading={i === 0 ? "eager" : "lazy"}
-              className="min-w-full h-full object-cover"
+              className="w-full h-full shrink-0 object-cover"
             />
           ))}
         </div>
@@ -242,7 +242,7 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
             type="button"
             onClick={handleHotelSearch}
             className="flex-1 h-12 rounded bg-mint-green-100 text-blackish-green text-sm font-semibold flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
-            label={isPending ? "Loading" :"View Place"}
+            label={isPending ? "Loading" : "View Place"}
             disabled={isPending}
           />
         </div>
