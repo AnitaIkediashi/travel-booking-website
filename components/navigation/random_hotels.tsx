@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Button } from "../reusable/button";
+import { HOTEL_LISTING_PATH } from "@/utils/page_routes";
 
 type RandomHotelProps ={
  hotel: HotelProps
@@ -47,7 +48,7 @@ export const RandomHotels = ({ hotel }: RandomHotelProps) => {
        rooms: "1",
      });
 
-     const href = `/hotel-flow/hotel-search/listing?${params.toString()}`;
+     const href = `${HOTEL_LISTING_PATH}?${params.toString()}`;
 
   return (
     <div className="min-w-[225px] flex-1 rounded-xl h-[420px] relative font-montserrat">

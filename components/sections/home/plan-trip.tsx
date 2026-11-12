@@ -2,6 +2,7 @@ import { SeeMorePlaces } from "@/components/navigation/see_more_places";
 import { RandomLocationCard } from "@/components/navigation/random-location-card";
 import { TitleAndContent } from "@/components/reusable/title_and_content";
 import { randomizeLocations } from "@/helpers/random_flights";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 
 export const PlanTrip = async () => {
   const randomData = await randomizeLocations();
@@ -15,7 +16,7 @@ export const PlanTrip = async () => {
         />
         <SeeMorePlaces
           label="See more places"
-          href="/flight-flow/flight-search"
+          href={FLIGHT_LISTING_PATH}
           width="md:w-[149px]"
         />
       </div>

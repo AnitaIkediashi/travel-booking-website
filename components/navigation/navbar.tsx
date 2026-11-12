@@ -14,16 +14,17 @@ import { AccountMenu } from "./account_menu";
 import { useCurrentUser } from "@/lib/auth-context";
 import { Avatar } from "antd";
 import { OtherMenus } from "./other_menus";
+import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
 
 const NavLinksDark: NavLinkProp[] = [
   {
     label: "find flight",
-    href: "/flight-flow/flight-search",
+    href: FLIGHT_SEARCH_PATH,
     icon: <FlightIcon fillColor="#112211" />,
   },
   {
     label: "find stays",
-    href: "/hotel-flow/hotel-search",
+    href: HOTEL_SEARCH_PATH,
     icon: <BedIcon fillColor="#112211" />,
   },
 ];

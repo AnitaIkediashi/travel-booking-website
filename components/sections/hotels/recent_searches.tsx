@@ -1,4 +1,5 @@
 import { getRecentSearchCards } from "@/helpers/recentSearchCards";
+import { HOTEL_LISTING_PATH } from "@/utils/page_routes";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -60,7 +61,7 @@ export const RecentSearches = async () => {
             return (
               <Link
                 key={c.id}
-                href={`/hotel-flow/hotel-search/listing?${params}`}
+                href={`${HOTEL_LISTING_PATH}?${params}`}
                 className="flex items-center gap-4 shrink-0 w-[280px] cursor-pointer rounded-lg bg-white p-4 border border-transparent transition-all duration-300 ease-in-out hover:shadow-lg hover:border-mint-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-green-100"
               >
                 <div className="relative h-[90px] w-[90px] shrink-0 rounded-lg overflow-hidden">

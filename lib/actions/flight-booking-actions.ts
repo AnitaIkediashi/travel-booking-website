@@ -14,6 +14,7 @@ import { stripe } from "../stripe";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import { getFlightTotal } from "../booking_total";
+import { FLIGHT_BOOKING_PATH, FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 
 export type ContactInfoInput = {
   email: string;
@@ -26,9 +27,6 @@ type SaveContactInfoResult =
       success: false;
       errors: z.core.$ZodErrorTree<ContactInfoSchema> | string;
     };
-
-const LISTING = "/flight-flow/flight-search/listing";
-const BOOKING = "/flight-flow/flight-search/listing/flight-detail/booking";
 
 export async function createBookingAction(formData: FormData) {
   const str = (k: string) => String(formData.get(k) ?? "");
@@ -46,13 +44,13 @@ export async function createBookingAction(formData: FormData) {
     total <= 9 &&
     infant <= adults; // remove if your search allows it
 
-  if (!token || !countsValid) redirect(LISTING);
+  if (!token || !countsValid) redirect(FLIGHT_LISTING_PATH);
 
   const offer = await prisma.flightOffers.findUnique({
     where: { token },
     select: { id: true },
   });
-  if (!offer) redirect(LISTING);
+  if (!offer) redirect(FLIGHT_LISTING_PATH);
 
   const booking = await prisma.booking.create({
     data: {
@@ -81,7 +79,7 @@ export async function createBookingAction(formData: FormData) {
     params.set("return", str("return"));
   }
 
-  redirect(`${BOOKING}?${params.toString()}`);
+  redirect(`${FLIGHT_BOOKING_PATH}?${params.toString()}`);
 }
 
 type PassengerInput = {

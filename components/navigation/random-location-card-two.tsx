@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Button } from "../reusable/button";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 
 type LocationCardTwoProps = {
   shortenCountryLength: string | undefined;
@@ -28,7 +29,7 @@ export const RandomLocationCardTwo = ({shortenCountryLength, price, image, curre
           <h6 className="text-xl font-medium">{shortenCountryLength}</h6>
           <p className="text-2xl font-semibold">{currencyChar} {price}</p>
         </div>
-        <Button label="book flight" className="w-full h-12 flex items-center justify-center bg-mint-green-100 capitalize rounded text-sm font-medium hover:bg-mint-green-70" href={`/flight-flow/flight-search/listing?from=${airportCode}`} />
+        <Button label="book flight" className="w-full h-12 flex items-center justify-center bg-mint-green-100 capitalize rounded text-sm font-medium hover:bg-mint-green-70" href={`${FLIGHT_LISTING_PATH}?from=${airportCode}`} />
       </div>
     </div>
   );

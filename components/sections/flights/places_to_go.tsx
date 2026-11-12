@@ -9,6 +9,7 @@ import { useRef } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TitleAndContent } from "@/components/reusable/title_and_content";
 import { useGSAP } from "@gsap/react";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -55,7 +56,7 @@ export const PlacesToGo = () => {
           />
           <SeeMorePlaces
             label="See All"
-            href="/flight-flow/flight-search/listing"
+            href={FLIGHT_LISTING_PATH}
             width="md:w-20"
           />
         </div>

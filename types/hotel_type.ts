@@ -197,3 +197,25 @@ export const REVIEW_CATEGORIES = [
   "Value for Money",
   "Free Wi-Fi",
 ] as const;
+
+export type Stay = {
+  checkIn: string;
+  checkOut: string;
+  adults: number;
+  children: number;
+  rooms: number;
+};
+
+export type FavouriteHotel = {
+  id: string;
+  token: string;
+  name: string;
+  city: string;
+  country: string;
+  image: string | null;
+  imageCount: number;
+  amenityCount: number;
+  rating: number | null;
+  reviewCount: number;
+  price: { amount: number; original: number | null; currency: string } | null;
+};

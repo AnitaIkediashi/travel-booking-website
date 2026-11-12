@@ -2,6 +2,7 @@ import { RandomLocationCardTwo } from "@/components/navigation/random-location-c
 import { SeeMorePlaces } from "@/components/navigation/see_more_places";
 import { TitleAndContent } from "@/components/reusable/title_and_content";
 import { randomCountriesAndPrice } from "@/helpers/random_flights";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 
 export const RandomPlacesToBook = async () => {
   const data = await randomCountriesAndPrice();
@@ -16,7 +17,7 @@ export const RandomPlacesToBook = async () => {
           />
           <SeeMorePlaces
             label="See All"
-            href="/flight-flow/flight-search/listing"
+            href={FLIGHT_LISTING_PATH}
             width="md:w-20"
           />
         </div>

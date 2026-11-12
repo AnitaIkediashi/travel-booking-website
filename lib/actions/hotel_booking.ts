@@ -11,10 +11,9 @@ import { stripe } from "../stripe";
 import { contactInfoSchema, passengerSchema } from "../zod_schema";
 import z from "zod";
 import { HotelSearchProps } from "@/types/hotel_type";
+import { HOTEL_BOOKING_PATH } from "@/utils/page_routes";
 
 const HOLD_MINUTES = 15;
-
-const BOOKING = "/hotel-flow/hotel-search/listing/hotel-detail/booking";
 
 type CreateBookingInput = Pick<
   HotelSearchProps,
@@ -155,7 +154,7 @@ export async function createHotelBooking(input: CreateBookingInput) {
     if (value) params.set(key, value);
   }
 
-  redirect(`${BOOKING}?${params.toString()}`);
+  redirect(`${HOTEL_BOOKING_PATH}?${params.toString()}`);
 }
 
 async function getEditableBooking(bookingId: string | undefined) {

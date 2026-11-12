@@ -3,6 +3,7 @@ import { BedIcon } from "../icons/bed";
 import { FlightIcon } from "../icons/flight";
 import { CloseIcon } from "../icons/close";
 import { usePathname, useSearchParams } from "next/navigation";
+import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
 
 type OtherMenuProps = {
   showOtherMenu: boolean;
@@ -32,9 +33,9 @@ export const OtherMenus = ({
           <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg relative">
             <FlightIcon fillColor="#112211" />
             <Link
-              href="/flight-flow/flight-search"
+              href={FLIGHT_SEARCH_PATH}
               className={`capitalize text-sm font-semibold ${
-                pathname.startsWith("/flight-flow/flight-search")
+                pathname.startsWith(FLIGHT_SEARCH_PATH)
                   ? "after:content-[''] after:absolute after:w-full after:h-[5px] after:bg-mint-green-100 after:-bottom-2.5 after:left-0 "
                   : ""
               }`}
@@ -45,9 +46,9 @@ export const OtherMenus = ({
           <li className="flex items-center gap-[3.5px] cursor-pointer transition-all duration-300 ease-in-out hover:bg-blackish-green/30 hover:py-3 hover:px-2 hover:rounded-lg relative">
             <BedIcon fillColor="#112211" />
             <Link
-              href="/hotel-flow/hotel-search"
+              href={HOTEL_SEARCH_PATH}
               className={`capitalize text-sm font-semibold ${
-                pathname.startsWith("/hotel-flow/hotel-search")
+                pathname.startsWith(HOTEL_SEARCH_PATH)
                   ? "after:content-[''] after:absolute after:w-full after:h-[5px] after:bg-mint-green-100 after:-bottom-2.5 after:left-0 "
                   : ""
               }`}

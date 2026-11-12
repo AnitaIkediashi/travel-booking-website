@@ -9,6 +9,7 @@ import { HeartIcon } from "@/components/icons/heart";
 import { useRouter } from "next/navigation";
 import { Dayjs } from "dayjs";
 import { getRatingLabel } from "@/utils/getRating";
+import { HOTEL_DETAIL_PATH } from "@/utils/page_routes";
 
 type HotelListProps = {
   hotel: HotelCard;
@@ -101,7 +102,9 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
         token: hotel.token,
       });
 
-      router.push(`/hotel-flow/hotel-search/listing/hotel-detail/${hotel.hotel_id}-${hotel.token}?${query}`);
+      router.push(
+        `${HOTEL_DETAIL_PATH}/${hotel.hotel_id}-${hotel.token}?${query}`,
+      );
     })
   }
 

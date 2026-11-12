@@ -14,6 +14,7 @@ import { FlightSuggestions } from "../dropdowns/flight_suggestions";
 import { ValidateFlightsInputEntriesModal } from "../modals/validate_flights_input_entries_modal";
 import { useRouter } from "next/navigation";
 import { inputClassName } from "@/utils/inputClassName";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 
 /**
  * NOTES: 1. Day.js is a minimalist JavaScript library designed to make parsing, validating, manipulating, and displaying dates and times in web applications much easier and more efficient than using the built-in JavaScript Date object
@@ -308,11 +309,11 @@ export const SearchFlights = ({ from }: {from?: string}) => {
       startTransition(() => {
         if (initialValues.trip === "one-way") {
           router.push(
-            `/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,
+            `${FLIGHT_LISTING_PATH}?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.entryDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,
           );
         } else {
           router.push(
-            `/flight-flow/flight-search/listing?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format("YYYY-MM-DD")}&return=${initialValues.endDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,
+            `${FLIGHT_LISTING_PATH}?from=${initialValues.fromValue}&to=${initialValues.toValue}&trip=${initialValues.trip}&depart=${initialValues.startDate?.format("YYYY-MM-DD")}&return=${initialValues.endDate?.format("YYYY-MM-DD")}&adults=${initialValues.adultCount}&child=${initialValues.child}&infant=${initialValues.infant}&cabin=${initialValues.cabinClass}`,
           );
         }
       });

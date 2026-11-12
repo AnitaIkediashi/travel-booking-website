@@ -15,6 +15,7 @@ import { AccountMenu } from "./account_menu";
 import { MenuIcon } from "../icons/menu";
 import { OtherMenus } from "./other_menus";
 import { usePathname, useSearchParams } from "next/navigation";
+import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
 
 export type NavLinkProp = {
   label: string;
@@ -61,12 +62,12 @@ export const HomeNavbar = () => {
   const NavLinks: NavLinkProp[] = [
     {
       label: "find flight",
-      href: "/flight-flow/flight-search",
+      href: FLIGHT_SEARCH_PATH,
       icon: <FlightIcon fillColor={isScrolled ? "#112211" : "white"} />,
     },
     {
       label: "find stays",
-      href: "/hotel-flow/hotel-search",
+      href: HOTEL_SEARCH_PATH,
       icon: <BedIcon fillColor={isScrolled ? "#112211" : "white"} />,
     },
   ];

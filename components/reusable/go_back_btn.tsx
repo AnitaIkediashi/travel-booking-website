@@ -2,9 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Button } from "./button";
-
-const FLIGHT_SEARCH_PATH = "/flight-flow/flight-search";
-const HOTEL_SEARCH_PATH = "/hotel-flow/hotel-search";
+import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
 
 export const GoBackBtn = () => {
   const pathname = usePathname();

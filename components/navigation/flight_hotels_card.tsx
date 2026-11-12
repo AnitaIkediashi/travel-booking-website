@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Button } from "../reusable/button";
 import { PaperPlaneIcon } from "../icons/paperPlane";
+import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
 
 const cardContents = [
   {
@@ -8,14 +9,14 @@ const cardContents = [
     title: "flights",
     content: "Search Flights & Places Hire to our most popular destinations",
     cta: 'show flights',
-    href: '/flight-flow/flight-search'
+    href: FLIGHT_SEARCH_PATH
   },
   {
     bg: "/landing_page/hotel-tour.svg",
     title: "hotels",
     content: "Search hotels & Places Hire to our most popular destinations",
     cta: 'show hotels',
-    href: '/hotel-flow/hotel-search'
+    href: HOTEL_SEARCH_PATH
   },
 ];
 

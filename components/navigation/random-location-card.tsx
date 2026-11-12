@@ -1,6 +1,7 @@
 "use client";
 
 import { RandomLocation } from "@/helpers/random_flights";
+import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -20,8 +21,8 @@ export const RandomLocationCard = ({
   const handleCardClick = () => {
     const href =
       item.kind === "flight"
-        ? `/flight-flow/flight-search?from=${encodeURIComponent(item.airport_code)}`
-        : `/hotel-flow/hotel-search?destination=${encodeURIComponent(item.city)}`;
+        ? `${FLIGHT_SEARCH_PATH}?from=${encodeURIComponent(item.airport_code)}`
+        : `${HOTEL_SEARCH_PATH}?destination=${encodeURIComponent(item.city)}`;
     router.push(href);
   };
 

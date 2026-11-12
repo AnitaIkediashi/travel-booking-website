@@ -2,6 +2,7 @@ import { RandomHotels } from "@/components/navigation/random_hotels";
 import { SeeMorePlaces } from "@/components/navigation/see_more_places";
 import { TitleAndContent } from "@/components/reusable/title_and_content";
 import { randomHotelsToBook } from "@/helpers/random_hotels_to_book";
+import { HOTEL_LISTING_PATH } from "@/utils/page_routes";
 
 export const RandomHotelsToGo = async () => {
   const hotelLists = await randomHotelsToBook()
@@ -15,7 +16,7 @@ export const RandomHotelsToGo = async () => {
           />
           <SeeMorePlaces
             label="See All"
-            href="/hotel-flow/hotel-search/listing"
+            href={HOTEL_LISTING_PATH}
             width="md:w-20"
           />
         </div>

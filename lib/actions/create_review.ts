@@ -6,6 +6,7 @@ import { REVIEW_CATEGORIES } from "@/types/hotel_type";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import { Prisma } from "@/app/generated/prisma/client";
+import { HOTEL_DETAIL_PATH } from "@/utils/page_routes";
 
 type CreateReviewInput = {
   hotelId: string;
@@ -78,7 +79,7 @@ export async function createReview(
   }
 
   revalidatePath(
-    `/hotel-flow/hotel-search/listing/hotel-detail/${hotel.id}-${hotel.token}`,
+    `${HOTEL_DETAIL_PATH}/${hotel.id}-${hotel.token}`,
   );
   return { ok: true };
 }

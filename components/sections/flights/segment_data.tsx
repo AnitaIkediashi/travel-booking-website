@@ -2,6 +2,7 @@
 import { Button } from "@/components/reusable/button";
 import { formatDateTime, getDate, getDuration } from "@/helpers/convertNumberToTime";
 import { FlightOffer } from "@/types/flight_type";
+import { FLIGHT_DETAIL_PATH } from "@/utils/page_routes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -69,9 +70,9 @@ export const SegmentData = ({
   let segmentDetailUrl = ''
 
   if(hasMultipleSegments) {
-    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
+    segmentDetailUrl = `${FLIGHT_DETAIL_PATH}/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&return=${arrivalDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
   }  else {
-    segmentDetailUrl = `/flight-flow/flight-search/listing/flight-detail/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
+    segmentDetailUrl = `${FLIGHT_DETAIL_PATH}/${flightKey}?from=${departCode}&to=${reassignedArrivalCode}&depart=${departDate}&trip=${tripType}&cabin=${cabin}&adults=${adultCount}&child=${childCount}&infant=${infantCount}&token=${offers.token}`;
   }
 
   const handleNavigate = () => {

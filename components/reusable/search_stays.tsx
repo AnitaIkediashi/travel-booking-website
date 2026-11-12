@@ -17,6 +17,7 @@ import { useDebouncedCallback } from "@/utils/debounceCallback";
 import { HotelSuggestions } from "../dropdowns/hotel_suggestions";
 import { ValidateHotelInputEntries } from "../modals/validate_hotel_input_entries";
 import { saveHotelRecentSearch } from "@/lib/actions/hotel_recent_searches";
+import { HOTEL_LISTING_PATH } from "@/utils/page_routes";
 
 export type InitialState = {
   destination: string;
@@ -239,7 +240,7 @@ export const SearchStays = ({destination}: {destination?: string}) => {
        } catch (e) {
          console.error("Failed to save recent search", e); // never block the search
        }
-       router.push(`/hotel-flow/hotel-search/listing?${qs}`);
+       router.push(`${HOTEL_LISTING_PATH}?${qs}`);
      });
   }
 

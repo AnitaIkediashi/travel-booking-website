@@ -1,6 +1,7 @@
 import { FlightDetailWrapper } from "@/components/sections/flights/flight_detail_wrapper";
 import { queryFlightToken } from "@/helpers/query_flights";
 import { FlightSearchParams } from "@/types/flight_type";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 import { redirect } from "next/navigation";
 
 const FlightDetailPage = async ({ searchParams }: FlightSearchParams) => {
@@ -49,7 +50,7 @@ const FlightDetailPage = async ({ searchParams }: FlightSearchParams) => {
     (adultCount > 0 || childCount > 0 || infantCount > 0);
 
   if (!isValidQuery) {
-    redirect("/flight-flow/flight-search/listing");
+    redirect(FLIGHT_LISTING_PATH);
   }
 
   const newParams = {

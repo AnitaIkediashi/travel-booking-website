@@ -83,14 +83,6 @@ export const FlightDetailWrapper = async ({
     token,
   } = searchProps;
 
-  // let bookingUrl = "";
-
-  // if (trip === "round-trip") {
-  //   bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&return=${returnDate}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
-  // } else {
-  //   bookingUrl = `/flight-flow/flight-search/listing/flight-detail/booking?from=${from}&to=${to}&depart=${depart}&trip=${trip}&cabin=${cabinType}&adults=${adults}&child=${child}&infant=${infant}&token=${token}`;
-  // }
-
   return (
     <section className="pt-[137px] md:pb-[120px] pb-12 font-montserrat">
       <div className="lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0">

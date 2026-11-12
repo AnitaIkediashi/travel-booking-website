@@ -44,6 +44,7 @@ model Hotels {
     reviews     Reviews[]
     rules       Rules[]
     rooms       Rooms[]
+    favourites   HotelFavourite[]
 
     @@map("hotels")
 }
@@ -210,4 +211,16 @@ model HotelRecentSearch {
   @@index([ownerId, updatedAt])
 
   @@map("hotel_recent_searches")
+}
+
+model HotelFavourite {
+  id        String   @id @default(uuid())
+  ownerId   String  
+  hotel_id  String
+  createdAt DateTime @default(now())
+  hotel     Hotels   @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, hotel_id])
+  @@index([ownerId, createdAt])
+  @@map("hotel_favourites")
 }

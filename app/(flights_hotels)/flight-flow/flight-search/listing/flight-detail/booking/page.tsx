@@ -3,6 +3,7 @@ import { FlightBooking } from "@/components/sections/flights/flight_booking";
 import { queryFlightToken } from "@/helpers/query_flights";
 import { prisma } from "@/lib/prisma";
 import { FlightSearchParams } from "@/types/flight_type";
+import { FLIGHT_LISTING_PATH } from "@/utils/page_routes";
 import { redirect } from "next/navigation";
 
 const FlightBookingPage = async ({ searchParams }: FlightSearchParams) => {
@@ -22,7 +23,7 @@ const FlightBookingPage = async ({ searchParams }: FlightSearchParams) => {
     bookingId
   } = searchProps;
 
-  if (!depart) redirect("/flight-flow/flight-search/listing");
+  if (!depart) redirect(FLIGHT_LISTING_PATH);
 
   const currentDate = new Date();
   currentDate.setUTCHours(0, 0, 0, 0);
@@ -55,7 +56,7 @@ const FlightBookingPage = async ({ searchParams }: FlightSearchParams) => {
     !isReturnDateInvalid &&
     totalTravelers > 0;
 
-  if (!isValidQuery) redirect("/flight-flow/flight-search/listing");
+  if (!isValidQuery) redirect(FLIGHT_LISTING_PATH);
 
   const flightData = await queryFlightToken({
     adults: adultCount,
