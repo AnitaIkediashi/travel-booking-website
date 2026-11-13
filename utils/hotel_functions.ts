@@ -47,18 +47,18 @@ export function formatStayLine(s: Stay) {
 }
 
 export function buildDetailHref(
-  h: Pick<FavouriteHotel, "id" | "token" | "city">,
+  h: Pick<FavouriteHotel, "id" | "token" | "name">,
   s: Stay,
 ) {
   const qs = new URLSearchParams({
     hotelId: h.id,
-    token: h.token,
-    destination: h.city,
+    destination: h.name,
     checkIn: s.checkIn,
     checkOut: s.checkOut,
     adults: String(s.adults),
     children: String(s.children),
     rooms: String(s.rooms),
+    token: h.token,
   });
-  return `${HOTEL_DETAIL_PATH}?${qs.toString()}`;
+  return `${HOTEL_DETAIL_PATH}/${h.id}-${h.token}?${qs.toString()}`;
 }

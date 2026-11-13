@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Dayjs } from "dayjs";
 import { getRatingLabel } from "@/utils/getRating";
 import { HOTEL_DETAIL_PATH } from "@/utils/page_routes";
+import { useFavourites } from "@/lib/favourite-context";
 
 type HotelListProps = {
   hotel: HotelCard;
@@ -26,6 +27,8 @@ const SWIPE_THRESHOLD = 0.15; // fraction of the width needed to change slide
 
 export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, checkOut }: HotelListProps) => {
   const router = useRouter()
+  const { isSaved, toggle } = useFavourites();
+  const isLiked = isSaved(hotel.hotel_id);
   const thumbnails = hotel.hotel_thumb_nails ?? [];
   const total = thumbnails.length;
 
@@ -33,7 +36,7 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  
   const [isPending, startTransition] = useTransition();
 
   const startX = useRef(0);
@@ -85,9 +88,9 @@ export const HotelList = ({ hotel, adultCount, childCount, roomCount, checkIn, c
 
   const hasReviews = hotel.review_count > 0;
 
-  const handleLike =() => {
-    setIsLiked((prev) => !prev);
-  }
+  const handleLike = () => {
+    void toggle(hotel.hotel_id);
+  };
 
   const handleHotelSearch = () => {
     startTransition(() => {

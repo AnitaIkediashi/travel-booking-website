@@ -34,6 +34,7 @@ function resolveStayDates(checkIn?: string | null, checkOut?: string | null) {
 
 export const RecentSearches = async () => {
   const cards = await getRecentSearchCards();
+  
   if (!cards.length) return null;
   return (
     <section className="md:pt-[266px] pt-[553px] font-montserrat pb-20">

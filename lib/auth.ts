@@ -4,6 +4,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import bcrypt from "bcrypt";
+import { mergeGuestFavourites } from "@/helpers/merge_favourites";
+import { cookies } from "next/headers";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -114,6 +116,20 @@ export const authOptions: NextAuthOptions = {
         session.user.phoneNo = token.phoneNo ?? null;
       }
       return session;
+    },
+  },
+
+  events: {
+    async signIn({ user }) {
+      try {
+        const guestId = (await cookies()).get("guest_id")?.value;
+        if (guestId && user.id) {
+          await mergeGuestFavourites(guestId, user.id);
+        }
+      } catch (err) {
+        // never block a login because of favourites
+        console.error("Failed to merge guest favourites", err);
+      }
     },
   },
 
