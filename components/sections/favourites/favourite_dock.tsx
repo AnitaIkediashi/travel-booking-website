@@ -177,14 +177,14 @@ function Dock() {
               href={HOTEL_HOME_PATH}
               onClick={close}
               label="Explore hotels & homes"
-              className="mt-5 block rounded-md bg-blue-600 py-3 text-center font-semibold text-white hover:bg-blue-700"
+              className="mt-5 block rounded-md bg-mint-green-100 py-3 text-center font-semibold hover:bg-mint-green-40"
             />
           )}
           <Button
             href={HOTEL_FAVOURITES_PATH}
             onClick={close}
             label={`View all saved items (${ids.size})`}
-            className="mt-3 block rounded-md border border-blue-600 py-3 text-center font-semibold text-blue-600 hover:bg-blue-50"
+            className="mt-3 block rounded-md border border-mint-green-70 py-3 text-center font-semibold text-mint-green-100 hover:bg-mint-green-40"
           />
         </section>
       )}

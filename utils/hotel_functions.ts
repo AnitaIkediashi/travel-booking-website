@@ -46,10 +46,54 @@ export function formatStayLine(s: Stay) {
   );
 }
 
+// export function buildDetailHref(
+//   h: Pick<FavouriteHotel, "id" | "token" | "name">,
+//   s: Stay,
+// ) {
+//   const qs = new URLSearchParams({
+//     hotelId: h.id,
+//     destination: h.name,
+//     checkIn: s.checkIn,
+//     checkOut: s.checkOut,
+//     adults: String(s.adults),
+//     children: String(s.children),
+//     rooms: String(s.rooms),
+//     token: h.token,
+//   });
+//   return `${HOTEL_DETAIL_PATH}/${h.id}-${h.token}?${qs.toString()}`;
+// }
+
+function toYMD(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addDays(base: Date, days: number) {
+  const d = new Date(base);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function normalizeStay(s: Stay): Stay {
+  const today = new Date();
+  const todayStr = toYMD(today);
+
+  if (s.checkIn < todayStr) {
+    const checkIn = addDays(today, 2);
+    const checkOut = addDays(checkIn, 1);
+    return { ...s, checkIn: toYMD(checkIn), checkOut: toYMD(checkOut) };
+  }
+  return s;
+}
+
 export function buildDetailHref(
   h: Pick<FavouriteHotel, "id" | "token" | "name">,
-  s: Stay,
+  stay: Stay,
 ) {
+  const s = normalizeStay(stay);
+
   const qs = new URLSearchParams({
     hotelId: h.id,
     destination: h.name,

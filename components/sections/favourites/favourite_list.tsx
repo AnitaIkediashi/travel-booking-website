@@ -46,8 +46,8 @@ export function FavouritesList({
                 />
               )}
               {h.imageCount > 0 && (
-                <span className="absolute right-3 top-3 rounded bg-black/40 px-2 py-0.5 text-[11px] text-white">
-                  {h.imageCount} Images
+                <span className="absolute right-3 top-3 rounded-lg bg-white/30 backdrop-blur-sm px-3 py-1 text-xs font-medium text-white">
+                  {h.imageCount} {h.imageCount === 1 ? "image" : "images"}
                 </span>
               )}
             </div>
@@ -55,8 +55,10 @@ export function FavouritesList({
             <div className="flex flex-1 flex-col p-4">
               <div className="flex justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-semibold">{h.name}</h2>
-                  <p className="mt-1 flex items-center gap-1 text-xs text-neutral-600">
+                  <h3 className="truncate text-lg md:text-xl font-semibold text-blackish-green leading-tight">
+                    {h.name}
+                  </h3>
+                  <p className="mt-1 flex items-center gap-1 text-xs opacity-75">
                     <LocationIcon /> {h.city}, {h.country}
                   </p>
                   {h.amenityCount > 0 && (
@@ -66,26 +68,24 @@ export function FavouritesList({
                   )}
                   {h.rating !== null && (
                     <p className="mt-3 flex items-center gap-2 text-xs">
-                      <span className="rounded border border-neutral-300 px-1.5 py-0.5">
-                        {h.rating}
+                      <span className="border border-mint-green-100 rounded px-2 py-1 font-medium">
+                        {h.rating.toFixed(1)}
                       </span>
-                      <b>{getRatingLabel(h.rating)}</b>
-                      <span className="text-neutral-500">
-                        {h.reviewCount} reviews
-                      </span>
+                      <strong>{getRatingLabel(h.rating)}</strong>
+                      <span>{h.reviewCount} reviews</span>
                     </p>
                   )}
                 </div>
 
                 {h.price && (
-                  <div className="shrink-0 text-right text-xs text-neutral-500">
-                    <p>starting from</p>
-                    <p className="text-xl font-bold text-salmon-100">
+                  <div className="shrink-0 text-right text-xs ">
+                    <p className="font-medium opacity-75">starting from</p>
+                    <p className="text-xl md:text-2xl font-bold text-salmon-100">
                       {h.price.currency}
                       {h.price.amount}
-                      <span className="text-xs font-normal">/night</span>
+                      <span className="text-sm">/night</span>
                     </p>
-                    <p>excl. tax</p>
+                    <p className="text-xs font-medium opacity-75">excl. tax</p>
                   </div>
                 )}
               </div>
@@ -94,7 +94,7 @@ export function FavouritesList({
                 <FavouriteButton hotelId={h.id} variant="square" />
                 <Link
                   href={buildDetailHref(h, stay)}
-                  className="flex-1 rounded-md bg-[#8fd1b9] py-2.5 text-center text-sm font-medium hover:brightness-95"
+                  className="flex-1 rounded-md bg-mint-green-100 h-12 text-blackish-green text-sm font-semibold flex items-center justify-center hover:opacity-90 transition-opacity"
                 >
                   View Place
                 </Link>

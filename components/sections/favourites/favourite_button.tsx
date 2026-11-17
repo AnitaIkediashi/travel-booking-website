@@ -29,7 +29,7 @@ export function FavouriteButton({
   };
 
   const shared = {
-    type: "button" as const, // your Button has no default type, so be explicit
+    type: "button" as const,
     onClick,
     icon: <HeartIcon isLiked={saved} />,
     iconClassName: "flex",
