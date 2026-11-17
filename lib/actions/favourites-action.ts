@@ -74,7 +74,7 @@ export async function getFavouriteHotels(input: {
         price = {
           amount,
           original: discount > 0 ? base : null,
-          currency: p.currency.code,
+          currency: p.currency.symbol,
         };
       }
     }
@@ -92,8 +92,7 @@ export async function getFavouriteHotels(input: {
       name: h.name,
       city: h.city,
       country: h.country,
-      image: h.thumb_nails[0] ?? null,
-      imageCount: h.thumb_nails.length,
+      images: h.thumb_nails ?? [],
       amenityCount: h.amenities.length,
       rating: rating === null ? null : Math.round(rating * 10) / 10,
       reviewCount: h.reviews.length,

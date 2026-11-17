@@ -212,8 +212,7 @@ export type FavouriteHotel = {
   name: string;
   city: string;
   country: string;
-  image: string | null;
-  imageCount: number;
+  images: string[];
   amenityCount: number;
   rating: number | null;
   reviewCount: number;

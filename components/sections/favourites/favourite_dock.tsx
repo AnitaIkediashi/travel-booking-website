@@ -126,9 +126,9 @@ function Dock() {
                     className="flex gap-3"
                   >
                     <div className="relative h-32 w-28 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
-                      {h.image && (
+                      {h.images[0] && (
                         <Image
-                          src={h.image}
+                          src={h.images[0]}
                           alt={h.name}
                           fill
                           sizes="112px"

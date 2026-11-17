@@ -63,13 +63,6 @@ export function formatStayLine(s: Stay) {
 //   return `${HOTEL_DETAIL_PATH}/${h.id}-${h.token}?${qs.toString()}`;
 // }
 
-function toYMD(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 function addDays(base: Date, days: number) {
   const d = new Date(base);
   d.setDate(d.getDate() + days);
@@ -78,12 +71,12 @@ function addDays(base: Date, days: number) {
 
 function normalizeStay(s: Stay): Stay {
   const today = new Date();
-  const todayStr = toYMD(today);
+  const todayStr = iso(today);
 
   if (s.checkIn < todayStr) {
     const checkIn = addDays(today, 2);
     const checkOut = addDays(checkIn, 1);
-    return { ...s, checkIn: toYMD(checkIn), checkOut: toYMD(checkOut) };
+    return { ...s, checkIn: iso(checkIn), checkOut: iso(checkOut) };
   }
   return s;
 }
