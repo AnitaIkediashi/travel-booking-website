@@ -70,7 +70,10 @@ export const AccountMenu = ({
       </div>
       <ul className="py-6 border-b-[0.5px] border-b-blackish-green/25">
         <li className="w-full mb-4 group">
-          <Link href="" className="flex items-center justify-between w-full">
+          <Link
+            href={`/account-flow?tab=account`}
+            className="flex items-center justify-between w-full"
+          >
             <div className="flex items-center gap-2">
               <UserIcon />
               <span className="text-xs md:text-sm font-medium group-hover:font-semibold">
@@ -81,7 +84,10 @@ export const AccountMenu = ({
           </Link>
         </li>
         <li className="w-full group">
-          <Link href="" className="flex items-center justify-between w-full">
+          <Link
+            href={`/account-flow?tab=payments`}
+            className="flex items-center justify-between w-full"
+          >
             <div className="flex items-center gap-2">
               <CardIcon />
               <span className="text-xs md:text-sm font-medium group-hover:font-semibold">
