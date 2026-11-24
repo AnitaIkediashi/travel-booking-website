@@ -102,6 +102,10 @@ body {
   color: var(--foreground);
 }
 
+.ant-avatar {
+  background: var(--color-neutral-300);
+}
+
 .animated_dots {
   width: 15px;
   aspect-ratio: 1;

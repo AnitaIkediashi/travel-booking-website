@@ -2,16 +2,10 @@ import Link from "next/link";
 
 type Item = { id: string; label: string; href: string };
 
-export const AccountTabs = ({
-  items,
-  active,
-}: {
-  items: Item[];
-  active: string;
-}) => (
+export const AccountTabs = ({ items, active }: { items: Item[]; active: string }) => (
   <nav
     role="tablist"
-    className="flex w-full rounded-xl bg-white shadow-light items-center mb-10 mt-8"
+    className="flex w-full rounded-xl bg-white shadow-light items-center mb-10 mt-[117px]"
   >
     {items.map((item) => {
       const isActive = item.id === active;
