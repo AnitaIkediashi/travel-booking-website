@@ -81,6 +81,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           phoneNo: user.phoneNo,
+          image: user.image,
+          coverImage: user.coverImage
         };
       },
     }),
@@ -95,15 +97,19 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.phoneNo = user.phoneNo ?? null;
+        token.picture = user.image ?? null;
+        token.coverImage = user.coverImage ?? null
         return token;
       }
 
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id },
-          select: { phoneNo: true },
+          select: { phoneNo: true, image: true, coverImage: true },
         });
         token.phoneNo = dbUser?.phoneNo ?? null;
+        token.picture = dbUser?.image ?? null;
+        token.coverImage = dbUser?.coverImage ?? null;
       }
 
       return token;
@@ -114,6 +120,7 @@ export const authOptions: NextAuthOptions = {
       if (token?.id && session.user) {
         session.user.id = token.id;
         session.user.phoneNo = token.phoneNo ?? null;
+        session.user.coverImage = token.coverImage ?? null;
       }
       return session;
     },
