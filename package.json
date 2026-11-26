@@ -24,6 +24,7 @@
     "@types/bcrypt": "^6.0.0",
     "antd": "^6.2.1",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.11.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",

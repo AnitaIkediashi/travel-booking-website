@@ -8,6 +8,7 @@ import { ChevronIcon } from "../icons/chevron";
 import { CloseIcon } from "../icons/close";
 import { Button } from "../reusable/button";
 import { Avatar } from "antd";
+import { getInitials } from "@/utils/getInitialsFromName";
 
 type GalleryModalProps = Omit<HotelGalleryProps, "reviews"> & {
   reviews: GalleryReview[];
@@ -347,15 +348,7 @@ export const GalleryModal = ({
               <>
                 <ul className="flex flex-col">
                   {topReviews.map((r) => {
-                    const firstInitial = r.author.charAt(0).toUpperCase();
-                    const lastInitial = r.author.includes(" ")
-                      ? r.author
-                          ?.split(" ")
-                          .slice(-1)[0]
-                          .charAt(0)
-                          .toUpperCase()
-                      : "";
-                    const initials = `${firstInitial}${lastInitial}`;
+                    const initials = getInitials(r.author)
                     return (
                       <li
                         key={r.id}

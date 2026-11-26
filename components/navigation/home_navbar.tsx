@@ -16,6 +16,7 @@ import { MenuIcon } from "../icons/menu";
 import { OtherMenus } from "./other_menus";
 import { usePathname, useSearchParams } from "next/navigation";
 import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
+import { getInitials } from "@/utils/getInitialsFromName";
 
 export type NavLinkProp = {
   label: string;
@@ -32,11 +33,6 @@ export const HomeNavbar = () => {
   const [showOtherMenu, setShowOtherMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const firstInitial = user?.name?.charAt(0).toUpperCase();
-  const lastInitial = user?.name?.includes(" ")
-    ? user?.name?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
-    : "";
-
   const fullname = user?.name?.includes(" ")
     ? user.name
         .split(" ")
@@ -45,7 +41,7 @@ export const HomeNavbar = () => {
     : user?.name;
 
   const avatarImg = user?.image;
-  const initials = `${firstInitial}${lastInitial}`;
+  const initials = getInitials(user?.name);
 
   const handleClick = () => {
     setShowAccountMenu(!showAccountMenu);
@@ -155,8 +151,7 @@ export const HomeNavbar = () => {
                             color: "#f56a00",
                           }}
                         >
-                          {firstInitial}
-                          {lastInitial}
+                          {initials}
                         </Avatar>
                       )}
                       <p

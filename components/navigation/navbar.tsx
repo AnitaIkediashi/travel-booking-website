@@ -15,6 +15,7 @@ import { useCurrentUser } from "@/lib/auth-context";
 import { Avatar } from "antd";
 import { OtherMenus } from "./other_menus";
 import { FLIGHT_SEARCH_PATH, HOTEL_SEARCH_PATH } from "@/utils/page_routes";
+import { getInitials } from "@/utils/getInitialsFromName";
 
 const NavLinksDark: NavLinkProp[] = [
   {
@@ -39,11 +40,6 @@ export const Navbar = () => {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showOtherMenu, setShowOtherMenu] = useState(false);
 
-  const firstInitial = user?.name?.charAt(0).toUpperCase();
-  const lastInitial = user?.name?.includes(" ")
-    ? user?.name?.split(" ").slice(-1)[0].charAt(0).toUpperCase()
-    : "";
-
   const fullname = user?.name?.includes(" ")
     ? user.name
         .split(" ")
@@ -52,7 +48,7 @@ export const Navbar = () => {
     : user?.name;
 
   const avatarImg = user?.image;
-  const initials = `${firstInitial}${lastInitial}`;
+  const initials = getInitials(user?.name);
 
   const handleClick = () => {
     setShowAccountMenu(!showAccountMenu);
@@ -136,8 +132,7 @@ export const Navbar = () => {
                         color: "#f56a00",
                       }}
                     >
-                      {firstInitial}
-                      {lastInitial}
+                      {initials}
                     </Avatar>
                   )}
                   <p className={`font-semibold text-sm hidden lg:block`}>

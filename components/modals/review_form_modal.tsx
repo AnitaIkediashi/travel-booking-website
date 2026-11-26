@@ -8,17 +8,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { CloseIcon } from "../icons/close";
 import { REVIEW_CATEGORIES } from "@/types/hotel_type";
 import { Avatar, Select } from "antd";
+import { getInitials } from "@/utils/getInitialsFromName";
 
 type ReviewFormModalProps = { hotelId: string };
-
-const getInitials = (name?: string | null) => {
-  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  const first = parts[0].charAt(0).toUpperCase();
-  const last =
-    parts.length > 1 ? parts[parts.length - 1].charAt(0).toUpperCase() : "";
-  return `${first}${last}`;
-};
 
 const StarPicker = ({
   value,

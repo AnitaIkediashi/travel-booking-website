@@ -5,9 +5,9 @@ import coverImage from "@/public/authentication/account_cover.png";
 import { Button } from "@/components/reusable/button";
 import { CloudUploadIcon } from "@/components/icons/cloud_upload";
 import { Avatar } from "antd";
-import { UserOutlineIcon } from "@/components/icons/user_outline";
 import { PenIcon } from "@/components/icons/pen";
 import { useCurrentUser } from "@/lib/auth-context";
+import { getInitials } from "@/utils/getInitialsFromName";
 
 type ProfileHeaderProps = {
   name?: string;
@@ -20,9 +20,10 @@ type ProfileHeaderProps = {
 
 export const ProfileHeader = ({}: ProfileHeaderProps) => {
   const { user } = useCurrentUser();
+  const initials = getInitials(user?.name)
   return (
     <section className="w-full relative">
-      <div className="lg:h-[350ppx] md:h-[280px] sm:h-60 h-48 w-full relative rounded-xl">
+      <div className="lg:h-[350px] md:h-[280px] sm:h-60 h-48 w-full relative rounded-xl">
         <Image
           src={coverImage}
           alt="user cover image"
@@ -45,11 +46,10 @@ export const ProfileHeader = ({}: ProfileHeaderProps) => {
         />
       </div>
       <div className="absolute left-1/2 -translate-x-1/2 md:-bottom-[156px] -bottom-[102px] flex flex-col items-center justify-center">
-        <div className="relative size-20 sm:size-28 md:size-36 lg:size-40 border-4 border-salmon-100 rounded-full z-30 ">
-          <Avatar
-            icon={<UserOutlineIcon className="size-3/4" />}
-            className="size-full! rounded-[inherit] inline-flex items-center justify-center"
-          />
+        <div className="relative size-20 sm:size-28 md:size-36 lg:size-40 border-4 border-salmon-100 rounded-full z-30 avatar_container">
+          <Avatar className="size-full! rounded-[inherit] inline-flex items-center justify-center">
+            {initials}
+          </Avatar>
           <Button
             icon={<PenIcon className="w-3 h-3 md:w-auto md:h-auto" />}
             className="md:w-11 md:h-11 sm:h-7 sm:w-7 w-5 h-5 rounded-full flex items-center justify-center absolute bottom-0 right-0 bg-salmon-100 z-20 hover:bg-black hover:text-salmon-100  disabled:opacity-60 disabled:cursor-not-allowed"
