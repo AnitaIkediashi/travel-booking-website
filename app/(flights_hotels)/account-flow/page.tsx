@@ -30,7 +30,7 @@ const AccountPage = async ({
     href: `/account-flow?tab=${id}`,
   }));
   return (
-    <div className="min-h-screen lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0 pt-[115px] font-montserrat">
+    <div className="h-auto lg:w-[77%] md:w-[80%] mx-auto px-8 md:px-0 pt-[115px] font-montserrat">
       <ProfileHeader />
       <AccountTabs items={items} active={activeTab} />
       <Suspense
